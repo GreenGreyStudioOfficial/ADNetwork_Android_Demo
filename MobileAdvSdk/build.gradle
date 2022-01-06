@@ -60,6 +60,8 @@ dependencies {
 
     implementation("androidx.navigation:navigation-dynamic-features-fragment:2.3.5")
 
+    implementation 'com.github.tbruyelle:rxpermissions:0.12'
+
 
 //    testImplementation 'junit:junit:4.+'
 //    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
