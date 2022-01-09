@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="MobileAdvSdk/src/main/res/layout/activity_adv.xml" value="0.14817629179331307" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.19882246376811594" />
       </map>
