@@ -4,39 +4,36 @@ import com.google.gson.annotations.SerializedName
 
 data class DeviceRemote(
 
-    @SerializedName("ua")
-    val ua: String,
-
     @SerializedName("geo")
-    val geo: GeoRemote,
+    val geo: GeoRemote? = null,
 
     @SerializedName("ip")
-    val ip: String,
+    val ip: String? = null,
 
     @SerializedName("devicetype")
-    val deviceType: Int,
+    val deviceType: Int? = null,
 
     @SerializedName("make")
-    val make: String,
+    val make: String? = null,
 
     @SerializedName("model")
-    val model: String,
+    val model: String? = null,
 
     @SerializedName("os")
-    val os: String,
+    val os: String? = null,
 
     @SerializedName("osv")
-    val osv: String,
+    val osv: String? = null,
 
     @SerializedName("w")
-    val w: Int,
+    val w: Int? = null,
 
     @SerializedName("h")
-    val h: Int,
+    val h: Int? = null,
 
     @SerializedName("connectiontype")
-    val connectionType: String,
+    val connectionType: Int? = null,
 
     @SerializedName("ifa")
-    val ifa: String
+    val ifa: String? = null
 )

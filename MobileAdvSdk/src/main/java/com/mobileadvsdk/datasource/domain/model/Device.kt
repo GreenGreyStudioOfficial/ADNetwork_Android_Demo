@@ -1,16 +1,15 @@
 package com.mobileadvsdk.datasource.domain.model
 
 data class Device(
-    val ua: String,
     val geo: Geo,
-    val ip: String,
-    val deviceType: Int,
-    val make: String,
+    val ip: String? = null,
+    val deviceType: Int? = null,
+    val make: String? = null,
     val model: String,
     val os: String,
-    val osv: String,
+    val osv: String? = null,
     val w: Int,
     val h: Int,
-    val connectionType: String,
+    val connectionType: Int,
     val ifa: String
 )

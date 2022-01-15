@@ -4,7 +4,7 @@ import com.mobileadvsdk.datasource.remote.model.AdvDataRemote
 import com.mobileadvsdk.datasource.remote.model.AdvDataRequestRemote
 import io.reactivex.Single
 
-interface CloudDataStore {
+internal interface CloudDataStore {
 
     fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote>
 }

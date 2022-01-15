@@ -9,7 +9,7 @@ import com.mobileadvsdk.datasource.toRemote
 import io.reactivex.Scheduler
 import io.reactivex.Single
 
-class DataRepositoryImpl(
+internal class DataRepositoryImpl(
     private val ioScheduler: Scheduler,
     private val cloudDataStore: CloudDataStore
 ) : DataRepository {

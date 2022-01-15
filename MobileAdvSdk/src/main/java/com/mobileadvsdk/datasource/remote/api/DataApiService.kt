@@ -6,9 +6,9 @@ import io.reactivex.Single
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-interface DataApiService {
+internal interface DataApiService {
 
-    @POST("rtb?token=[app_token]")
+    @POST("rtb?key=secret")
     fun loadStartData(@Body advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote>
 
 }

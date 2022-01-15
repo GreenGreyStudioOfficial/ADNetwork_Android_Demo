@@ -3,7 +3,7 @@ package com.mobileadvsdk.datasource
 import com.mobileadvsdk.datasource.domain.model.*
 import com.mobileadvsdk.datasource.remote.model.*
 
-fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
+internal fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     id,
     test,
     imp.map { it.toRemote() },
@@ -12,16 +12,15 @@ fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     user.toRemote()
 )
 
-fun Imp.toRemote(): ImpRemote = ImpRemote(id, video.toRemote(), instl)
+internal fun Imp.toRemote(): ImpRemote = ImpRemote(id, video.toRemote(), instl)
 
-fun Video.toRemote(): VideoRemote = VideoRemote(mimes, w, h, ext.toRemote())
+internal fun Video.toRemote(): VideoRemote = VideoRemote(mimes, w, h, ext.toRemote())
 
-fun Ext.toRemote(): ExtRemote = ExtRemote(rewarded)
+internal fun Ext.toRemote(): ExtRemote = ExtRemote(rewarded)
 
-fun AppInfo.toRemote(): AppInfoRemote = AppInfoRemote(id, name, bundle)
+internal  fun AppInfo.toRemote(): AppInfoRemote = AppInfoRemote(id, name, bundle)
 
-fun Device.toRemote(): DeviceRemote = DeviceRemote(
-    ua,
+internal fun Device.toRemote(): DeviceRemote = DeviceRemote(
     geo.toRemote(),
     ip,
     deviceType,
@@ -35,15 +34,15 @@ fun Device.toRemote(): DeviceRemote = DeviceRemote(
     ifa
 )
 
-fun Geo.toRemote(): GeoRemote = GeoRemote(lat, lon, country, region, city)
+internal fun Geo.toRemote(): GeoRemote = GeoRemote(lat, lon, country, region, city)
 
-fun User.toRemote(): UserRemote = UserRemote(id)
+internal fun User.toRemote(): UserRemote = UserRemote(id)
 
-fun AdvDataRemote.toDomain(): AdvData = AdvData(id, bidid, seatbid.map { it.toDomain() })
+internal fun AdvDataRemote.toDomain(): AdvData = AdvData(id, bidid, seatbid.map { it.toDomain() })
 
-fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid.map { it.toDomain() })
+internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid.map { it.toDomain() })
 
-fun BidRemote.toDomain(): Bid = Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv.toDomain())
+internal fun BidRemote.toDomain(): Bid = Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv.toDomain())
 
-fun ExtAdvRemote.toDomain(): ExtAdv = ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
+internal fun ExtAdvRemote.toDomain(): ExtAdv = ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
 
