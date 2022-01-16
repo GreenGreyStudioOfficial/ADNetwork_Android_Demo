@@ -8,14 +8,13 @@ import net.pubnative.player.VASTPlayer
 import net.pubnative.player.model.VASTModel
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
-import org.kodein.di.android.kodein
-import org.kodein.di.android.subKodein
 import org.kodein.di.generic.instance
+import org.kodein.di.subKodein
 
 
 class AdvActivity : AppCompatActivity(), KodeinAware {
 
-    override val kodein: Kodein by subKodein(kodein()){}
+    override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
     private val advViewMadel: AdvViewModel by instance()
 

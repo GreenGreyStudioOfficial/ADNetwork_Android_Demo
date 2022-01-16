@@ -15,5 +15,7 @@ class AdvApplication : MultiDexApplication(), KodeinAware {
 
     override val kodein: Kodein by Kodein.lazy {
         import(mainModule())
+    }.apply {
+        KodeinHolder.kodein = this
     }
 }
