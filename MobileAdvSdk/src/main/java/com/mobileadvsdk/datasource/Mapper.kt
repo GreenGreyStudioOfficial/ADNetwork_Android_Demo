@@ -42,7 +42,7 @@ internal fun AdvDataRemote.toDomain(): AdvData = AdvData(id, bidid, seatbid.map 
 
 internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid.map { it.toDomain() })
 
-internal fun BidRemote.toDomain(): Bid = Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv.toDomain())
+internal fun BidRemote.toDomain(): Bid = Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv?.toDomain())
 
 internal fun ExtAdvRemote.toDomain(): ExtAdv = ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
 
