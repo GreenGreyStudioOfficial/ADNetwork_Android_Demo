@@ -1,12 +1,12 @@
 package com.mobileadvsdk
 
 import android.content.Context
+import com.mobileadvsdk.di.mainModule
+import org.kodein.di.Kodein
 import org.kodein.di.generic.instance
-import org.kodein.di.subKodein
 
 object AdvManager {
-
-    private val kodein = subKodein(KodeinHolder.kodein) {}
+    private val kodein = Kodein { import(mainModule()) }.apply { KodeinHolder.kodein = this }
 
     private val provider: AdvViewModel by kodein.instance()
 
