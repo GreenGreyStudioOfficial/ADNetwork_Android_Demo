@@ -7,7 +7,7 @@
     tools:context=".AdvActivity">
 
     <net.pubnative.player.VASTPlayer
-        android:id="@+id/pubnative_vast_player"
+        android:id="@+id/vastPlayer"
         android:layout_width="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

@@ -2,6 +2,7 @@ package com.mobileadvsdk
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.mobileadvsdk.datasource.domain.model.AdvData
 import kotlinx.android.synthetic.main.activity_adv.*
 import net.pubnative.player.VASTParser
 import net.pubnative.player.VASTPlayer
@@ -22,46 +23,61 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
 
-        observe(advViewMadel.peekData()) {
-            VASTParser(this).setListener(object : VASTParser.Listener {
-                override fun onVASTParserError(error: Int) {
-
-                }
-
-                override fun onVASTParserFinished(model: VASTModel) {
-                    pubnative_vast_player.load(model)
-                    pubnative_vast_player.setListener(object : VASTPlayer.Listener {
-                        override fun onVASTPlayerLoadFinish() {
-
-                        }
-
-                        override fun onVASTPlayerFail(exception: Exception?) {
-
-                        }
-
-                        override fun onVASTPlayerPlaybackStart() {
-
-                        }
-
-                        override fun onVASTPlayerPlaybackFinish() {
-
-                        }
-
-                        override fun onVASTPlayerOpenOffer() {
-
-                        }
-
-                    })
-                    pubnative_vast_player.play()
-                }
-            }).execute(it.seatbid[0].bid[0].adm)
+        observe(advViewMadel.advDataLive) {
+            parseAdvData(it)
         }
+
+        initPlayerListener()
     }
 
-    override fun onStart() {
-        super.onStart()
+    private fun parseAdvData(it: AdvData) {
+        VASTParser(this).setListener(object : VASTParser.Listener {
+            override fun onVASTParserError(error: Int) {
 
-        advViewMadel.onStart()
+            }
+
+            override fun onVASTParserFinished(model: VASTModel) {
+                vastPlayer.load(model)
+            }
+        }).execute(it.seatbid[0].bid[0].adm)
     }
 
+    private fun initPlayerListener(){
+        vastPlayer.setListener(object : VASTPlayer.Listener {
+            override fun onVASTPlayerLoadFinish() {
+                vastPlayer.play()
+            }
+
+            override fun onVASTPlayerFail(exception: Exception?) {
+
+            }
+
+            override fun onVASTPlayerPlaybackStart() {
+
+            }
+
+            override fun onVASTPlayerPlaybackFinish() {
+
+            }
+
+            override fun onVASTPlayerOpenOffer() {
+
+            }
+        })
+    }
+
+    override fun onPause() {
+        super.onPause()
+        vastPlayer.pause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        vastPlayer.stop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        vastPlayer.destroy()
+    }
 }
