@@ -2,6 +2,8 @@ package com.mobileadvsdk
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.mobileadvsdk.datasource.domain.DataRepository
@@ -38,12 +40,22 @@ class AdvViewModel(
         MutableLiveData()
     }
 
+    fun peekData():LiveData<AdvData> = data
+
+    private var advData:AdvData? =null
+
+    init {
+        Log.e("FUCKFUCK","AdvViewModel" )
+    }
+
     override fun loadAvd(listener: LoadDataListener) {
         disposables += dataRepository.loadStartData(deviceInfo)
             .observeOn(scheduler)
+            .doOnSuccess {
+                advData = it
+            }
             .subscribeBy(
                 onSuccess = {
-                    data.postValue(it)
                     listener.dataLoadSuccess()
                 },
                 onError = {
@@ -54,9 +66,14 @@ class AdvViewModel(
 
     override fun showAvd(context: Context) {
         context.startActivity(Intent(context, AdvActivity::class.java))
+
     }
 
     override fun onCleared() {
         disposables.clear()
+    }
+
+    fun onStart() {
+        data.postValue(advData)
     }
 }

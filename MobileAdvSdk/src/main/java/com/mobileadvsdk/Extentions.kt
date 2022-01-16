@@ -1,6 +1,9 @@
 package com.mobileadvsdk
 
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.kodein.di.Kodein.Builder
@@ -14,3 +17,7 @@ inline fun <reified VM : ViewModel, T> T.viewModelInstance(): Lazy<VM> where T :
 
 inline fun <reified T : ViewModel> Builder.bindViewModel(overrides: Boolean? = null): Builder.TypeBinder<T> =
     bind<T>(T::class.java.simpleName, overrides)
+
+fun <T> LifecycleOwner.observe(liveData: LiveData<T>, action: (t: T) -> Unit) {
+    liveData.observe(this, Observer { it?.let { t -> action(t) } })
+}

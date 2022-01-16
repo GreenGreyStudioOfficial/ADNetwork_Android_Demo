@@ -12,9 +12,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         findViewById<View>(R.id.btnStart).setOnClickListener {
-            AdvManager().loadData(object : LoadDataListener {
+            AdvManager.loadData(object : LoadDataListener {
                 override fun dataLoadSuccess() {
-                    Log.e("MainActivity", "dataLoadSuccess")
+                   AdvManager.showAdv(this@MainActivity)
                 }
 
                 override fun dataLoadFailure() {
