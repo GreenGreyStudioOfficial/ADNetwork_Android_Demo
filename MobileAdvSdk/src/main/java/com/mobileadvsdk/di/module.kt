@@ -5,9 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.mobileadvsdk.AdvController
-import com.mobileadvsdk.AdvControllerImpl
-import com.mobileadvsdk.BuildConfig
+import com.mobileadvsdk.*
 import com.mobileadvsdk.datasource.data.DataRepositoryImpl
 import com.mobileadvsdk.datasource.data.remote.CloudDataStore
 import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
@@ -31,8 +29,8 @@ import java.util.concurrent.TimeUnit
 
 fun mainModule() = Kodein.Module("main") {
 
-    bind<AdvController>() with singleton {
-        AdvControllerImpl(instance(), instance("uiScheduler"))
+    bind<AdvViewModel>() with singleton {
+        AdvViewModel(instance(), instance("uiScheduler"))
     }
 
     bind<DataApiService>() with singleton {

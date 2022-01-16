@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName
 
 data class AdvDataRemote(
     @SerializedName("id")
-    val id: String,
+    val id: String?,
 
     @SerializedName("bidid")
-    val bidid: String,
+    val bidid: String?,
 
     @SerializedName("seatbid")
-    val seatbid: List<SeatbidRemote> = mutableListOf()
+    val seatbid: List<SeatbidRemote>? = mutableListOf()
 )

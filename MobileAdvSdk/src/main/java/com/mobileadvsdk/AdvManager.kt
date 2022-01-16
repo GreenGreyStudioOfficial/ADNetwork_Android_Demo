@@ -1,23 +1,19 @@
 package com.mobileadvsdk
 
+import android.content.Context
 import com.mobileadvsdk.di.mainModule
 import org.kodein.di.Kodein
-import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
-import org.kodein.di.generic.singleton
 
-class AdvManager() {
+class AdvManager {
 
     private val kodein = Kodein {
         import(mainModule())
     }
 
-    private val controller: AdvController by kodein.instance()
+    private val provider: AdvViewModel by kodein.instance()
 
-    fun loadData() = controller.loadAvd()
+    fun loadData(listener: LoadDataListener) = provider.loadAvd(listener)
 
-
-    fun showAdv() {}
-
-
+    fun showAdv(context: Context) = provider.showAvd(context)
 }

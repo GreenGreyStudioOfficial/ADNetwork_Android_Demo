@@ -6,13 +6,12 @@ import com.google.gson.JsonParser
 import okhttp3.logging.HttpLoggingInterceptor
 
 class HttpResponseLogger : HttpLoggingInterceptor.Logger {
-    private val jsonParser by lazy { JsonParser() }
     private val gson by lazy { GsonBuilder().setPrettyPrinting().create() }
 
     override fun log(message: String) {
         message.takeIf { it.isNotBlank() }?.let { msg ->
             try {
-                Log.d(HttpResponseLogger::class.java.simpleName, gson.toJson(jsonParser.parse(msg)))
+                Log.d(HttpResponseLogger::class.java.simpleName, gson.toJson(JsonParser.parseString(msg)))
             } catch (e: Exception) {
                 Log.d(HttpResponseLogger::class.java.simpleName, msg)
             }
