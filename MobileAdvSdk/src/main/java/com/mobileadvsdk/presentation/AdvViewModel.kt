@@ -19,13 +19,16 @@ import io.reactivex.rxkotlin.subscribeBy
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
+import java.io.IOException
 
 class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
 
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
 
-    override val kodein: Kodein = Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
+
+    override val kodein: Kodein =
+        Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
 
 
     private val disposables: CompositeDisposable = CompositeDisposable()
@@ -60,7 +63,15 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                    listener.onLoadComplete("")
                 },
                 onError = {
-                    listener.onLoadError(LoadErrorType.CONNECTION_ERROR, "", "")
+                    when (it) {
+                        is IOException -> {
+                            listener.onLoadError(
+                                LoadErrorType.CONNECTION_ERROR,
+                                LoadErrorType.CONNECTION_ERROR.desc
+                            )
+                        }
+
+                    }
                 }
             )
     }
@@ -79,6 +90,17 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
         AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
+    }
+
+
+    fun getNurl(url: String) {
+        disposables += dataRepository.getNurl(url)
+            .observeOn(scheduler)
+            .subscribeBy(
+                onComplete = {
+
+                },
+                onError = {})
     }
 
 
