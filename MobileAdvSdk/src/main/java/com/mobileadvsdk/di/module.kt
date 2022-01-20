@@ -12,6 +12,7 @@ import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.remote.api.DataApiService
 import com.mobileadvsdk.datasource.remote.api.HttpResponseLogger
+import com.mobileadvsdk.presentation.AdvViewModel
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -27,11 +28,11 @@ import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-fun mainModule() = Kodein.Module("main") {
+fun mainModule(host : String) = Kodein.Module("main") {
 
-    bind<AdvViewModel>() with singleton {
-        AdvViewModel(instance(), instance("uiScheduler"))
-    }
+//    bind<AdvViewModel>() with singleton {
+//        AdvViewModel(instance(), instance("uiScheduler"))
+//    }
 
     bind<DataApiService>() with singleton {
         instance<Retrofit>().create(DataApiService::class.java)
@@ -76,7 +77,7 @@ fun mainModule() = Kodein.Module("main") {
     bind<Retrofit>() with singleton {
         Retrofit.Builder()
             .client(instance())
-            .baseUrl(API_BASE_URL)
+            .baseUrl(host)
             .addConverterFactory(instance())
             .addCallAdapterFactory(instance())
             .build()
@@ -102,5 +103,4 @@ fun mainModule() = Kodein.Module("main") {
 
 private const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000L
 private const val OKHTTP_READ_TIMEOUT_MS = 20_000L
-private const val API_BASE_URL = "https://sp.mobidriven.com"
 private const val PREF_CONTAINER_NAME = "prefs"

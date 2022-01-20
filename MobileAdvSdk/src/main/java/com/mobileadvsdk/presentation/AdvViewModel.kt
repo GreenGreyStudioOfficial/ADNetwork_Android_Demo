@@ -1,20 +1,30 @@
-package com.mobileadvsdk
+package com.mobileadvsdk.presentation
 
-import android.content.Context
-import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.mobileadvsdk.IAdInitializationListener
+import com.mobileadvsdk.IAdLoadListener
+import com.mobileadvsdk.IAdShowListener
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.*
+import com.mobileadvsdk.di.KodeinHolder
+import com.mobileadvsdk.di.mainModule
 import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
+import org.kodein.di.Kodein
+import org.kodein.di.KodeinAware
+import org.kodein.di.generic.instance
 
-class AdvViewModel(
-    private val dataRepository: DataRepository,
-    private val scheduler: Scheduler
-) : ViewModel(), AdvProvider {
+class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
+
+    private val dataRepository: DataRepository by instance()
+    private val scheduler: Scheduler by instance("uiScheduler")
+
+
+    override val kodein: Kodein = Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
+
 
     private val disposables: CompositeDisposable = CompositeDisposable()
     private val deviceInfo = DeviceInfo(
@@ -39,25 +49,39 @@ class AdvViewModel(
     }
 
 
-    override fun loadAvd(listener: LoadDataListener) {
+    override fun loadAvd(listener: IAdLoadListener) {
         disposables += dataRepository.loadStartData(deviceInfo)
             .observeOn(scheduler)
             .subscribeBy(
                 onSuccess = {
                     advDataLive.value = it
-                    listener.dataLoadSuccess()
+//                    listener.onLoadComplete()
                 },
                 onError = {
-                    listener.dataLoadFailure()
+//                    listener.onLoadError()
                 }
             )
     }
 
-    override fun showAvd(context: Context) {
-        context.startActivity(Intent(context, AdvActivity::class.java))
+    override fun getLoadedAds() {
     }
+
+    override fun initialize(
+        gameId: String,
+        adServerHost: String,
+        isTestMode: Boolean,
+        listener: IAdInitializationListener
+    ) {
+
+    }
+
+    override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
+//        context.startActivity(Intent(context, AdvActivity::class.java))
+    }
+
 
     override fun onCleared() {
         disposables.clear()
     }
+
 }

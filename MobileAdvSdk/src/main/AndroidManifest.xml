@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdvSDK">
         <activity
-            android:name=".AdvActivity"
+            android:name=".presentation.AdvActivity"
             android:exported="false"/>
     </application>
 </manifest>

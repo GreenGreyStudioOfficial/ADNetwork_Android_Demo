@@ -1,8 +1,11 @@
-package com.mobileadvsdk
+package com.mobileadvsdk.presentation
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.mobileadvsdk.di.KodeinHolder
+import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
+import com.mobileadvsdk.observe
 import kotlinx.android.synthetic.main.activity_adv.*
 import net.pubnative.player.VASTParser
 import net.pubnative.player.VASTPlayer

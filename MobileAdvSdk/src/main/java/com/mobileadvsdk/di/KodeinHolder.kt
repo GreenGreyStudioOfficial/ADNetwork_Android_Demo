@@ -1,4 +1,4 @@
-package com.mobileadvsdk
+package com.mobileadvsdk.di
 
 import org.kodein.di.Kodein
 
