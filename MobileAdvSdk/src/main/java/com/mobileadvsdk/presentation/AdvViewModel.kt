@@ -1,7 +1,10 @@
 package com.mobileadvsdk.presentation
 
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.mobileadvsdk.AdvApplication
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
@@ -57,6 +60,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             .subscribeBy(
                 onSuccess = {
                     advDataLive.value = it
+                   listener.onLoadComplete("")
 //                    listener.onLoadComplete()
                     it.seatbid[0].bid[0].nurl?.let {url->getUrl(url) }
                 },
@@ -87,7 +91,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
-//        context.startActivity(Intent(context, AdvActivity::class.java))
+        AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }
 
 

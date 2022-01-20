@@ -6,7 +6,9 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.IAdInitializationListener
-import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
+import com.mobileadvsdk.IAdLoadListener
+import com.mobileadvsdk.IAdShowListener
+import com.mobileadvsdk.datasource.domain.model.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,12 +28,34 @@ class MainActivity : AppCompatActivity() {
                         error: InitializationErrorType,
                         errorMessage: String
                     ) {
-                        Log.e("onInitializationError", errorMessage.toString())
+                        Log.e("onInitializationError", errorMessage)
                     }
 
                 })
+            AdNetworkSDK.load(AdvertiseType.REWARDED, object : IAdLoadListener {
+                override fun onLoadComplete(id: String) {
+                    show()
+                }
+
+                override fun onLoadError(error: LoadErrorType, id: String, errorMessage: String) {
+                    TODO("Not yet implemented")
+                }
+
+            })
         }
     }
+}
+
+private fun show() {
+    AdNetworkSDK.show("", object : IAdShowListener {
+        override fun onShowComplete(id: String, showCompletionState: ShowCompletionState) {
+
+        }
+
+        override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
+
+        }
+    })
 }
 
 

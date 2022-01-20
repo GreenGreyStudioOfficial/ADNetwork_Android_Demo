@@ -2,6 +2,7 @@ package com.mobileadvsdk.presentation
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
@@ -20,16 +21,19 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
-    private val advViewMadel: AdvViewModel by instance()
+    private val advViewMadel: AdvViewModel?  = AdNetworkSDK.provider
+
+    private lateinit var advData: AdvData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
-
-        observe(advViewMadel.advDataLive) {
-            parseAdvData(it)
+        advViewMadel?.let {
+            observe(it.advDataLive) {
+                advData = it
+                parseAdvData(it)
+            }
         }
-
         initPlayerListener()
     }
 
@@ -48,6 +52,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
     private fun initPlayerListener(){
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
+                advViewMadel?.getNurl(advData.seatbid[0].bid[0].nurl?:"")
                 vastPlayer.play()
             }
 
