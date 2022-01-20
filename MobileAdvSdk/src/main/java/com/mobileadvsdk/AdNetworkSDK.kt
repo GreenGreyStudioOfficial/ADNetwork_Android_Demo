@@ -7,7 +7,7 @@ import com.mobileadvsdk.presentation.AdvViewModel
 
 object AdNetworkSDK {
 
-    private var provider: AdvProvider? = null
+     var provider: AdvViewModel? = null
 
     fun initialize(
         gameId: String,

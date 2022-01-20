@@ -1,7 +1,10 @@
 package com.mobileadvsdk.presentation
 
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.mobileadvsdk.AdvApplication
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
@@ -21,7 +24,6 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
-
 
     override val kodein: Kodein = Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
 
@@ -55,10 +57,10 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             .subscribeBy(
                 onSuccess = {
                     advDataLive.value = it
-//                    listener.onLoadComplete()
+                   listener.onLoadComplete("")
                 },
                 onError = {
-//                    listener.onLoadError()
+                    listener.onLoadError(LoadErrorType.CONNECTION_ERROR, "", "")
                 }
             )
     }
@@ -76,7 +78,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
-//        context.startActivity(Intent(context, AdvActivity::class.java))
+        AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }
 
 
