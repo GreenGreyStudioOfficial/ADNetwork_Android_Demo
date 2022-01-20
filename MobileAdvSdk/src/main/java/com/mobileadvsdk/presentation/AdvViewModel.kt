@@ -58,6 +58,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                 onSuccess = {
                     advDataLive.value = it
 //                    listener.onLoadComplete()
+                    it.seatbid[0].bid[0].nurl?.let {url->getUrl(url) }
                 },
                 onError = {
                     when (it) {
@@ -90,7 +91,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     }
 
 
-    fun getNurl(url: String) {
+    fun getUrl(url: String) {
         disposables += dataRepository.getNurl(url)
             .observeOn(scheduler)
             .subscribeBy(
