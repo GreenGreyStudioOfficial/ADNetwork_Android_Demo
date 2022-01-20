@@ -87,6 +87,7 @@ fun mainModule(host: String) = Kodein.Module("main") {
     bind<Retrofit>("eventService") with singleton {
         Retrofit.Builder()
             .client(instance())
+            .baseUrl(host)
             .addConverterFactory(instance())
             .addCallAdapterFactory(instance())
             .build()

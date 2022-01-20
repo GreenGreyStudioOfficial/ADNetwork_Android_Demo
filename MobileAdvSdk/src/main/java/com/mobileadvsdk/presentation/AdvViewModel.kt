@@ -61,8 +61,6 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                 onSuccess = {
                     advDataLive.value = it
                    listener.onLoadComplete("")
-//                    listener.onLoadComplete()
-                    it.seatbid[0].bid[0].nurl?.let {url->getUrl(url) }
                 },
                 onError = {
                     when (it) {

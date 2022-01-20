@@ -37,8 +37,8 @@ class MainActivity : AppCompatActivity() {
                     show()
                 }
 
-                override fun onLoadError(error: LoadErrorType, id: String, errorMessage: String) {
-                    TODO("Not yet implemented")
+                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String?) {
+
                 }
 
             })

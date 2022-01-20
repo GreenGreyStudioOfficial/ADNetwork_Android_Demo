@@ -52,7 +52,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
     private fun initPlayerListener(){
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewMadel?.getNurl(advData.seatbid[0].bid[0].nurl?:"")
+                advViewMadel?.getUrl(advData.seatbid[0].bid[0].nurl?:"")
                 vastPlayer.play()
             }
 

@@ -15,7 +15,7 @@ internal class CloudDataStoreImpl(
     override fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote> =
         dataServiceApi.loadStartData(advDataRequestRemote)
 
-    override fun getNurl(url: String): Completable = eventApiService.getNurl(url)
+    override fun getNurl(url: String): Completable = dataServiceApi.getUrl(url)
 
     override fun getLurl(string: String): Completable {
         TODO("Not yet implemented")
