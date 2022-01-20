@@ -18,6 +18,7 @@ object AdNetworkSDK {
         if (provider == null) {
             provider = AdvViewModel(adServerHost)
             init(gameId, adServerHost, isTestMode, listener)
+            listener.onInitializationComplete()
         } else {
             listener.onInitializationError(InitializationErrorType.SDK_ALREADY_INITIALIZED, "")
         }

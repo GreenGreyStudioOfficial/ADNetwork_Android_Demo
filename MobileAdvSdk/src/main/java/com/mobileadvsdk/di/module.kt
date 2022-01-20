@@ -30,9 +30,6 @@ import java.util.concurrent.TimeUnit
 
 fun mainModule(host : String) = Kodein.Module("main") {
 
-//    bind<AdvViewModel>() with singleton {
-//        AdvViewModel(instance(), instance("uiScheduler"))
-//    }
 
     bind<DataApiService>() with singleton {
         instance<Retrofit>().create(DataApiService::class.java)
