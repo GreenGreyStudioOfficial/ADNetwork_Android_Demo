@@ -6,6 +6,7 @@ import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.DeviceInfo
 import com.mobileadvsdk.datasource.toDomain
 import com.mobileadvsdk.datasource.toRemote
+import io.reactivex.Completable
 import io.reactivex.Scheduler
 import io.reactivex.Single
 
@@ -17,5 +18,10 @@ internal class DataRepositoryImpl(
     override fun loadStartData(deviceInfo: DeviceInfo): Single<AdvData> =
         cloudDataStore.loadStartData(deviceInfo.toRemote())
             .map { it.toDomain() }
+            .subscribeOn(ioScheduler)
+
+
+    override fun getNurl(url: String): Completable =
+        cloudDataStore.getNurl(url)
             .subscribeOn(ioScheduler)
 }
