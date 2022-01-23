@@ -3,9 +3,9 @@ package com.mobileadvsdk.presentation
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdNetworkSDK
-import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
+import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.observe
 import kotlinx.android.synthetic.main.activity_adv.*
 import net.pubnative.player.VASTParser
@@ -13,7 +13,6 @@ import net.pubnative.player.VASTPlayer
 import net.pubnative.player.model.VASTModel
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
-import org.kodein.di.generic.instance
 import org.kodein.di.subKodein
 
 
@@ -21,7 +20,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
-    private val advViewMadel: AdvViewModel?  = AdNetworkSDK.provider
+    private val advViewMadel: AdvViewModel? = AdNetworkSDK.provider
 
     private lateinit var advData: AdvData
 
@@ -43,16 +42,20 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
             }
 
+            override fun onVASTCacheError(error: Int) {
+                TODO("Not yet implemented")
+            }
+
             override fun onVASTParserFinished(model: VASTModel) {
                 vastPlayer.load(model)
             }
         }).execute(it.seatbid[0].bid[0].adm)
     }
 
-    private fun initPlayerListener(){
+    private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewMadel?.getUrl(advData.seatbid[0].bid[0].nurl?:"")
+                advViewMadel?.getUrl(advData.seatbid[0].bid[0].nurl ?: "")
                 vastPlayer.play()
             }
 
@@ -79,9 +82,9 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
         vastPlayer.pause()
     }
 
-    override fun onStop() {
-        super.onStop()
-        vastPlayer.stop()
+    override fun onResume() {
+        super.onResume()
+        // vastPlayer.play()
     }
 
     override fun onDestroy() {

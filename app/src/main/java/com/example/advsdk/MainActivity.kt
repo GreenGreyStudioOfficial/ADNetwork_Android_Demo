@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String?) {
-
+                    show()
                 }
 
             })

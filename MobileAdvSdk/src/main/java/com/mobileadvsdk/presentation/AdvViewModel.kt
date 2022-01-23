@@ -92,7 +92,6 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }
 
-
     fun getUrl(url: String) {
         disposables += dataRepository.getNurl(url)
             .observeOn(scheduler)

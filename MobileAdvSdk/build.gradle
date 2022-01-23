@@ -66,9 +66,9 @@ dependencies {
 
     implementation("androidx.navigation:navigation-dynamic-features-fragment:2.3.5")
 
-    implementation 'net.pubnative:player:1.0.8'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0"
+    implementation project(path: ':player')
 
 
 //    testImplementation 'junit:junit:4.+'
