@@ -1,6 +1,10 @@
 package com.mobileadvsdk.presentation
 
 import android.os.Bundle
+import android.util.DisplayMetrics
+import android.util.Log
+import android.view.Window
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.R
@@ -25,8 +29,16 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
     private lateinit var advData: AdvData
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
+
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+
+        Log.e("SCREEN_SIZE", " " + displayMetrics.widthPixels)
+        Log.e("SCREEN_SIZE", " " + displayMetrics.heightPixels)
+
         advViewMadel?.let {
             observe(it.advDataLive) {
                 advData = it
@@ -84,7 +96,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override fun onResume() {
         super.onResume()
-        // vastPlayer.play()
+        vastPlayer.play()
     }
 
     override fun onDestroy() {

@@ -64,6 +64,7 @@ public class VASTModel implements Serializable {
     private String pickedMediaFileURL = null;
 
     // Tracking XPATH
+    private static final String XPATH_INLINE_LINEAR     = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear";
     private static final String XPATH_INLINE_LINEAR_TRACKING     = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear/TrackingEvents/Tracking";
     private static final String XPATH_INLINE_NONLINEAR_TRACKING  = "/VASTS/VAST/Ad/InLine/Creatives/Creative/NonLinearAds/TrackingEvents/Tracking";
     private static final String XPATH_WRAPPER_LINEAR_TRACKING    = "/VASTS/VAST/Ad/Wrapper/Creatives/Creative/Linear/TrackingEvents/Tracking";

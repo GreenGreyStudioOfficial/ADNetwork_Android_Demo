@@ -35,14 +35,14 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     private val deviceInfo = DeviceInfo(
         "1",
         1,
-        listOf(Imp("1", Video(listOf("video/mp4"), 799, 268, Ext(0)), 1)),
+        listOf(Imp("1", Video(listOf("video/mp4"), 1555, 692, Ext(0)), 1)),
         AppInfo("secret", "GGAD_NETWORK_SDK", "com.DefaultCompany.GGAD_NETWORK_SD"),
         Device(
             geo = Geo(0.0, 0.0),
             model = "OMEN Laptop 15-ek1xxx (HP)",
             os = "Windows 10  (10.0.19042) 64bit",
-            w = 799,
-            h = 268,
+            w = 1555,
+            h = 692,
             connectionType = 2,
             ifa = "0947b09a6e1342c05c728adb8cdf88d3a3bb31f4"
         ),

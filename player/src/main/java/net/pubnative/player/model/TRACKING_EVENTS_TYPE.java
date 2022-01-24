@@ -47,5 +47,6 @@ public enum TRACKING_EVENTS_TYPE {
     expand,
     collapse,
     acceptInvitation,
+    skip,
     close
 }

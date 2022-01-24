@@ -3,6 +3,7 @@ package com.example.advsdk
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.IAdInitializationListener
@@ -12,6 +13,7 @@ import com.mobileadvsdk.datasource.domain.model.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         findViewById<View>(R.id.btnStart).setOnClickListener {

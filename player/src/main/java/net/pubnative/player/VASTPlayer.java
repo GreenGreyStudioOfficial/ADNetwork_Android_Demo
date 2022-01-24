@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -66,7 +67,9 @@ import net.pubnative.player.widget.CountDownView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -121,7 +124,7 @@ public class VASTPlayer extends RelativeLayout implements
     // TIMERS
     private Timer mLayoutTimer;
     private Timer mProgressTimer;
-    private Timer mTrackingEventsTimer;
+    private CountDownTimer mTrackingEventsTimer;
 
     private static final long TIMER_TRACKING_INTERVAL = 250;
     private static final long TIMER_PROGRESS_INTERVAL = 50;
@@ -159,7 +162,6 @@ public class VASTPlayer extends RelativeLayout implements
     private boolean mIsVideoMute = false;
     private boolean mIsBufferingShown = false;
     private boolean mIsDataSourceSet = false;
-    private int mQuartile = 0;
     private CampaignType mCampaignType = CampaignType.CPM;
     private PlayerState mPlayerState = PlayerState.Empty;
     private List<Integer> mProgressTracker = null;
@@ -313,7 +315,6 @@ public class VASTPlayer extends RelativeLayout implements
         // Reset all other items
         mIsDataSourceSet = false;
         mVastModel = null;
-        mQuartile = 0;
         mTrackingEventMap = null;
         mProgressTracker = null;
     }
@@ -390,6 +391,7 @@ public class VASTPlayer extends RelativeLayout implements
 
         mMainHandler = new Handler(getContext().getMainLooper());
 
+        createMediaPlayer();
         createLayout();
         setEmptyState();
     }
@@ -509,6 +511,7 @@ public class VASTPlayer extends RelativeLayout implements
                 simpleExoPlayer.stop();
                 simpleExoPlayer.release();
                 mIsDataSourceSet = false;
+                quartileSet.clear();
             }
             setState(PlayerState.Loading);
         } else {
@@ -526,7 +529,7 @@ public class VASTPlayer extends RelativeLayout implements
         if (canSetState(PlayerState.Pause) && mIsDataSourceSet) {
 
             if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-                simpleExoPlayer.seekTo(0);
+                stopQuartileTimer();
                 simpleExoPlayer.pause();
             }
             setState(PlayerState.Pause);
@@ -570,39 +573,23 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     public void onOpenClick() {
-
         VASTLog.v(TAG, "onOpenClick");
-        load(mVastModel);
         openOffer();
+        pause();
     }
 
     private void openOffer() {
-
         String clickThroughUrl = mVastModel.getVideoClicks().getClickThrough();
         VASTLog.d(TAG, "openOffer - clickThrough url: " + clickThroughUrl);
-
         // Before we send the app to the click through url, we will process ClickTracking URL's.
         List<String> urls = mVastModel.getVideoClicks().getClickTracking();
         fireUrls(urls);
-
         // Navigate to the click through url
         try {
-
             Uri uri = Uri.parse(clickThroughUrl);
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            ResolveInfo resolvable = getContext().getPackageManager().resolveActivity(intent, PackageManager.GET_INTENT_FILTERS);
-
-            if (resolvable == null) {
-
-                VASTLog.e(TAG, "openOffer -clickthrough error occured, uri unresolvable");
-                return;
-
-            } else {
-
-                invokeOnPlayerOpenOffer();
-                getContext().startActivity(intent);
-            }
-
+            getContext().startActivity(intent);
+            invokeOnPlayerOpenOffer();
         } catch (NullPointerException e) {
 
             VASTLog.e(TAG, e.getMessage(), e);
@@ -707,17 +694,13 @@ public class VASTPlayer extends RelativeLayout implements
             simpleExoPlayer = new SimpleExoPlayer.Builder(getContext())
                     .setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory)).build();
 
-
             simpleExoPlayer.addAnalyticsListener(new AnalyticsListener() {
                 @Override
                 public void onPlaybackStateChanged(EventTime eventTime, int state) {
                     if (state == Player.STATE_ENDED) {
                         VASTLog.v(TAG, "onCompletion -- (MediaPlayer callback)");
-
-                        if (mQuartile > 3) {
-                            processEvent(TRACKING_EVENTS_TYPE.complete);
-                            invokeOnPlayerPlaybackFinish();
-                        }
+                        processEvent(TRACKING_EVENTS_TYPE.complete);
+                        invokeOnPlayerPlaybackFinish();
                         mCountDown.setVisibility(INVISIBLE);
                     } else if (state == Player.STATE_READY) {
                         VASTLog.v(TAG, "onPrepared --(MediaPlayer callback) ....about to play");
@@ -752,6 +735,7 @@ public class VASTPlayer extends RelativeLayout implements
 
         if (simpleExoPlayer != null) {
             turnVolumeOff();
+            simpleExoPlayer.stop();
             simpleExoPlayer.release();
             simpleExoPlayer = null;
         }
@@ -1005,71 +989,43 @@ public class VASTPlayer extends RelativeLayout implements
         }
     }
 
+    private final Set<String> quartileSet = new HashSet<>();
+
     // Quartile timer
     //-------------------------------------------------------
     private void startQuartileTimer() {
-
         VASTLog.v(TAG, "startQuartileTimer");
-
-        mQuartile = 0;
-
-        mTrackingEventsTimer = new Timer();
-        mTrackingEventsTimer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-
-                try {
-                    new Handler().post(() -> {
-                        int percentage;
-                        // wait for the video to really start
-                        if (simpleExoPlayer.getCurrentPosition() == 0) {
-                            return;
-                        }
-
-                        percentage = (int) (100 * simpleExoPlayer.getCurrentPosition() / simpleExoPlayer.getDuration());
-                        if (percentage >= 25 * mQuartile) {
-
-                            if (mQuartile == 0) {
-
-                                VASTLog.i(TAG, "Video at start: (" + percentage + "%)");
-                                processImpressions();
-                                processEvent(TRACKING_EVENTS_TYPE.start);
-                                invokeOnPlayerPlaybackStart();
-
-                            } else if (mQuartile == 1) {
-
-                                VASTLog.i(TAG, "Video at first quartile: (" + percentage + "%)");
-                                processEvent(TRACKING_EVENTS_TYPE.firstQuartile);
-
-                            } else if (mQuartile == 2) {
-
-                                VASTLog.i(TAG, "Video at midpoint: (" + percentage + "%)");
-                                processEvent(TRACKING_EVENTS_TYPE.midpoint);
-
-                            } else if (mQuartile == 3) {
-
-                                VASTLog.i(TAG, "Video at third quartile: (" + percentage + "%)");
-                                processEvent(TRACKING_EVENTS_TYPE.thirdQuartile);
-                                stopQuartileTimer();
-                            }
-
-                            mQuartile++;
-                        }
-                    });
-
-                } catch (Exception e) {
-
-                    VASTLog.e(TAG, "QuartileTimer error: " + e.getMessage());
-                    cancel();
-
+        mTrackingEventsTimer = new CountDownTimer(simpleExoPlayer.getDuration(), 250) {
+            public void onTick(long millisUntilFinished) {
+                int percentage = (int) ((simpleExoPlayer.getCurrentPosition() * 100) / simpleExoPlayer.getDuration());
+                if (simpleExoPlayer.getCurrentPosition() == 0) {
                     return;
                 }
-
-
+                if (percentage < 25 && !quartileSet.contains(TRACKING_EVENTS_TYPE.start.toString())) {
+                    VASTLog.i(TAG, "Video at start: (" + percentage + "%)");
+                    processImpressions();
+                    processEvent(TRACKING_EVENTS_TYPE.start);
+                    quartileSet.add(TRACKING_EVENTS_TYPE.start.toString());
+                    invokeOnPlayerPlaybackStart();
+                } else if (percentage >= 25 && percentage < 50 && !quartileSet.contains(TRACKING_EVENTS_TYPE.firstQuartile.toString())) {
+                    VASTLog.i(TAG, "Video at first quartile: (" + percentage + "%)");
+                    processEvent(TRACKING_EVENTS_TYPE.firstQuartile);
+                    quartileSet.add(TRACKING_EVENTS_TYPE.firstQuartile.toString());
+                } else if (percentage >= 50 && percentage < 75 && !quartileSet.contains(TRACKING_EVENTS_TYPE.midpoint.toString())) {
+                    VASTLog.i(TAG, "Video at midpoint: (" + percentage + "%)");
+                    processEvent(TRACKING_EVENTS_TYPE.midpoint);
+                    quartileSet.add(TRACKING_EVENTS_TYPE.midpoint.toString());
+                } else if (percentage >= 75 && percentage < 100 && !quartileSet.contains(TRACKING_EVENTS_TYPE.thirdQuartile.toString())) {
+                    VASTLog.i(TAG, "Video at third quartile: (" + percentage + "%)");
+                    processEvent(TRACKING_EVENTS_TYPE.thirdQuartile);
+                    quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString());
+                    stopQuartileTimer();
+                }
             }
 
-        }, 0, TIMER_TRACKING_INTERVAL);
+            public void onFinish() {
+            }
+        }.start();
     }
 
     private void stopQuartileTimer() {
@@ -1159,11 +1115,8 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     private void invokeOnPlayerLoadFinish() {
-
         VASTLog.v(TAG, "invokeOnPlayerLoadFinish");
-
         if (mListener != null) {
-
             mListener.onVASTPlayerLoadFinish();
         }
     }

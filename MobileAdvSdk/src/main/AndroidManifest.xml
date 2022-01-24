@@ -13,6 +13,8 @@
         android:theme="@style/Theme.AdvSDK">
         <activity
             android:name=".presentation.AdvActivity"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AdvSDK"
             android:exported="false"/>
     </application>
 </manifest>
