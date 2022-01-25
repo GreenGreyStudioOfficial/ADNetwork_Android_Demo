@@ -33,8 +33,6 @@ package net.pubnative.player;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -43,9 +41,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageView;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.widget.AppCompatImageView;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.MediaItem;
@@ -146,13 +146,10 @@ public class VASTPlayer extends RelativeLayout implements
     // VIEWS
     private View mRoot;
     private View mOpen;
-    // Load
-    private View mLoader;
-    private TextView mLoaderText;
+
     // Player
-    private View mPlayer;
     private TextView mSkip;
-    private ImageView mMute;
+    private AppCompatImageView mMute;
     private CountDownView mCountDown;
 
     // OTHERS
@@ -268,13 +265,9 @@ public class VASTPlayer extends RelativeLayout implements
      * @return
      */
     private void setState(PlayerState playerState) {
-
         Log.v(TAG, "setState: " + playerState.name());
-
         if (canSetState(playerState)) {
-
             switch (playerState) {
-
                 case Empty:
                     setEmptyState();
                     break;
@@ -426,8 +419,6 @@ public class VASTPlayer extends RelativeLayout implements
      *              the button
      */
     public void setSkip(String name, int delay) {
-
-
         if (TextUtils.isEmpty(name)) {
             Log.w(TAG, "Skip name set to empty value, this will disable the button");
         } else if (delay < 0) {
@@ -436,30 +427,6 @@ public class VASTPlayer extends RelativeLayout implements
 
         mSkipName = name;
         mSkipDelay = delay;
-    }
-
-    /**
-     * Sets skip string to be shown in the skip button
-     *
-     * @param skipName skip label
-     * @deprecated Please use setSkip(String, int) instead
-     */
-    @Deprecated
-    public void setSkipName(String skipName) {
-
-        // Does nothing
-    }
-
-    /**
-     * Sets the amount of time that has to be played to be able to skip the video
-     *
-     * @param skipTime skip time
-     * @deprecated Please use setSkip(String, int) instead
-     */
-    @Deprecated
-    public void setSkipTime(int skipTime) {
-
-        // Does nothing
     }
 
     //=======================================================
@@ -501,9 +468,7 @@ public class VASTPlayer extends RelativeLayout implements
      * Stops video playback
      */
     public void stop() {
-
         VASTLog.v(TAG, "stop");
-
         if (canSetState(PlayerState.Loading) && mIsDataSourceSet) {
 
             stopTimers();
@@ -542,7 +507,6 @@ public class VASTPlayer extends RelativeLayout implements
      * Destroys current player and clears all loaded data and tracking items
      */
     public void destroy() {
-
         VASTLog.v(TAG, "clear");
         setState(PlayerState.Empty);
     }
@@ -566,10 +530,9 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     public void onSkipClick() {
-
         VASTLog.v(TAG, "onSkipClick");
         processEvent(TRACKING_EVENTS_TYPE.close);
-        stop();
+        destroy();
     }
 
     public void onOpenClick() {
@@ -606,30 +569,26 @@ public class VASTPlayer extends RelativeLayout implements
 
             mRoot = LayoutInflater.from(getContext()).inflate(R.layout.pubnative_player, null);
 
-            mPlayer = mRoot.findViewById(R.id.player);
             playerView = (PlayerView) mRoot.findViewById(R.id.playerView);
 
-            mMute = (ImageView) mPlayer.findViewById(R.id.mute);
+            mMute = (AppCompatImageView) mRoot.findViewById(R.id.mute);
             mMute.setVisibility(INVISIBLE);
             mMute.setOnClickListener(this);
 
-            mCountDown = (CountDownView) mPlayer.findViewById(R.id.count_down);
+            mCountDown = (CountDownView) mRoot.findViewById(R.id.count_down);
             mCountDown.setVisibility(INVISIBLE);
 
-            mSkip = (TextView) mPlayer.findViewById(R.id.skip);
+            mSkip = (TextView) mRoot.findViewById(R.id.skip);
             mSkip.setVisibility(INVISIBLE);
             mSkip.setOnClickListener(this);
-
-            // Root contained
-            mLoader = mRoot.findViewById(R.id.loader);
-            mLoaderText = (TextView) mRoot.findViewById(R.id.loader_text);
-            mLoaderText.setVisibility(GONE);
 
             mOpen = mRoot.findViewById(R.id.open);
             mOpen.setVisibility(INVISIBLE);
             mOpen.setOnClickListener(this);
 
-            addView(mRoot);
+            addView(mRoot, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
         }
     }
 
@@ -644,7 +603,6 @@ public class VASTPlayer extends RelativeLayout implements
 
     private void hideLoader() {
 
-        mLoader.setVisibility(INVISIBLE);
     }
 
     private void hideOpen() {
@@ -671,8 +629,6 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     private void showPlayerLayout() {
-
-        mSkip.setVisibility(TextUtils.isEmpty(mSkipName) ? INVISIBLE : VISIBLE);
         mMute.setVisibility(VISIBLE);
         mCountDown.setVisibility(VISIBLE);
     }
@@ -732,11 +688,11 @@ public class VASTPlayer extends RelativeLayout implements
 
     private void cleanMediaPlayer() {
         VASTLog.v(TAG, "cleanUpMediaPlayer");
-
         if (simpleExoPlayer != null) {
             turnVolumeOff();
             simpleExoPlayer.stop();
             simpleExoPlayer.release();
+            simpleExoPlayer.clearVideoSurface();
             simpleExoPlayer = null;
         }
     }
@@ -745,10 +701,10 @@ public class VASTPlayer extends RelativeLayout implements
 
         if (mIsVideoMute) {
             turnVolumeOff();
-            mMute.setImageResource(R.drawable.pubnative_btn_unmute);
+            mMute.setImageResource(R.drawable.ic_baseline_volume_off_24);
         } else {
             turnVolumeOn();
-            mMute.setImageResource(R.drawable.pubnative_btn_mute);
+            mMute.setImageResource(R.drawable.ic_baseline_volume_up_24);
         }
     }
 
@@ -913,6 +869,7 @@ public class VASTPlayer extends RelativeLayout implements
         startQuartileTimer();
         startLayoutTimer();
         startVideoProgressTimer();
+        setSkip("Close", mVastModel.getSkipOffset());
     }
 
     // Progress timer
@@ -1050,40 +1007,30 @@ public class VASTPlayer extends RelativeLayout implements
 
             @Override
             public void run() {
-
                 if (simpleExoPlayer == null) {
-
                     cancel();
                     return;
                 }
-
                 // Execute with handler to be sure we execute this on the UIThread
-                mMainHandler.post(new Runnable() {
+                mMainHandler.post(() -> {
 
-                    @Override
-                    public void run() {
+                    try {
 
-                        try {
+                        if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
 
-                            if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-
-                                int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
-                                mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-
-                                if (!TextUtils.isEmpty(mSkipName) && mSkipDelay > currentPosition) {
-
-                                    mSkip.setText(mSkipName);
-                                    mSkip.setVisibility(View.VISIBLE);
-                                }
+                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
+                            mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
+                            if (!TextUtils.isEmpty(mSkipName) && currentPosition/1000 > mSkipDelay) {
+                                VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
+                                mSkip.setText(mSkipName);
+                                mSkip.setVisibility(View.VISIBLE);
                             }
-
-                        } catch (Exception e) {
-
-                            Log.e(TAG, "Layout timer error: " + e);
-
-                            cancel();
-                            return;
                         }
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Layout timer error: " + e);
+                        cancel();
+                        return;
                     }
                 });
             }
@@ -1162,21 +1109,13 @@ public class VASTPlayer extends RelativeLayout implements
     // View.OnClickListener
     //---------------------------------------------
     public void onClick(View view) {
-
         VASTLog.v(TAG, "onClick -- (View.OnClickListener callback)");
-
         if (mOpen == view) {
-
             onOpenClick();
-
         } else if (mSkip == view) {
-
             onSkipClick();
-
         } else if (mMute == view) {
-
             onMuteClick();
-
         }
     }
 

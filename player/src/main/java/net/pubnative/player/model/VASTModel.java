@@ -64,21 +64,21 @@ public class VASTModel implements Serializable {
     private String pickedMediaFileURL = null;
 
     // Tracking XPATH
-    private static final String XPATH_INLINE_LINEAR     = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear";
-    private static final String XPATH_INLINE_LINEAR_TRACKING     = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear/TrackingEvents/Tracking";
-    private static final String XPATH_INLINE_NONLINEAR_TRACKING  = "/VASTS/VAST/Ad/InLine/Creatives/Creative/NonLinearAds/TrackingEvents/Tracking";
-    private static final String XPATH_WRAPPER_LINEAR_TRACKING    = "/VASTS/VAST/Ad/Wrapper/Creatives/Creative/Linear/TrackingEvents/Tracking";
+    private static final String XPATH_INLINE_LINEAR = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear";
+    private static final String XPATH_INLINE_LINEAR_TRACKING = "/VASTS/VAST/Ad/InLine/Creatives/Creative/Linear/TrackingEvents/Tracking";
+    private static final String XPATH_INLINE_NONLINEAR_TRACKING = "/VASTS/VAST/Ad/InLine/Creatives/Creative/NonLinearAds/TrackingEvents/Tracking";
+    private static final String XPATH_WRAPPER_LINEAR_TRACKING = "/VASTS/VAST/Ad/Wrapper/Creatives/Creative/Linear/TrackingEvents/Tracking";
     private static final String XPATH_WRAPPER_NONLINEAR_TRACKING = "/VASTS/VAST/Ad/Wrapper/Creatives/Creative/NonLinearAds/TrackingEvents/Tracking";
 
     private static final String XPATH_COMBINED_TRACKING = XPATH_INLINE_LINEAR_TRACKING + "|" + XPATH_INLINE_NONLINEAR_TRACKING + "|" + XPATH_WRAPPER_LINEAR_TRACKING + "|" + XPATH_WRAPPER_NONLINEAR_TRACKING;
 
     // Direct items XPATH
-    private static final String XPATH_MEDIA_FILE   = "//MediaFile";
-    private static final String XPATH_DURATION     = "//Duration";
+    private static final String XPATH_MEDIA_FILE = "//MediaFile";
+    private static final String XPATH_DURATION = "//Duration";
     private static final String XPATH_VIDEO_CLICKS = "//VideoClicks";
-    private static final String XPATH_IMPRESSION   = "//Impression";
-    private static final String XPATH_ERROR        = "//Error";
-    private static final String XPATH_BANNER       = "//Extension[@type='{EXTENSION_TYPE}']/Banner";
+    private static final String XPATH_IMPRESSION = "//Impression";
+    private static final String XPATH_ERROR = "//Error";
+    private static final String XPATH_BANNER = "//Extension[@type='{EXTENSION_TYPE}']/Banner";
 
     private static final String EXTENSION_TYPE_KEY = "{EXTENSION_TYPE}";
 
@@ -93,15 +93,10 @@ public class VASTModel implements Serializable {
     }
 
     public HashMap<TRACKING_EVENTS_TYPE, List<String>> getTrackingUrls() {
-
         VASTLog.d(TAG, "getTrackingUrls");
-
         List<String> tracking;
-
         HashMap<TRACKING_EVENTS_TYPE, List<String>> trackings = new HashMap<TRACKING_EVENTS_TYPE, List<String>>();
-
         XPath xpath = XPathFactory.newInstance().newXPath();
-
         try {
             NodeList nodes = (NodeList) xpath.evaluate(XPATH_COMBINED_TRACKING, vastsDocument, XPathConstants.NODESET);
             Node node;
@@ -151,6 +146,21 @@ public class VASTModel implements Serializable {
         }
 
         return trackings;
+    }
+
+    public int getSkipOffset() {
+        VASTLog.d(TAG, "getSkipOffset");
+        int result = 0;
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        try {
+            NodeList nodes = (NodeList) xpath.evaluate(XPATH_INLINE_LINEAR, vastsDocument, XPathConstants.NODESET);
+            if (nodes != null) {
+                result = Integer.parseInt((nodes.item(0).getAttributes().getNamedItem("skipoffset")).getNodeValue());
+            }
+        } catch (Exception e) {
+            VASTLog.e(TAG, e.getMessage(), e);
+        }
+        return result;
     }
 
     public List<VASTMediaFile> getMediaFiles() {
@@ -254,7 +264,7 @@ public class VASTModel implements Serializable {
 
         String result = null;
 
-        String       xPath      = XPATH_BANNER.replace(EXTENSION_TYPE_KEY, type);
+        String xPath = XPATH_BANNER.replace(EXTENSION_TYPE_KEY, type);
         List<String> extensions = getListFromXPath(xPath);
 
         // We will use the first banner seen of this type

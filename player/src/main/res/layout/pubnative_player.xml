@@ -1,95 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:layout_gravity="center">
+    tools:ignore="ContentDescription">
 
-    <RelativeLayout
-        android:id="@+id/player"
+    <!--PLAYER VIEW-->
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true">
+        android:keepScreenOn="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:use_controller="false" />
 
-        <!--PLAYER VIEW-->
-
-        <com.google.android.exoplayer2.ui.PlayerView
-            android:id="@+id/playerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:keepScreenOn="true"
-
-            app:use_controller="false" />
-
-        <!--PLAYER COUNTDOWN-->
-        <net.pubnative.player.widget.CountDownView
-            android:id="@+id/count_down"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/playerView"
-            android:layout_alignParentLeft="true"
-            android:layout_margin="5dp" />
-
-        <!--MUTE-->
-        <ImageView
-            android:id="@+id/mute"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:layout_margin="5dp"
-            android:src="@drawable/pubnative_btn_mute" />
-
-        <!--SKIP-->
-        <TextView
-            android:id="@+id/skip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/playerView"
-            android:layout_alignParentRight="true"
-            android:layout_margin="5dp"
-            android:padding="10dp"
-            android:text="Skip"
-            android:textColor="@android:color/white" />
-    </RelativeLayout>
-
-    <!-- OPEN BANNER BUTTON -->
-    <ImageView
-        android:id="@+id/open"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignTop="@id/player"
-        android:layout_alignParentRight="true"
-        android:layout_margin="5dp"
-        android:src="@drawable/pubnative_btn_learn_more"
-        android:visibility="gone" />
-
-    <!-- LOADER -->
-    <RelativeLayout
-        android:id="@+id/loader"
+    <!--PLAYER COUNTDOWN-->
+    <net.pubnative.player.widget.CountDownView
+        android:id="@+id/count_down"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:background="@drawable/pubnative_rounded_shape_gray"
-        android:padding="10dp">
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:background="@android:color/black" />
 
-        <ProgressBar
-            android:id="@+id/loader_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true" />
+    <!--MUTE-->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/mute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/playerView"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:src="@drawable/ic_baseline_volume_off_24" />
 
-        <TextView
-            android:id="@+id/loader_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/loader_progress"
-            android:layout_marginTop="5dp"
-            android:text="lorem ipsum"
-            android:textColor="@android:color/white"
-            android:textSize="20dp" />
+    <!--SKIP-->
+    <TextView
+        android:id="@+id/skip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:padding="10dp"
+        android:visibility="invisible"
+        android:textColor="@android:color/darker_gray"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Close" />
 
-    </RelativeLayout>
+    <!-- OPEN BANNER BUTTON -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/open"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_baseline_open_in_new_24"
+        tools:visibility="visible" />
 
-</RelativeLayout>
+    <!-- LOADER -->
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
