@@ -26,10 +26,8 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
 
-
     override val kodein: Kodein =
         Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
-
 
     private val disposables: CompositeDisposable = CompositeDisposable()
     private val deviceInfo = DeviceInfo(
@@ -101,7 +99,6 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                 },
                 onError = {})
     }
-
 
     override fun onCleared() {
         disposables.clear()

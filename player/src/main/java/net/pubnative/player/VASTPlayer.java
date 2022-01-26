@@ -1021,7 +1021,7 @@ public class VASTPlayer extends RelativeLayout implements
                             int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
                             mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
                             if (!TextUtils.isEmpty(mSkipName) && currentPosition/1000 > mSkipDelay) {
-                                VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
+                               // VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
                                 mSkip.setText(mSkipName);
                                 mSkip.setVisibility(View.VISIBLE);
                             }
