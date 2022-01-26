@@ -107,6 +107,14 @@ public class VASTPlayer extends RelativeLayout implements
         void onVASTPlayerPlaybackFinish();
 
         void onVASTPlayerOpenOffer();
+
+        void onVASTPlayerOnFirstQuartile();
+
+        void onVASTPlayerOnMidpoint();
+
+        void onVASTPlayerOnThirdQuartile();
+
+        void onVASTPlayerClose();
     }
 
     private enum PlayerState {
@@ -532,6 +540,7 @@ public class VASTPlayer extends RelativeLayout implements
     public void onSkipClick() {
         VASTLog.v(TAG, "onSkipClick");
         processEvent(TRACKING_EVENTS_TYPE.close);
+        mListener.onVASTPlayerClose();
         destroy();
     }
 
@@ -884,46 +893,22 @@ public class VASTPlayer extends RelativeLayout implements
 
             @Override
             public void run() {
-
                 if (mProgressTracker.size() > MAX_PROGRESS_TRACKING_POINTS) {
-
                     int firstPosition = mProgressTracker.get(0);
                     int lastPosition = mProgressTracker.get(mProgressTracker.size() - 1);
-
                     if (lastPosition > firstPosition) {
-
                         if (mIsBufferingShown) {
-
                             mIsBufferingShown = false;
-                            mMainHandler.post(new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    hideLoader();
-                                }
-                            });
+                            mMainHandler.post(() -> hideLoader());
                         }
-
                     } else {
-
                         if (!mIsBufferingShown) {
-
                             mIsBufferingShown = true;
-                            mMainHandler.post(new Runnable() {
-
-                                @Override
-                                public void run() {
-
-                                    showLoader(TEXT_BUFFERING);
-                                }
-                            });
+                            mMainHandler.post(() -> showLoader(TEXT_BUFFERING));
                         }
                     }
-
                     mProgressTracker.remove(0);
                 }
-
                 mMainHandler.post(() -> {
                     try {
                         mProgressTracker.add((int) simpleExoPlayer.getCurrentPosition());
@@ -968,14 +953,17 @@ public class VASTPlayer extends RelativeLayout implements
                     VASTLog.i(TAG, "Video at first quartile: (" + percentage + "%)");
                     processEvent(TRACKING_EVENTS_TYPE.firstQuartile);
                     quartileSet.add(TRACKING_EVENTS_TYPE.firstQuartile.toString());
+                    mListener.onVASTPlayerOnFirstQuartile();
                 } else if (percentage >= 50 && percentage < 75 && !quartileSet.contains(TRACKING_EVENTS_TYPE.midpoint.toString())) {
                     VASTLog.i(TAG, "Video at midpoint: (" + percentage + "%)");
                     processEvent(TRACKING_EVENTS_TYPE.midpoint);
                     quartileSet.add(TRACKING_EVENTS_TYPE.midpoint.toString());
+                    mListener.onVASTPlayerOnMidpoint();
                 } else if (percentage >= 75 && percentage < 100 && !quartileSet.contains(TRACKING_EVENTS_TYPE.thirdQuartile.toString())) {
                     VASTLog.i(TAG, "Video at third quartile: (" + percentage + "%)");
                     processEvent(TRACKING_EVENTS_TYPE.thirdQuartile);
                     quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString());
+                    mListener.onVASTPlayerOnThirdQuartile();
                     stopQuartileTimer();
                 }
             }
@@ -1020,8 +1008,8 @@ public class VASTPlayer extends RelativeLayout implements
 
                             int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
                             mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-                            if (!TextUtils.isEmpty(mSkipName) && currentPosition/1000 > mSkipDelay) {
-                               // VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
+                            if (!TextUtils.isEmpty(mSkipName) && currentPosition / 1000 > mSkipDelay) {
+                                // VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
                                 mSkip.setText(mSkipName);
                                 mSkip.setVisibility(View.VISIBLE);
                             }

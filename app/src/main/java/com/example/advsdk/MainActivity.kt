@@ -70,8 +70,12 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.btnShow).setOnClickListener {
             AdNetworkSDK.show("", object : IAdShowListener {
-                override fun onShowComplete(id: String, showCompletionState: ShowCompletionState) {
-                    logsAdapter.addLog("onShowComplete, id = $id")
+                override fun onShowChangeState(
+                    id: String,
+                    showCompletionState: ShowCompletionState
+                ) {
+                    logsAdapter
+                        .addLog("onShowError, id = $id showCompletionState = ${showCompletionState.name}")
                 }
 
                 override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {

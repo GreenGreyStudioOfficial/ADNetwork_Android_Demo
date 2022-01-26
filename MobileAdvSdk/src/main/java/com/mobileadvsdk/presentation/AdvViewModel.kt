@@ -30,6 +30,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
 
     private val disposables: CompositeDisposable = CompositeDisposable()
+
     private val deviceInfo = DeviceInfo(
         "1",
         1,
@@ -86,7 +87,10 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     }
 
+    lateinit var iAdShowListener:IAdShowListener
+
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
+        this.iAdShowListener = iAdShowListener
         AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }
 
@@ -103,5 +107,4 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     override fun onCleared() {
         disposables.clear()
     }
-
 }
