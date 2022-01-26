@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                         errorMessage: String
                     ) {
                         Log.e("onInitializationError", errorMessage)
-                        logsAdapter.addLog("onInitializationError = $errorMessage")
+                        logsAdapter.addLog("onInitializationError = ${error.name}, $errorMessage")
                     }
                 })
         }
@@ -50,8 +50,8 @@ class MainActivity : AppCompatActivity() {
                     logsAdapter.addLog("REWARDED onLoadComplete, id = $id")
                 }
 
-                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String?) {
-                    logsAdapter.addLog("REWARDED onLoadError, id = $id, errorMessage $errorMessage")
+                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
+                    logsAdapter.addLog("REWARDED onLoadError, id = $id, ${error.name} , errorMessage $errorMessage")
                 }
             })
         }
@@ -61,8 +61,8 @@ class MainActivity : AppCompatActivity() {
                     logsAdapter.addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
 
-                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String?) {
-                    logsAdapter.addLog("INTERSTITIAL onLoadError, id = $id, errorMessage $errorMessage")
+                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
+                    logsAdapter.addLog("INTERSTITIAL onLoadError, id = $id,   ${error.name} ,errorMessage $errorMessage")
                 }
 
             })
@@ -75,11 +75,11 @@ class MainActivity : AppCompatActivity() {
                     showCompletionState: ShowCompletionState
                 ) {
                     logsAdapter
-                        .addLog("onShowError, id = $id showCompletionState = ${showCompletionState.name}")
+                        .addLog("onShowChangeState, id = $id showCompletionState = ${showCompletionState.name}")
                 }
 
                 override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
-                    logsAdapter.addLog("onShowError, id = $id errorMessage = $errorMessage")
+                    logsAdapter.addLog("onShowError, id = $id errorMessage = ${error.name}")
                 }
             })
         }

@@ -59,7 +59,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             .subscribeBy(
                 onSuccess = {
                     advDataLive.value = it
-                   listener.onLoadComplete("")
+                   listener.onLoadComplete(it.seatbid[0].bid[0].id ?: "")
                 },
                 onError = {
                     when (it) {
@@ -90,6 +90,10 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     lateinit var iAdShowListener:IAdShowListener
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
+        if (advDataLive.value== null){
+            iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+            return
+        }
         this.iAdShowListener = iAdShowListener
         AdvApplication.instance.startActivity(Intent( AdvApplication.instance, AdvActivity::class.java).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }

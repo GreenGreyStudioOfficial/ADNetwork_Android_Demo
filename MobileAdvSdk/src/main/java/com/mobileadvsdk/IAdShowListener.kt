@@ -7,5 +7,5 @@ interface IAdShowListener {
 
     fun onShowChangeState(id: String, showCompletionState: ShowCompletionState)
 
-    fun  onShowError(id: String, error: ShowErrorType, errorMessage: String)
+    fun onShowError(id: String, error: ShowErrorType, errorMessage: String = "")
 }

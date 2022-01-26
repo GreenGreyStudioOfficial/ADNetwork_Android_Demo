@@ -6,5 +6,5 @@ interface IAdLoadListener {
 
     fun onLoadComplete(id: String)
 
-    fun onLoadError(error: LoadErrorType, errorMessage: String, id: String?=null,)
+    fun onLoadError(error: LoadErrorType, errorMessage: String = "", id: String = "")
 }

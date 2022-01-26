@@ -2,18 +2,19 @@ package com.mobileadvsdk
 
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
-import com.mobileadvsdk.presentation.AdvProvider
+import com.mobileadvsdk.datasource.domain.model.LoadErrorType
+import com.mobileadvsdk.datasource.domain.model.ShowErrorType
 import com.mobileadvsdk.presentation.AdvViewModel
 
 object AdNetworkSDK {
 
-     var provider: AdvViewModel? = null
+    var provider: AdvViewModel? = null
 
     fun initialize(
-        gameId: String,
-        adServerHost: String,
-        isTestMode: Boolean,
-        listener: IAdInitializationListener
+            gameId: String,
+            adServerHost: String,
+            isTestMode: Boolean,
+            listener: IAdInitializationListener
     ) {
         if (provider == null) {
             provider = AdvViewModel(adServerHost)
@@ -26,19 +27,23 @@ object AdNetworkSDK {
 
 
     private fun init(
-        gameId: String,
-        adServerHost: String,
-        isTestMode: Boolean,
-        listener: IAdInitializationListener
+            gameId: String,
+            adServerHost: String,
+            isTestMode: Boolean,
+            listener: IAdInitializationListener
     ) = provider?.initialize(gameId, adServerHost, isTestMode, listener)
 
 
-    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.loadAvd(listener)
-
-    fun lazyLoad(advertiseType: AdvertiseType, listener: IAdLoadListener) =
+    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
         provider?.loadAvd(listener)
+    } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
-    fun show(id: String, iAdShowListener: IAdShowListener) = provider?.showAvd(id, iAdShowListener)
 
+    fun lazyLoad(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
+        provider?.loadAvd(listener)
+    } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
+    fun show(id: String, iAdShowListener: IAdShowListener) = provider?.let {
+        provider?.showAvd(id, iAdShowListener)
+    } ?: iAdShowListener.onShowError("", ShowErrorType.NOT_INITIALIZED_ERROR)
 }

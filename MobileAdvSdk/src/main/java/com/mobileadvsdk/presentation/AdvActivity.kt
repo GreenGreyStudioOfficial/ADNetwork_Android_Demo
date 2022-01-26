@@ -75,8 +75,9 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
             }
 
             override fun onVASTPlayerFail(exception: Exception?) {
+                Log.e("onVASTPlayerFail", exception?.localizedMessage, exception)
                 advViewMadel?.iAdShowListener?.onShowError(
-                    "",
+                    getAdvId(),
                     ShowErrorType.UNKNOWN,
                     exception?.message ?: ""
                 )
