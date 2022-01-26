@@ -8,9 +8,6 @@ interface AdvProvider {
 
     fun loadAvd(listener: IAdLoadListener)
 
-
-    fun getLoadedAds()
-
     fun initialize(
         gameId: String,
         adServerHost: String,

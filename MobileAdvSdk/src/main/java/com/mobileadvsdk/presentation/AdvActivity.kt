@@ -20,7 +20,6 @@ import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.subKodein
 
-
 class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
@@ -41,95 +40,74 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
         Log.e("SCREEN_SIZE", " " + displayMetrics.heightPixels)
 
         advViewMadel?.let {
-            observe(it.advDataLive) {
-                advData = it
-                parseAdvData(it)
+            observe(it.advDataLive) { data ->
+                advData = data
+                parseAdvData()
             }
         }
         initPlayerListener()
     }
 
-    private fun parseAdvData(it: AdvData) {
-        VASTParser(this).setListener(object : VASTParser.Listener {
-            override fun onVASTParserError(error: Int) {
+    private fun parseAdvData() =
+            VASTParser(this).setListener(object : VASTParser.Listener {
+                override fun onVASTParserError(error: Int) {
+                    Log.e("onVASTParserError", "error: $error")
+                }
 
-            }
+                override fun onVASTCacheError(error: Int) {
+                    Log.e("onVASTCacheError", "error: $error")
+                }
 
-            override fun onVASTCacheError(error: Int) {
-                TODO("Not yet implemented")
-            }
+                override fun onVASTParserFinished(model: VASTModel) {
+                    vastPlayer.load(model)
+                }
+            }).execute(getAdvData().adm)
 
-            override fun onVASTParserFinished(model: VASTModel) {
-                vastPlayer.load(model)
-            }
-        }).execute(it.seatbid[0].bid[0].adm)
-    }
+    private fun getAdvData() = advData.seatbid[0].bid[0]
 
-    private fun getAdvId(): String = advData.seatbid[0].bid[0].id ?: ""
+    private fun getAdvId(): String = getAdvData().id ?: ""
+
+    private fun handleShowChangeState(state: ShowCompletionState) =
+            advViewMadel?.iAdShowListener?.onShowChangeState(getAdvId(), state)
 
     private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewMadel?.getUrl(advData.seatbid[0].bid[0].nurl ?: "")
+                advViewMadel?.getUrl(getAdvData().nurl ?: "")
                 vastPlayer.play()
             }
 
             override fun onVASTPlayerFail(exception: Exception?) {
                 Log.e("onVASTPlayerFail", exception?.localizedMessage, exception)
-                advViewMadel?.iAdShowListener?.onShowError(
-                    getAdvId(),
-                    ShowErrorType.UNKNOWN,
-                    exception?.message ?: ""
-                )
+                advViewMadel?.iAdShowListener?.onShowError(getAdvId(), ShowErrorType.UNKNOWN, exception?.message ?: "")
             }
 
             override fun onVASTPlayerPlaybackStart() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.START
-                )
+                handleShowChangeState(ShowCompletionState.START)
             }
 
             override fun onVASTPlayerPlaybackFinish() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.COMPLETE
-                )
+                handleShowChangeState(ShowCompletionState.COMPLETE)
             }
 
             override fun onVASTPlayerOpenOffer() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.OFFER
-                )
+                handleShowChangeState(ShowCompletionState.OFFER)
             }
 
             override fun onVASTPlayerOnFirstQuartile() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.FIRST_QUARTILE
-                )
+                handleShowChangeState(ShowCompletionState.FIRST_QUARTILE)
             }
 
             override fun onVASTPlayerOnMidpoint() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.MIDPOINT
-                )
+                handleShowChangeState(ShowCompletionState.MIDPOINT)
             }
 
             override fun onVASTPlayerOnThirdQuartile() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.THIRD_QUARTILE
-                )
+                handleShowChangeState(ShowCompletionState.THIRD_QUARTILE)
             }
 
             override fun onVASTPlayerClose() {
-                advViewMadel?.iAdShowListener?.onShowChangeState(
-                    getAdvId(),
-                    ShowCompletionState.CLOSE
-                )
+                handleShowChangeState(ShowCompletionState.CLOSE)
             }
         })
     }
