@@ -22,9 +22,10 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnInit"
         android:layout_width="170dp"
-        android:layout_height="wrap_content"
+         android:layout_height="40dp"
         android:layout_marginTop="16dp"
         android:text="Init"
+        android:textAllCaps="false"
         app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -33,9 +34,10 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnLoadRewarded"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+         android:layout_height="40dp"
+
         android:text="Load rewarded"
+        android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="@+id/btnInit"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -46,9 +48,10 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnLoadInterstitial"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+         android:layout_height="40dp"
+
         android:text="Load interstitial"
+        android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="@+id/btnLoadRewarded"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -59,9 +62,10 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnShow"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_height="40dp"
+
         android:text="Show"
+        android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="@+id/btnLoadInterstitial"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
