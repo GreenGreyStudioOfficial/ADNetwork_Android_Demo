@@ -25,7 +25,6 @@ object AdNetworkSDK {
         }
     }
 
-
     private fun init(
             gameId: String,
             adServerHost: String,
@@ -37,7 +36,6 @@ object AdNetworkSDK {
     fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
         provider?.loadAvd(listener)
     } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
-
 
     fun lazyLoad(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
         provider?.loadAvd(listener)
