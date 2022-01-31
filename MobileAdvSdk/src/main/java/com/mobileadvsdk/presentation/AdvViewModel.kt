@@ -2,6 +2,7 @@ package com.mobileadvsdk.presentation
 
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.res.Resources
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.mobileadvsdk.AdvApplication
@@ -37,8 +38,8 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             geo = Geo(0.0, 0.0),
             model = "OMEN Laptop 15-ek1xxx (HP)",
             os = "Windows 10  (10.0.19042) 64bit",
-            w = 1555,
-            h = 692,
+            w = Resources.getSystem().displayMetrics.widthPixels,
+            h = Resources.getSystem().displayMetrics.heightPixels,
             connectionType = 2,
             ifa = "0947b09a6e1342c05c728adb8cdf88d3a3bb31f4"
         ),
