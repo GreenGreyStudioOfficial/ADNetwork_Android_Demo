@@ -69,6 +69,11 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         listener: IAdInitializationListener
     ) {
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
+        AdvApplication.instance.startActivity(
+            Intent(
+                AdvApplication.instance,
+                PermissionsActivity::class.java
+            ).addFlags(FLAG_ACTIVITY_NEW_TASK))
     }
 
     fun getLastKnownLoaction(enabledProvidersOnly: Boolean, context: Context): Location? {

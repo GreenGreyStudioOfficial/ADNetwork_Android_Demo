@@ -12,10 +12,17 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AdvSDK">
+
         <activity
             android:name=".presentation.AdvActivity"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AdvSDK"
+            android:exported="false"/>
+
+        <activity
+            android:name=".presentation.PermissionsActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Transparent"
             android:exported="false"/>
     </application>
 </manifest>
