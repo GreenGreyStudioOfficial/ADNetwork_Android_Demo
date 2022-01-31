@@ -1,19 +1,14 @@
 package com.mobileadvsdk.presentation
 
-import android.Manifest
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.mobileadvsdk.AdvApplication
@@ -31,7 +26,6 @@ import io.reactivex.rxkotlin.subscribeBy
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
-import pub.devrel.easypermissions.EasyPermissions
 import java.io.IOException
 
 class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
@@ -73,36 +67,8 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             Intent(
                 AdvApplication.instance,
                 PermissionsActivity::class.java
-            ).addFlags(FLAG_ACTIVITY_NEW_TASK))
-    }
-
-    fun getLastKnownLoaction(enabledProvidersOnly: Boolean, context: Context): Location? {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var utilLocation: Location? = null
-        val providers = manager.getProviders(enabledProvidersOnly)
-        for (provider in providers) {
-            if (ActivityCompat.checkSelfPermission(
-                    AdvApplication.instance,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                    AdvApplication.instance,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return null
-            }
-            provider.length
-            utilLocation = manager.getLastKnownLocation(provider!!)
-            if (utilLocation != null) return utilLocation
-        }
-        return null
+            ).addFlags(FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 
     override fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
@@ -157,5 +123,19 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     override fun onCleared() {
         disposables.clear()
+    }
+
+
+    @SuppressLint("MissingPermission")
+    fun getLocation() {
+        val manager = AdvApplication.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var utilLocation: Location? = null
+        val providers = manager.getProviders(true)
+        for (provider in providers) {
+            provider?.let { it ->
+                utilLocation = manager.getLastKnownLocation(it)
+            }
+        }
+        deviceInfo.device.geo = Geo(utilLocation?.latitude, utilLocation?.longitude)
     }
 }
