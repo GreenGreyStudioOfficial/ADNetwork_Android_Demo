@@ -80,7 +80,7 @@ public class VASTPlayer extends RelativeLayout implements
     private static final String TEXT_BUFFERING = "Buffering...";
     private CacheDataSource.Factory cacheDataSourceFactory;
     private PlayerView playerView;
-    private AdvType type;
+    private AdvType type = AdvType.INTERSTITIAL;
 
     public void setType(AdvType type) {
         this.type = type;
@@ -181,7 +181,6 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     public VASTPlayer(Context context, AttributeSet attrs, int defStyleAttr) {
-
         super(context, attrs, defStyleAttr);
     }
 
@@ -542,7 +541,7 @@ public class VASTPlayer extends RelativeLayout implements
     public void onSkipClick() {
         VASTLog.v(TAG, "onSkipClick");
         if (simpleExoPlayer != null) {
-            mListener.onVASTPlayerClose(simpleExoPlayer.isPlaying());
+            mListener.onVASTPlayerClose(needShowDialogClose);
             pause();
         }
     }
@@ -876,7 +875,7 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     private void startTimers() {
-
+        setSkip("Close", mVastModel.getSkipOffset());
         VASTLog.v(TAG, "startTimers");
 
         // Stop previous timers so they don't remain hold
@@ -886,7 +885,6 @@ public class VASTPlayer extends RelativeLayout implements
         startQuartileTimer();
         startLayoutTimer();
         startVideoProgressTimer();
-        setSkip("Close", mVastModel.getSkipOffset());
     }
 
     // Progress timer
@@ -992,6 +990,8 @@ public class VASTPlayer extends RelativeLayout implements
         }
     }
 
+    private boolean needShowDialogClose;
+
     // Layout timer
     //-------------------------------------------------------
     private void startLayoutTimer() {
@@ -1008,12 +1008,32 @@ public class VASTPlayer extends RelativeLayout implements
                 mMainHandler.post(() -> {
                     try {
                         if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
-                            mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-                            if (!TextUtils.isEmpty(mSkipName) && currentPosition / 1000 > mSkipDelay) {
-                                // VASTLog.v(TAG, "mSkipDelay = " + mSkipDelay + " currentPosition = " + currentPosition);
+                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition()/1000;
+                            if (type == AdvType.REWARDED && mVastModel.getSkipOffset() != -1) {
+                                mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
+
                                 mSkip.setText(mSkipName);
                                 mSkip.setVisibility(View.VISIBLE);
+
+                                needShowDialogClose = currentPosition < mSkipDelay;
+
+                            } else if (type == AdvType.REWARDED && mVastModel.getSkipOffset() == -1) {
+                                mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
+                                needShowDialogClose =true;
+                            }else if (type == AdvType.INTERSTITIAL&& mVastModel.getSkipOffset() != -1){
+                                mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
+
+                                if (currentPosition > mSkipDelay){
+                                    mSkip.setText(mSkipName);
+                                    mSkip.setVisibility(View.VISIBLE);
+                                }
+                                needShowDialogClose =false;
+                            }else if (type == AdvType.INTERSTITIAL&& mVastModel.getSkipOffset() == -1){
+                                mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
+                                mSkip.setText(mSkipName);
+                                mSkip.setVisibility(View.VISIBLE);
+
+                                needShowDialogClose =false;
                             }
                         }
 

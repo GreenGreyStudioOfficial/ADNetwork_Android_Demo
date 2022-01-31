@@ -18,7 +18,7 @@ internal fun Video.toRemote(): VideoRemote = VideoRemote(mimes, w, h, ext.toRemo
 
 internal fun Ext.toRemote(): ExtRemote = ExtRemote(rewarded)
 
-internal  fun AppInfo.toRemote(): AppInfoRemote = AppInfoRemote(id, name, bundle)
+internal fun AppInfo.toRemote(): AppInfoRemote = AppInfoRemote(id, name, bundle)
 
 internal fun Device.toRemote(): DeviceRemote = DeviceRemote(
     geo.toRemote(),
@@ -38,11 +38,14 @@ internal fun Geo.toRemote(): GeoRemote = GeoRemote(lat, lon, country, region, ci
 
 internal fun User.toRemote(): UserRemote = UserRemote(id)
 
-internal fun AdvDataRemote.toDomain(): AdvData = AdvData(id, bidid, seatbid.map { it.toDomain() })
+internal fun AdvDataRemote.toDomain(): AdvData =
+    AdvData(id, AdvertiseType.REWARDED, bidid, seatbid.map { it.toDomain() })
 
 internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid.map { it.toDomain() })
 
-internal fun BidRemote.toDomain(): Bid = Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv?.toDomain())
+internal fun BidRemote.toDomain(): Bid =
+    Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv?.toDomain())
 
-internal fun ExtAdvRemote.toDomain(): ExtAdv = ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
+internal fun ExtAdvRemote.toDomain(): ExtAdv =
+    ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
 

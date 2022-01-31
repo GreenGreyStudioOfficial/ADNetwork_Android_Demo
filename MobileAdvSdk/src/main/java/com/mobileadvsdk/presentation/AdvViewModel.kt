@@ -103,8 +103,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         disposables += dataRepository.getNurl(url)
             .observeOn(scheduler)
             .subscribeBy(
-                onComplete = {
-                },
+                onComplete = {},
                 onError = {})
     }
 

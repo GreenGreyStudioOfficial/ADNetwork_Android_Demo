@@ -150,7 +150,7 @@ public class VASTModel implements Serializable {
 
     public int getSkipOffset() {
         VASTLog.d(TAG, "getSkipOffset");
-        int result = 0;
+        int result = -1;
         XPath xpath = XPathFactory.newInstance().newXPath();
         try {
             NodeList nodes = (NodeList) xpath.evaluate(XPATH_INLINE_LINEAR, vastsDocument, XPathConstants.NODESET);
