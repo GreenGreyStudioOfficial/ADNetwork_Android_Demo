@@ -80,6 +80,11 @@ public class VASTPlayer extends RelativeLayout implements
     private static final String TEXT_BUFFERING = "Buffering...";
     private CacheDataSource.Factory cacheDataSourceFactory;
     private PlayerView playerView;
+    private AdvType type;
+
+    public void setType(AdvType type) {
+        this.type = type;
+    }
 
     /**
      * Player type will lead to different layouts and behaviour to improve campaign type
@@ -114,11 +119,10 @@ public class VASTPlayer extends RelativeLayout implements
 
         void onVASTPlayerOnThirdQuartile();
 
-        void onVASTPlayerClose();
+        void onVASTPlayerClose(boolean needToConfirm);
     }
 
     private enum PlayerState {
-
         Empty,
         Loading,
         Ready,
@@ -460,9 +464,7 @@ public class VASTPlayer extends RelativeLayout implements
      * Starts video playback if possible
      */
     public void play() {
-
         VASTLog.v(TAG, "play");
-
         if (canSetState(PlayerState.Playing)) {
             setState(PlayerState.Playing);
         } else if (mPlayerState == PlayerState.Empty) {
@@ -539,8 +541,14 @@ public class VASTPlayer extends RelativeLayout implements
 
     public void onSkipClick() {
         VASTLog.v(TAG, "onSkipClick");
+        if (simpleExoPlayer != null) {
+            mListener.onVASTPlayerClose(simpleExoPlayer.isPlaying());
+            pause();
+        }
+    }
+
+    public void onSkipConfirm() {
         processEvent(TRACKING_EVENTS_TYPE.close);
-        mListener.onVASTPlayerClose();
         destroy();
     }
 
@@ -987,12 +995,9 @@ public class VASTPlayer extends RelativeLayout implements
     // Layout timer
     //-------------------------------------------------------
     private void startLayoutTimer() {
-
         VASTLog.v(TAG, "startLayoutTimer");
-
         mLayoutTimer = new Timer();
         mLayoutTimer.scheduleAtFixedRate(new TimerTask() {
-
             @Override
             public void run() {
                 if (simpleExoPlayer == null) {
@@ -1001,11 +1006,8 @@ public class VASTPlayer extends RelativeLayout implements
                 }
                 // Execute with handler to be sure we execute this on the UIThread
                 mMainHandler.post(() -> {
-
                     try {
-
                         if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-
                             int currentPosition = (int) simpleExoPlayer.getCurrentPosition();
                             mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
                             if (!TextUtils.isEmpty(mSkipName) && currentPosition / 1000 > mSkipDelay) {
@@ -1077,11 +1079,8 @@ public class VASTPlayer extends RelativeLayout implements
     }
 
     private void invokeOnPlayerPlaybackFinish() {
-
         VASTLog.v(TAG, "invokeOnPlayerPlaybackFinish");
-
         if (mListener != null) {
-
             mListener.onVASTPlayerPlaybackFinish();
         }
     }

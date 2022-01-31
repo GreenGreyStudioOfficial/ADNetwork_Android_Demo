@@ -1,5 +1,6 @@
 package com.mobileadvsdk.presentation
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -13,6 +14,8 @@ import com.mobileadvsdk.datasource.domain.model.ShowErrorType
 import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.observe
 import kotlinx.android.synthetic.main.activity_adv.*
+import kotlinx.android.synthetic.main.dialog_close_advert.view.*
+import net.pubnative.player.AdvType
 import net.pubnative.player.VASTParser
 import net.pubnative.player.VASTPlayer
 import net.pubnative.player.model.VASTModel
@@ -24,7 +27,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
-    private val advViewMadel: AdvViewModel? = AdNetworkSDK.provider
+    private val advViewModel: AdvViewModel? = AdNetworkSDK.provider
 
     private lateinit var advData: AdvData
 
@@ -39,7 +42,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
         Log.e("SCREEN_SIZE", " " + displayMetrics.widthPixels)
         Log.e("SCREEN_SIZE", " " + displayMetrics.heightPixels)
 
-        advViewMadel?.let {
+        advViewModel?.let {
             observe(it.advDataLive) { data ->
                 advData = data
                 parseAdvData()
@@ -49,37 +52,45 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
     }
 
     private fun parseAdvData() =
-            VASTParser(this).setListener(object : VASTParser.Listener {
-                override fun onVASTParserError(error: Int) {
-                    Log.e("onVASTParserError", "error: $error")
-                }
+        VASTParser(this).setListener(object : VASTParser.Listener {
+            override fun onVASTParserError(error: Int) {
+                Log.e("onVASTParserError", "error: $error")
+                advViewModel?.getUrl(getAdvData().lurl ?: "")
+            }
 
-                override fun onVASTCacheError(error: Int) {
-                    Log.e("onVASTCacheError", "error: $error")
-                }
+            override fun onVASTCacheError(error: Int) {
+                Log.e("onVASTCacheError", "error: $error")
+            }
 
-                override fun onVASTParserFinished(model: VASTModel) {
-                    vastPlayer.load(model)
-                }
-            }).execute(getAdvData().adm)
+            override fun onVASTParserFinished(model: VASTModel) {
+                vastPlayer.load(model)
+            }
+        }).execute(getAdvData().adm)
 
     private fun getAdvData() = advData.seatbid[0].bid[0]
+    private fun getAdvertiseType() =
+        if (advData.advertiseType?.name == AdvType.REWARDED.name) AdvType.REWARDED else AdvType.INTERSTITIAL
 
     private fun getAdvId(): String = getAdvData().id ?: ""
 
     private fun handleShowChangeState(state: ShowCompletionState) =
-            advViewMadel?.iAdShowListener?.onShowChangeState(getAdvId(), state)
+        advViewModel?.iAdShowListener?.onShowChangeState(getAdvId(), state)
 
     private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewMadel?.getUrl(getAdvData().nurl ?: "")
+                advViewModel?.getUrl(getAdvData().nurl ?: "")
+                vastPlayer.setType(getAdvertiseType())
                 vastPlayer.play()
             }
 
             override fun onVASTPlayerFail(exception: Exception?) {
                 Log.e("onVASTPlayerFail", exception?.localizedMessage, exception)
-                advViewMadel?.iAdShowListener?.onShowError(getAdvId(), ShowErrorType.UNKNOWN, exception?.message ?: "")
+                advViewModel?.iAdShowListener?.onShowError(
+                    getAdvId(),
+                    ShowErrorType.UNKNOWN,
+                    exception?.message ?: ""
+                )
             }
 
             override fun onVASTPlayerPlaybackStart() {
@@ -88,6 +99,9 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
             override fun onVASTPlayerPlaybackFinish() {
                 handleShowChangeState(ShowCompletionState.COMPLETE)
+                advViewModel?.advDataLive?.postValue(null)
+                vastPlayer.destroy()
+                finish()
             }
 
             override fun onVASTPlayerOpenOffer() {
@@ -106,8 +120,14 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
                 handleShowChangeState(ShowCompletionState.THIRD_QUARTILE)
             }
 
-            override fun onVASTPlayerClose() {
-                handleShowChangeState(ShowCompletionState.CLOSE)
+            override fun onVASTPlayerClose(needToConfirm: Boolean) {
+                if (needToConfirm) {
+                    showCloseDialog()
+                } else {
+                    handleShowChangeState(ShowCompletionState.CLOSE)
+                    vastPlayer.onSkipConfirm()
+                    finish()
+                }
             }
         })
     }
@@ -125,5 +145,28 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
     override fun onDestroy() {
         super.onDestroy()
         vastPlayer.destroy()
+    }
+
+    override fun onBackPressed() {
+        vastPlayer.onSkipClick()
+    }
+
+    private fun showCloseDialog() {
+        val builder = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.dialog_close_advert, null)
+        builder.setView(view)
+        builder.setCancelable(true)
+        val dialog = builder.create()
+        view.btnClose.setOnClickListener {
+            handleShowChangeState(ShowCompletionState.CLOSE)
+            vastPlayer.onSkipConfirm()
+            dialog.dismiss()
+            finish()
+        }
+        view.btnContinue.setOnClickListener {
+            vastPlayer.play()
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 }

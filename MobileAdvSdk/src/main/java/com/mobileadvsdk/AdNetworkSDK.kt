@@ -34,11 +34,11 @@ object AdNetworkSDK {
 
 
     fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
-        provider?.loadAvd(listener)
+        provider?.loadAvd(advertiseType, listener)
     } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
     fun lazyLoad(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
-        provider?.loadAvd(listener)
+        provider?.loadAvd(advertiseType, listener)
     } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
     fun show(id: String, iAdShowListener: IAdShowListener) = provider?.let {

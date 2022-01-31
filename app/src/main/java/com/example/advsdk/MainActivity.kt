@@ -14,6 +14,8 @@ import com.mobileadvsdk.datasource.domain.model.*
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var recyclerView: RecyclerView
+
     private val logsAdapter by lazy {
         LogsAdapter()
     }
@@ -23,7 +25,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<RecyclerView>(R.id.rvLogs).adapter = logsAdapter
+        recyclerView = findViewById<RecyclerView>(R.id.rvLogs).apply {
+            adapter = logsAdapter
+        }
 
         findViewById<View>(R.id.btnInit).setOnClickListener {
             AdNetworkSDK.initialize(
@@ -32,7 +36,7 @@ class MainActivity : AppCompatActivity() {
                 true,
                 object : IAdInitializationListener {
                     override fun onInitializationComplete() {
-                        logsAdapter.addLog("onInitializationComplete")
+                        addLog("onInitializationComplete")
                     }
 
                     override fun onInitializationError(
@@ -40,31 +44,30 @@ class MainActivity : AppCompatActivity() {
                         errorMessage: String
                     ) {
                         Log.e("onInitializationError", errorMessage)
-                        logsAdapter.addLog("onInitializationError = ${error.name}, $errorMessage")
+                        addLog("onInitializationError = ${error.name}, $errorMessage")
                     }
                 })
         }
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
             AdNetworkSDK.load(AdvertiseType.REWARDED, object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
-                    logsAdapter.addLog("REWARDED onLoadComplete, id = $id")
+                    addLog("REWARDED onLoadComplete, id = $id")
                 }
 
                 override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
-                    logsAdapter.addLog("REWARDED onLoadError, id = $id, ${error.name} , errorMessage $errorMessage")
+                    addLog("REWARDED onLoadError, id = $id, ${error.name} , errorMessage $errorMessage")
                 }
             })
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
             AdNetworkSDK.load(AdvertiseType.INTERSTITIAL, object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
-                    logsAdapter.addLog("INTERSTITIAL onLoadComplete, id = $id")
+                    addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
 
                 override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
-                    logsAdapter.addLog("INTERSTITIAL onLoadError, id = $id,   ${error.name} ,errorMessage $errorMessage")
+                    addLog("INTERSTITIAL onLoadError, id = $id,   ${error.name} ,errorMessage $errorMessage")
                 }
-
             })
         }
 
@@ -79,10 +82,15 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
-                    logsAdapter.addLog("onShowError, id = $id errorMessage = ${error.name}")
+                    addLog("onShowError, id = $id errorMessage = ${error.name}")
                 }
             })
         }
+    }
+
+    private fun addLog(log:String) {
+        logsAdapter.addLog(log)
+        recyclerView.smoothScrollToPosition(logsAdapter.itemCount - 1)
     }
 }
 

@@ -3,10 +3,11 @@ package com.mobileadvsdk.presentation
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
+import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 
 interface AdvProvider {
 
-    fun loadAvd(listener: IAdLoadListener)
+    fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener)
 
     fun initialize(
         gameId: String,
