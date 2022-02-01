@@ -1,16 +1,15 @@
 package com.mobileadvsdk.presentation
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.res.Resources
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.location.LocationServices
 import com.mobileadvsdk.AdvApplication
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
@@ -38,10 +37,21 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     private var deviceInfo = DeviceInfo(
         "1",
         1,
-        listOf(Imp("1", Video(listOf("video/mp4"), 1555, 692, Ext(0)), 1)),
+        listOf(
+            Imp(
+                "1",
+                Video(
+                    listOf("video/mp4"),
+                    Resources.getSystem().displayMetrics.widthPixels,
+                    Resources.getSystem().displayMetrics.heightPixels,
+                    Ext(0)
+                ),
+                1
+            )
+        ),
         AppInfo("secret", "GGAD_NETWORK_SDK", "com.DefaultCompany.GGAD_NETWORK_SD"),
         Device(
-            geo = Geo(0.0, 0.0),
+            geo = Geo(11.0, 11.0),
             model = "OMEN Laptop 15-ek1xxx (HP)",
             os = "Windows 10  (10.0.19042) 64bit",
             w = Resources.getSystem().displayMetrics.widthPixels,
@@ -63,6 +73,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         listener: IAdInitializationListener
     ) {
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
+
         AdvApplication.instance.startActivity(
             Intent(
                 AdvApplication.instance,
@@ -72,31 +83,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     }
 
     override fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
-        disposables += dataRepository.loadStartData(
-            deviceInfo.copy(
-                id = initDataLive.value?.gameId ?: ""
-            )
-        )
-            .observeOn(scheduler)
-            .subscribeBy(
-                onSuccess = {
-                    it?.let {
-                        advDataLive.value = it.apply { this.advertiseType = advertiseType }
-                        listener.onLoadComplete(it.seatbid[0].bid[0].id ?: "")
-                    }
-                },
-                onError = {
-                    when (it) {
-                        is IOException -> {
-                            listener.onLoadError(
-                                LoadErrorType.CONNECTION_ERROR,
-                                LoadErrorType.CONNECTION_ERROR.desc
-                            )
-                        }
-
-                    }
-                }
-            )
+        getLocationFirst(advertiseType, listener)
     }
 
     lateinit var iAdShowListener: IAdShowListener
@@ -125,17 +112,46 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         disposables.clear()
     }
 
-
     @SuppressLint("MissingPermission")
-    fun getLocation() {
-        val manager = AdvApplication.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var utilLocation: Location? = null
-        val providers = manager.getProviders(true)
-        for (provider in providers) {
-            provider?.let { it ->
-                utilLocation = manager.getLastKnownLocation(it)
+    fun getLocationFirst(advertiseType: AdvertiseType, listener: IAdLoadListener) {
+        val fusedLocationClient =
+            LocationServices.getFusedLocationProviderClient(AdvApplication.instance)
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { utilLocation: Location? ->
+                makeRequest(
+                    advertiseType,
+                    listener,
+                    Geo(utilLocation?.latitude, utilLocation?.longitude)
+                )
             }
-        }
-        deviceInfo.device.geo = Geo(utilLocation?.latitude, utilLocation?.longitude)
+    }
+
+    private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener, geo: Geo) {
+        disposables += dataRepository.loadStartData(
+            deviceInfo.copy(
+                id = initDataLive.value?.gameId ?: ""
+            )
+                .apply { device.geo = geo }
+        )
+            .observeOn(scheduler)
+            .subscribeBy(
+                onSuccess = {
+                    it?.let {
+                        advDataLive.value = it.apply { this.advertiseType = advertiseType }
+                        listener.onLoadComplete(it.seatbid[0].bid[0].id ?: "")
+                    }
+                },
+                onError = {
+                    when (it) {
+                        is IOException -> {
+                            listener.onLoadError(
+                                LoadErrorType.CONNECTION_ERROR,
+                                LoadErrorType.CONNECTION_ERROR.desc
+                            )
+                        }
+
+                    }
+                }
+            )
     }
 }
