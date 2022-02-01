@@ -42,6 +42,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -80,6 +81,7 @@ public class VASTPlayer extends RelativeLayout implements
     private static final String TEXT_BUFFERING = "Buffering...";
     private CacheDataSource.Factory cacheDataSourceFactory;
     private PlayerView playerView;
+    private ProgressBar progressBar;
     private AdvType type = AdvType.INTERSTITIAL;
 
     public void setType(AdvType type) {
@@ -106,6 +108,8 @@ public class VASTPlayer extends RelativeLayout implements
         void onVASTPlayerLoadFinish();
 
         void onVASTPlayerFail(Exception exception);
+
+        void onVASTPlayerCacheNotFound();
 
         void onVASTPlayerPlaybackStart();
 
@@ -543,6 +547,8 @@ public class VASTPlayer extends RelativeLayout implements
         if (simpleExoPlayer != null) {
             mListener.onVASTPlayerClose(needShowDialogClose);
             pause();
+        } else {
+            mListener.onVASTPlayerClose(needShowDialogClose);
         }
     }
 
@@ -586,6 +592,7 @@ public class VASTPlayer extends RelativeLayout implements
             mRoot = LayoutInflater.from(getContext()).inflate(R.layout.pubnative_player, null);
 
             playerView = (PlayerView) mRoot.findViewById(R.id.playerView);
+            progressBar = (ProgressBar) mRoot.findViewById(R.id.progress);
 
             mMute = (AppCompatImageView) mRoot.findViewById(R.id.mute);
             mMute.setVisibility(INVISIBLE);
@@ -686,6 +693,7 @@ public class VASTPlayer extends RelativeLayout implements
                     VASTLog.v(TAG, "onError -- (MediaPlayer callback)");
 
                     processErrorEvent();
+                    mListener.onVASTPlayerCacheNotFound();
 
                     invokeOnFail(new Exception("VASTPlayer error: " + error.getMessage()));
                     destroy();
@@ -942,10 +950,12 @@ public class VASTPlayer extends RelativeLayout implements
     // Quartile timer
     //-------------------------------------------------------
     private void startQuartileTimer() {
+        progressBar.setVisibility(VISIBLE);
         VASTLog.v(TAG, "startQuartileTimer");
         mTrackingEventsTimer = new CountDownTimer(simpleExoPlayer.getDuration(), 250) {
             public void onTick(long millisUntilFinished) {
                 int percentage = (int) ((simpleExoPlayer.getCurrentPosition() * 100) / simpleExoPlayer.getDuration());
+                progressBar.setProgress(percentage);
                 if (simpleExoPlayer.getCurrentPosition() == 0) {
                     return;
                 }
@@ -970,11 +980,11 @@ public class VASTPlayer extends RelativeLayout implements
                     processEvent(TRACKING_EVENTS_TYPE.thirdQuartile);
                     quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString());
                     mListener.onVASTPlayerOnThirdQuartile();
-                    stopQuartileTimer();
                 }
             }
 
             public void onFinish() {
+                progressBar.setVisibility(GONE);
             }
         }.start();
     }
@@ -1008,7 +1018,7 @@ public class VASTPlayer extends RelativeLayout implements
                 mMainHandler.post(() -> {
                     try {
                         if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition()/1000;
+                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition() / 1000;
                             if (type == AdvType.REWARDED && mVastModel.getSkipOffset() != -1) {
                                 mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
 
@@ -1019,21 +1029,21 @@ public class VASTPlayer extends RelativeLayout implements
 
                             } else if (type == AdvType.REWARDED && mVastModel.getSkipOffset() == -1) {
                                 mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-                                needShowDialogClose =true;
-                            }else if (type == AdvType.INTERSTITIAL&& mVastModel.getSkipOffset() != -1){
+                                needShowDialogClose = true;
+                            } else if (type == AdvType.INTERSTITIAL && mVastModel.getSkipOffset() != -1) {
                                 mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
 
-                                if (currentPosition > mSkipDelay){
+                                if (currentPosition > mSkipDelay) {
                                     mSkip.setText(mSkipName);
                                     mSkip.setVisibility(View.VISIBLE);
                                 }
-                                needShowDialogClose =false;
-                            }else if (type == AdvType.INTERSTITIAL&& mVastModel.getSkipOffset() == -1){
+                                needShowDialogClose = false;
+                            } else if (type == AdvType.INTERSTITIAL && mVastModel.getSkipOffset() == -1) {
                                 mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
                                 mSkip.setText(mSkipName);
                                 mSkip.setVisibility(View.VISIBLE);
 
-                                needShowDialogClose =false;
+                                needShowDialogClose = false;
                             }
                         }
 

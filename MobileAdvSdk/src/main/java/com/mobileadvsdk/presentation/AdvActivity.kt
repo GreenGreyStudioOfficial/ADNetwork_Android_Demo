@@ -1,14 +1,11 @@
 package com.mobileadvsdk.presentation
 
-import android.Manifest
 import android.app.AlertDialog
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
@@ -19,9 +16,7 @@ import com.mobileadvsdk.observe
 import kotlinx.android.synthetic.main.activity_adv.*
 import kotlinx.android.synthetic.main.dialog_close_advert.view.*
 import net.pubnative.player.AdvType
-import net.pubnative.player.VASTParser
 import net.pubnative.player.VASTPlayer
-import net.pubnative.player.model.VASTModel
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.subKodein
@@ -48,27 +43,14 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
         advViewModel?.let {
             observe(it.advDataLive) { data ->
                 advData = data
-                parseAdvData()
             }
+        }
+
+        advViewModel?.vastModel?.let {
+            vastPlayer.load(it)
         }
         initPlayerListener()
     }
-
-    private fun parseAdvData() =
-        VASTParser(this).setListener(object : VASTParser.Listener {
-            override fun onVASTParserError(error: Int) {
-                Log.e("onVASTParserError", "error: $error")
-                advViewModel?.getUrl(getAdvData().lurl ?: "")
-            }
-
-            override fun onVASTCacheError(error: Int) {
-                Log.e("onVASTCacheError", "error: $error")
-            }
-
-            override fun onVASTParserFinished(model: VASTModel) {
-                vastPlayer.load(model)
-            }
-        }).execute(getAdvData().adm)
 
     private fun getAdvData() = advData.seatbid[0].bid[0]
     private fun getAdvertiseType() =
@@ -94,6 +76,10 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
                     ShowErrorType.UNKNOWN,
                     exception?.message ?: ""
                 )
+            }
+
+            override fun onVASTPlayerCacheNotFound() {
+                advViewModel?.iAdShowListener?.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
             }
 
             override fun onVASTPlayerPlaybackStart() {
@@ -129,6 +115,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
                 } else {
                     handleShowChangeState(ShowCompletionState.CLOSE)
                     vastPlayer.onSkipConfirm()
+                    advViewModel?.advDataLive?.postValue(null)
                     finish()
                 }
             }

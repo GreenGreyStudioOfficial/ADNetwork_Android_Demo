@@ -8,6 +8,7 @@ import android.content.res.Resources
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,9 @@ import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
+import net.pubnative.player.VASTParser
+import net.pubnative.player.model.VASTModel
+import net.pubnative.player.processor.CacheFileManager
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
@@ -32,6 +36,7 @@ import java.io.IOException
 class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
+    var vastModel: VASTModel? = null
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
@@ -90,16 +95,38 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     lateinit var iAdShowListener: IAdShowListener
 
+    private fun parseAdvData(lurl: String?, vast: String) =
+        VASTParser(AdvApplication.instance).setListener(object : VASTParser.Listener {
+            override fun onVASTParserError(error: Int) {
+                Log.e("onVASTParserError", "error: $error")
+                iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
+                getUrl(lurl ?: "")
+            }
+
+            override fun onVASTCacheError(error: Int) {
+                iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND)
+                Log.e("onVASTCacheError", "error: $error")
+            }
+
+            override fun onVASTParserFinished(model: VASTModel) {
+                vastModel = model
+                AdvApplication.instance.startActivity(
+                    Intent(
+                        AdvApplication.instance,
+                        AdvActivity::class.java
+                    ).addFlags(FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        }).execute(vast)
+
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
         advDataLive.value?.let {
             this.iAdShowListener = iAdShowListener
-            AdvApplication.instance.startActivity(
-                Intent(
-                    AdvApplication.instance,
-                    AdvActivity::class.java
-                ).addFlags(FLAG_ACTIVITY_NEW_TASK)
-            )
-        } ?: iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+            parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
+        } ?: run {
+            CacheFileManager.getInstance().clearCache(AdvApplication.instance)
+            iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+        }
     }
 
     fun getUrl(url: String) {

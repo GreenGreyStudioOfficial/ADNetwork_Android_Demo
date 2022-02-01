@@ -60,4 +60,9 @@ public class CacheFileManager {
         return simpleCache;
     }
 
+    public void clearCache(Context context) {
+        getSimpleCache(context).release();
+        simpleCache =  null;
+        cacheWriter =  null;
+    }
 }
