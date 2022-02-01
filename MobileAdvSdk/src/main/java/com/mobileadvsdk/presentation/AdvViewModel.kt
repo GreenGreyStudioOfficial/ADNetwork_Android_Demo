@@ -1,15 +1,17 @@
 package com.mobileadvsdk.presentation
 
-import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.location.LocationServices
 import com.mobileadvsdk.AdvApplication
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
@@ -51,7 +53,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         ),
         AppInfo("secret", "GGAD_NETWORK_SDK", "com.DefaultCompany.GGAD_NETWORK_SD"),
         Device(
-            geo = Geo(11.0, 11.0),
+            geo = Geo(null, null),
             model = "OMEN Laptop 15-ek1xxx (HP)",
             os = "Windows 10  (10.0.19042) 64bit",
             w = Resources.getSystem().displayMetrics.widthPixels,
@@ -83,7 +85,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
     }
 
     override fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
-        getLocationFirst(advertiseType, listener)
+        makeRequest(advertiseType, listener)
     }
 
     lateinit var iAdShowListener: IAdShowListener
@@ -112,27 +114,32 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
         disposables.clear()
     }
 
-    @SuppressLint("MissingPermission")
-    fun getLocationFirst(advertiseType: AdvertiseType, listener: IAdLoadListener) {
-        val fusedLocationClient =
-            LocationServices.getFusedLocationProviderClient(AdvApplication.instance)
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { utilLocation: Location? ->
-                makeRequest(
-                    advertiseType,
-                    listener,
-                    Geo(utilLocation?.latitude, utilLocation?.longitude)
-                )
+    private fun getLastLocation() {
+        val manager =
+            AdvApplication.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        if (ContextCompat.checkSelfPermission(
+                AdvApplication.instance,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            var utilLocation: Location? = null
+            val providers = manager.getProviders(true)
+            for (provider in providers) {
+                provider?.let { it ->
+                    manager.getLastKnownLocation(it)?.let {
+                        utilLocation = it
+                    }
+                }
             }
+            deviceInfo.apply { device.geo = Geo(utilLocation?.latitude, utilLocation?.longitude) }
+        }
     }
 
-    private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener, geo: Geo) {
-        disposables += dataRepository.loadStartData(
-            deviceInfo.copy(
-                id = initDataLive.value?.gameId ?: ""
-            )
-                .apply { device.geo = geo }
-        )
+    private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener) {
+        getLastLocation()
+        disposables += dataRepository.loadStartData(deviceInfo)
             .observeOn(scheduler)
             .subscribeBy(
                 onSuccess = {
