@@ -28,57 +28,51 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.widget
 
-package net.pubnative.player.widget;
+import android.content.Context
+import android.util.AttributeSet
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.RotateAnimation
+import android.widget.FrameLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import net.pubnative.player.R
 
-import static android.view.animation.Animation.RELATIVE_TO_SELF;
+class CountDownView : FrameLayout {
+    private var progressBarView: ProgressBar? = null
+    private var progressTextView: TextView? = null
 
-import android.content.Context;
-import android.util.AttributeSet;
-import android.view.View;
-import android.view.animation.RotateAnimation;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
-import net.pubnative.player.R;
-
-public class CountDownView extends FrameLayout {
-    private ProgressBar progressBarView;
-    private TextView progressTextView;
-
-    public CountDownView(Context context) {
-        super(context);
-        init(context);
+    constructor(context: Context) : super(context) {
+        init(context)
     }
 
-    public CountDownView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        init(context)
     }
 
-    public CountDownView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init(context);
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle) {
+        init(context)
     }
 
-    private void init(Context ctx) {
-        View rootView = inflate(ctx, R.layout.pubnative_player_count_down, this);
-        progressBarView = (ProgressBar) rootView.findViewById(R.id.view_progress_bar);
-        progressTextView = (TextView) rootView.findViewById(R.id.view_progress_text);
-        RotateAnimation makeVertical = new RotateAnimation(0, -90, RELATIVE_TO_SELF, 0.5f, RELATIVE_TO_SELF, 0.5f);
-        makeVertical.setFillAfter(true);
-        progressBarView.startAnimation(makeVertical);
+    private fun init(ctx: Context) {
+        val rootView = inflate(ctx, R.layout.pubnative_player_count_down, this)
+        progressBarView = rootView.findViewById<View>(R.id.view_progress_bar) as ProgressBar
+        progressTextView = rootView.findViewById<View>(R.id.view_progress_text) as TextView
+        val makeVertical = RotateAnimation(0f, -90f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+        makeVertical.fillAfter = true
+        progressBarView!!.startAnimation(makeVertical)
     }
 
-    public void setProgress(int currentMs, int totalMs) {
-        progressBarView.setMax(totalMs);
-        progressBarView.setSecondaryProgress(totalMs);
-        progressBarView.setProgress(currentMs);
-        int remainSec = totalMs - currentMs;
+    fun setProgress(currentMs: Int, totalMs: Int) {
+        progressBarView!!.max = totalMs
+        progressBarView!!.secondaryProgress = totalMs
+        progressBarView!!.progress = currentMs
+        val remainSec = totalMs - currentMs
         if (remainSec <= 0) {
-            this.setVisibility(INVISIBLE);
+            this.visibility = INVISIBLE
         }
-        progressTextView.setText(String.valueOf(remainSec));
+        progressTextView!!.text = remainSec.toString()
     }
 }

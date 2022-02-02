@@ -28,180 +28,132 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.util
 
-package net.pubnative.player.util;
+import net.pubnative.player.util.VASTLog.d
+import net.pubnative.player.util.VASTLog.e
+import net.pubnative.player.util.VASTLog.v
+import net.pubnative.player.util.VASTLog
+import net.pubnative.player.util.XmlTools
+import org.w3c.dom.CharacterData
+import org.w3c.dom.Document
+import org.w3c.dom.Node
+import org.xml.sax.InputSource
+import java.io.*
+import java.lang.Exception
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.OutputKeys
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.stream.StreamResult
+import kotlin.Throws
 
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-public class XmlTools {
-
-    private static String TAG = XmlTools.class.getName();
-
-    public static void logXmlDocument(Document doc) {
-
-        VASTLog.d(TAG, "logXmlDocument");
-
+object XmlTools {
+    private val TAG = XmlTools::class.java.name
+    fun logXmlDocument(doc: Document?) {
+        d(TAG, "logXmlDocument")
         try {
-
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-            StringWriter sw = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(sw));
-
-            VASTLog.d(TAG, sw.toString());
-
-        } catch (Exception e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
-            ;
+            val tf = TransformerFactory.newInstance()
+            val transformer = tf.newTransformer()
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml")
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4")
+            val sw = StringWriter()
+            transformer.transform(DOMSource(doc), StreamResult(sw))
+            d(TAG, sw.toString())
+        } catch (e: Exception) {
+            e(TAG, e.message, e)
         }
     }
 
-    public static String xmlDocumentToString(Document doc) {
-
-        String xml = null;
-        VASTLog.d(TAG, "xmlDocumentToString");
-
+    fun xmlDocumentToString(doc: Document?): String? {
+        var xml: String? = null
+        d(TAG, "xmlDocumentToString")
         try {
-
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-            StringWriter sw = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(sw));
-
-            xml = sw.toString();
-
-        } catch (Exception e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
+            val tf = TransformerFactory.newInstance()
+            val transformer = tf.newTransformer()
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml")
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4")
+            val sw = StringWriter()
+            transformer.transform(DOMSource(doc), StreamResult(sw))
+            xml = sw.toString()
+        } catch (e: Exception) {
+            e(TAG, e.message, e)
         }
-
-        return xml;
+        return xml
     }
 
-    public static String xmlDocumentToString(Node node) {
-
-        String xml = null;
-        VASTLog.d(TAG, "xmlDocumentToString");
-
+    fun xmlDocumentToString(node: Node?): String? {
+        var xml: String? = null
+        d(TAG, "xmlDocumentToString")
         try {
-
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-
-            StringWriter sw = new StringWriter();
-            transformer.transform(new DOMSource(node), new StreamResult(sw));
-
-            xml = sw.toString();
-
-        } catch (Exception e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
+            val tf = TransformerFactory.newInstance()
+            val transformer = tf.newTransformer()
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml")
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4")
+            val sw = StringWriter()
+            transformer.transform(DOMSource(node), StreamResult(sw))
+            xml = sw.toString()
+        } catch (e: Exception) {
+            e(TAG, e.message, e)
         }
-
-        return xml;
+        return xml
     }
 
-    public static Document stringToDocument(String doc) {
-
-        VASTLog.d(TAG, "stringToDocument");
-
-        DocumentBuilder db;
-        Document        document = null;
-
+    fun stringToDocument(doc: String?): Document? {
+        d(TAG, "stringToDocument")
+        val db: DocumentBuilder
+        var document: Document? = null
         try {
-
-            db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
-            InputSource is = new InputSource();
-            is.setCharacterStream(new StringReader(doc));
-
-            document = db.parse(is);
-
-        } catch (Exception e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
+            db = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            val `is` = InputSource()
+            `is`.characterStream = StringReader(doc)
+            document = db.parse(`is`)
+        } catch (e: Exception) {
+            e(TAG, e.message, e)
         }
-        return document;
-
+        return document
     }
 
-    public static String stringFromStream(InputStream inputStream) throws IOException {
+//    @Throws(IOException::class)
+//    fun stringFromStream(inputStream: InputStream): String {
+//        d(TAG, "stringFromStream")
+//        val baos = ByteArrayOutputStream()
+//        val buffer = ByteArray(1024)
+//        var length = 0
+//        while (inputStream.read(buffer).also { length = it } != -1) {
+//            baos.write(buffer, 0, length)
+//        }
+//        val bytes = baos.toByteArray()
+//        return String(bytes, "UTF-8")
+//    }
 
-        VASTLog.d(TAG, "stringFromStream");
-
-        ByteArrayOutputStream baos   = new ByteArrayOutputStream();
-        byte[]                buffer = new byte[1024];
-        int                   length = 0;
-
-        while ((length = inputStream.read(buffer)) != -1) {
-
-            baos.write(buffer, 0, length);
-        }
-
-        byte[] bytes = baos.toByteArray();
-
-        return new String(bytes, "UTF-8");
-    }
-
-    public static String getElementValue(Node node) {
-
-        NodeList      childNodes = node.getChildNodes();
-        Node          child;
-        String        value      = null;
-        CharacterData cd;
-
-        for (int childIndex = 0; childIndex < childNodes.getLength(); childIndex++) {
-
-            child = childNodes.item(childIndex);
+    fun getElementValue(node: Node): String? {
+        val childNodes = node.childNodes
+        var child: Node
+        var value: String? = null
+        var cd: CharacterData
+        for (childIndex in 0 until childNodes.length) {
+            child = childNodes.item(childIndex)
             // value = child.getNodeValue().trim();
-            cd = (CharacterData) child;
-            value = cd.getData().trim();
-
-            if (value.length() == 0) {
+            cd = child as CharacterData
+            value = cd.data.trim { it <= ' ' }
+            if (value.isEmpty()) {
                 // this node was whitespace
-                continue;
+                continue
             }
-
-            VASTLog.v(TAG, "getElementValue: " + value);
-            return value;
+            v(TAG, "getElementValue: $value")
+            return value
         }
-
-        return value;
+        return value
     }
 }

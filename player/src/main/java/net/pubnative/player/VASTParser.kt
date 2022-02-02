@@ -28,112 +28,82 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player
 
-package net.pubnative.player;
+import android.content.Context
+import android.net.Uri
+import android.os.AsyncTask
+import net.pubnative.player.VASTParser
+import net.pubnative.player.model.VASTModel
+import net.pubnative.player.processor.CacheFileManager.Companion.instance
+import net.pubnative.player.processor.VASTMediaPicker
+import net.pubnative.player.processor.VASTProcessor
+import net.pubnative.player.util.DefaultMediaPicker
+import net.pubnative.player.util.VASTLog.v
+import java.io.IOException
 
-import android.content.Context;
-import android.net.Uri;
-import android.os.AsyncTask;
+class VASTParser(private val context: Context?) : AsyncTask<String?, Any?, VASTModel?>() {
+    private var listener: Listener? = null
+    private var resultError = ERROR_NONE
 
-import net.pubnative.player.model.VASTModel;
-import net.pubnative.player.processor.CacheFileManager;
-import net.pubnative.player.processor.VASTMediaPicker;
-import net.pubnative.player.processor.VASTProcessor;
-import net.pubnative.player.util.DefaultMediaPicker;
-import net.pubnative.player.util.VASTLog;
-
-import java.io.IOException;
-
-public class VASTParser extends AsyncTask<String, Object, VASTModel> {
-
-    private static final String TAG = VASTParser.class.getName();
-
-    public static final int ERROR_NONE = 0;
-    public static final int ERROR_XML_OPEN_OR_READ = 1;
-    public static final int ERROR_XML_PARSE = 2;
-    public static final int ERROR_POST_VALIDATION = 3;
-    public static final int ERROR_EXCEEDED_WRAPPER_LIMIT = 4;
-    public static final int ERROR_CACHE = 5;
-
-    private Context context = null;
-    private Listener listener = null;
-    private int resultError = ERROR_NONE;
-
-    public interface Listener {
-
-        void onVASTParserError(int error);
-
-        void onVASTCacheError(int error);
-
-        void onVASTParserFinished(VASTModel model);
+    interface Listener {
+        fun onVASTParserError(error: Int)
+        fun onVASTCacheError(error: Int)
+        fun onVASTParserFinished(model: VASTModel?)
     }
 
-    public VASTParser(Context context) {
-
-        this.context = context;
+    fun setListener(listener: Listener?): VASTParser {
+        v(TAG, "setListener")
+        this.listener = listener
+        return this
     }
 
-    public VASTParser setListener(Listener listener) {
-
-        VASTLog.v(TAG, "setListener");
-
-        this.listener = listener;
-        return this;
-    }
-
-    @Override
-    protected VASTModel doInBackground(String... params) {
-
-        VASTLog.v(TAG, "doInBackground");
-
-        VASTModel result = null;
-        this.resultError = ERROR_NONE;
-
-        String vastXML = null;
-        if (params.length > 0) {
-            vastXML = params[0];
+    override fun doInBackground(vararg params: String?): VASTModel? {
+        v(TAG, "doInBackground")
+        var result: VASTModel? = null
+        resultError = ERROR_NONE
+        var vastXML: String? = null
+        if (params.isNotEmpty()) {
+            vastXML = params[0]
         }
-
         if (vastXML != null) {
-
-            VASTMediaPicker mediaPicker = new DefaultMediaPicker(this.context);
-            VASTProcessor processor = new VASTProcessor(mediaPicker);
-
-            int error = processor.process(params[0]);
-
-            if (error == ERROR_NONE) {
-                result = cacheVideoFile(processor.getModel());
+            val mediaPicker: VASTMediaPicker = DefaultMediaPicker(context)
+            val processor = VASTProcessor(mediaPicker)
+            if (params[0]?.let { processor.process(it) } == ERROR_NONE) {
+                result = cacheVideoFile(processor.model)
             }
         }
-
-        return result;
+        return result
     }
 
-    private VASTModel cacheVideoFile(VASTModel model) {
+    private fun cacheVideoFile(model: VASTModel?): VASTModel? {
         try {
-            CacheFileManager.getInstance().cache(context, Uri.parse(model.getPickedMediaFileURL()));
-            return model;
-        } catch (IOException e) {
-            this.resultError = ERROR_CACHE;
+            instance!!.cache(context!!, Uri.parse(model!!.pickedMediaFileURL))
+            return model
+        } catch (e: IOException) {
+            resultError = ERROR_CACHE
         }
-        return null;
+        return null
     }
 
-    @Override
-    protected void onPostExecute(VASTModel result) {
-
-        VASTLog.v(TAG, "onPostExecute");
-
-        if (this.listener != null) {
-
+    override fun onPostExecute(result: VASTModel?) {
+        v(TAG, "onPostExecute")
+        if (listener != null) {
             if (result == null) {
-
-                this.listener.onVASTParserError(this.resultError);
-
+                listener!!.onVASTParserError(resultError)
             } else {
-
-                this.listener.onVASTParserFinished(result);
+                listener!!.onVASTParserFinished(result)
             }
         }
+    }
+
+    companion object {
+        private val TAG = VASTParser::class.java.name
+        const val ERROR_NONE = 0
+        const val ERROR_XML_OPEN_OR_READ = 1
+        const val ERROR_XML_PARSE = 2
+        const val ERROR_POST_VALIDATION = 3
+        const val ERROR_EXCEEDED_WRAPPER_LIMIT = 4
+        const val ERROR_CACHE = 5
     }
 }

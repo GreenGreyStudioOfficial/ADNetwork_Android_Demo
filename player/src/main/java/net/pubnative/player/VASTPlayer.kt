@@ -28,249 +28,197 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player
 
-package net.pubnative.player;
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.CountDownTimer
+import android.os.Handler
+import android.text.TextUtils
+import android.util.AttributeSet
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.RelativeLayout
+import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageView
+import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.analytics.AnalyticsListener
+import com.google.android.exoplayer2.analytics.AnalyticsListener.EventTime
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource
+import net.pubnative.player.model.TRACKING_EVENTS_TYPE
+import net.pubnative.player.model.VASTModel
+import net.pubnative.player.processor.CacheFileManager.Companion.instance
+import net.pubnative.player.util.HttpTools.httpGetURL
+import net.pubnative.player.util.VASTLog.d
+import net.pubnative.player.util.VASTLog.e
+import net.pubnative.player.util.VASTLog.i
+import net.pubnative.player.util.VASTLog.v
+import net.pubnative.player.util.VASTLog.w
+import net.pubnative.player.widget.CountDownView
+import java.util.*
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.CountDownTimer;
-import android.os.Handler;
-import android.text.TextUtils;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
-
-import androidx.appcompat.widget.AppCompatImageView;
-
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.analytics.AnalyticsListener;
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
-import com.google.android.exoplayer2.source.ProgressiveMediaSource;
-import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
-
-import net.pubnative.player.model.TRACKING_EVENTS_TYPE;
-import net.pubnative.player.model.VASTModel;
-import net.pubnative.player.processor.CacheFileManager;
-import net.pubnative.player.util.HttpTools;
-import net.pubnative.player.util.VASTLog;
-import net.pubnative.player.widget.CountDownView;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-
-public class VASTPlayer extends RelativeLayout implements
-        View.OnClickListener {
-
-    private static final String TAG = VASTPlayer.class.getName();
-    private static final String TEXT_BUFFERING = "Buffering...";
-    private CacheDataSource.Factory cacheDataSourceFactory;
-    private PlayerView playerView;
-    private ProgressBar progressBar;
-    private AdvType type = AdvType.INTERSTITIAL;
-
-    public void setType(AdvType type) {
-        this.type = type;
+class VASTPlayer : RelativeLayout, View.OnClickListener {
+    private var cacheDataSourceFactory: CacheDataSource.Factory? = null
+    private var playerView: PlayerView? = null
+    private var progressBar: ProgressBar? = null
+    private var type = AdvType.INTERSTITIAL
+    fun setType(type: AdvType) {
+        this.type = type
     }
 
     /**
      * Player type will lead to different layouts and behaviour to improve campaign type
      */
-    public enum CampaignType {
-
+    enum class CampaignType {
         // Cost per click, this will improve player click possibilities
-        CPC,
-
-        // Cost per million (of impressions), this will improve impression behaviour (keep playing)
+        CPC,  // Cost per million (of impressions), this will improve impression behaviour (keep playing)
         CPM
     }
 
     /**
      * Callbacks for following the player behaviour
      */
-    public interface Listener {
-
-        void onVASTPlayerLoadFinish();
-
-        void onVASTPlayerFail(Exception exception);
-
-        void onVASTPlayerCacheNotFound();
-
-        void onVASTPlayerPlaybackStart();
-
-        void onVASTPlayerPlaybackFinish();
-
-        void onVASTPlayerOpenOffer();
-
-        void onVASTPlayerOnFirstQuartile();
-
-        void onVASTPlayerOnMidpoint();
-
-        void onVASTPlayerOnThirdQuartile();
-
-        void onVASTPlayerClose(boolean needToConfirm);
+    interface Listener {
+        fun onVASTPlayerLoadFinish()
+        fun onVASTPlayerFail(exception: Exception?)
+        fun onVASTPlayerCacheNotFound()
+        fun onVASTPlayerPlaybackStart()
+        fun onVASTPlayerPlaybackFinish()
+        fun onVASTPlayerOpenOffer()
+        fun onVASTPlayerOnFirstQuartile()
+        fun onVASTPlayerOnMidpoint()
+        fun onVASTPlayerOnThirdQuartile()
+        fun onVASTPlayerClose(needToConfirm: Boolean)
     }
 
-    private enum PlayerState {
-        Empty,
-        Loading,
-        Ready,
-        Playing,
-        Pause
+    private enum class PlayerState {
+        Empty, Loading, Ready, Playing, Pause
     }
 
     // LISTENERS
-    private Listener mListener = null;
+    private var mListener: Listener? = null
 
     // TIMERS
-    private Timer mLayoutTimer;
-    private Timer mProgressTimer;
-    private CountDownTimer mTrackingEventsTimer;
-
-    private static final long TIMER_TRACKING_INTERVAL = 250;
-    private static final long TIMER_PROGRESS_INTERVAL = 50;
-    private static final long TIMER_LAYOUT_INTERVAL = 50;
-
-    private static final int MAX_PROGRESS_TRACKING_POINTS = 20;
+    private var mLayoutTimer: Timer? = null
+    private var mProgressTimer: Timer? = null
+    private var mTrackingEventsTimer: CountDownTimer? = null
 
     // TRACKING
-    private HashMap<TRACKING_EVENTS_TYPE, List<String>> mTrackingEventMap;
+    private var mTrackingEventMap: HashMap<TRACKING_EVENTS_TYPE, MutableList<String>>? = null
 
     // DATA
-    private VASTModel mVastModel;
-    private String mSkipName;
-    private int mSkipDelay;
+    private var mVastModel: VASTModel? = null
+    private var mSkipName: String? = null
+    private var mSkipDelay = 0
 
     // PLAYER
-    private SimpleExoPlayer simpleExoPlayer;
+    private var simpleExoPlayer: SimpleExoPlayer? = null
 
     // VIEWS
-    private View mRoot;
-    private View mOpen;
+    private var mRoot: View? = null
+    private var mOpen: View? = null
 
     // Player
-    private TextView mSkip;
-    private AppCompatImageView mMute;
-    private CountDownView mCountDown;
+    private var mSkip: TextView? = null
+    private var mMute: AppCompatImageView? = null
+    private var mCountDown: CountDownView? = null
 
     // OTHERS
-    private Handler mMainHandler = null;
-    private int mVideoHeight = 0;
-    private int mVideoWidth = 0;
-    private boolean mIsVideoMute = false;
-    private boolean mIsBufferingShown = false;
-    private boolean mIsDataSourceSet = false;
-    private CampaignType mCampaignType = CampaignType.CPM;
-    private PlayerState mPlayerState = PlayerState.Empty;
-    private List<Integer> mProgressTracker = null;
-    private double mTargetAspect = -1.0;
+    private var mMainHandler: Handler? = null
+    private var mVideoHeight = 0
+    private var mVideoWidth = 0
+    private var mIsVideoMute = false
+    private var mIsBufferingShown = false
+    private var mIsDataSourceSet = false
+    private var mCampaignType = CampaignType.CPM
+    private var mPlayerState = PlayerState.Empty
+    private var mProgressTracker: MutableList<Int> = mutableListOf()
+    private var mTargetAspect = -1.0
 
-    public VASTPlayer(Context context) {
-        super(context);
-    }
-
-    public VASTPlayer(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
+    constructor(context: Context?) : super(context) {}
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
 
     /**
-     * Sets the desired aspect ratio.  The value is <code>width / height</code>.
+     * Sets the desired aspect ratio.  The value is `width / height`.
      */
-    public void setAspectRatio(double aspectRatio) {
-        if (aspectRatio < 0) {
-            throw new IllegalArgumentException();
-        }
-        Log.d(TAG, "Setting aspect ratio to " + aspectRatio + " (was " + mTargetAspect + ")");
+    fun setAspectRatio(aspectRatio: Double) {
+        require(aspectRatio >= 0)
+        Log.d(TAG, "Setting aspect ratio to $aspectRatio (was $mTargetAspect)")
         if (mTargetAspect != aspectRatio) {
-            mTargetAspect = aspectRatio;
-            requestLayout();
+            mTargetAspect = aspectRatio
+            requestLayout()
         }
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
 
         // Target aspect ratio will be < 0 if it hasn't been set yet.  In that case,
         // we just use whatever we've been handed.
+        var widthMeasureSpec = widthMeasureSpec
+        var heightMeasureSpec = heightMeasureSpec
         if (mTargetAspect > 0) {
-            int initialWidth = MeasureSpec.getSize(widthMeasureSpec);
-            int initialHeight = MeasureSpec.getSize(heightMeasureSpec);
+            var initialWidth = MeasureSpec.getSize(widthMeasureSpec)
+            var initialHeight = MeasureSpec.getSize(heightMeasureSpec)
 
             // factor the padding out
-            int horizPadding = getPaddingLeft() + getPaddingRight();
-            int vertPadding = getPaddingTop() + getPaddingBottom();
-            initialWidth -= horizPadding;
-            initialHeight -= vertPadding;
-
-            double viewAspectRatio = (double) initialWidth / initialHeight;
-            double aspectDiff = mTargetAspect / viewAspectRatio - 1;
-
+            val horizPadding = paddingLeft + paddingRight
+            val vertPadding = paddingTop + paddingBottom
+            initialWidth -= horizPadding
+            initialHeight -= vertPadding
+            val viewAspectRatio = initialWidth.toDouble() / initialHeight
+            val aspectDiff = mTargetAspect / viewAspectRatio - 1
             if (Math.abs(aspectDiff) < 0.01) {
                 // We're very close already.  We don't want to risk switching from e.g. non-scaled
                 // 1280x720 to scaled 1280x719 because of some floating-point round-off error,
                 // so if we're really close just leave it alone.
-                Log.v(TAG, "aspect ratio is good (target=" + mTargetAspect +
-                        ", view=" + initialWidth + "x" + initialHeight + ")");
+                Log.v(
+                    TAG, "aspect ratio is good (target=" + mTargetAspect +
+                            ", view=" + initialWidth + "x" + initialHeight + ")"
+                )
             } else {
                 if (aspectDiff > 0) {
                     // limited by narrow width; restrict height
-                    initialHeight = (int) (initialWidth / mTargetAspect);
+                    initialHeight = (initialWidth / mTargetAspect).toInt()
                 } else {
                     // limited by short height; restrict width
-                    initialWidth = (int) (initialHeight * mTargetAspect);
+                    initialWidth = (initialHeight * mTargetAspect).toInt()
                 }
-                Log.v(TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
-                        horizPadding + "x" + vertPadding);
-                initialWidth += horizPadding;
-                initialHeight += vertPadding;
-                widthMeasureSpec = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY);
-                heightMeasureSpec = MeasureSpec.makeMeasureSpec(initialHeight, MeasureSpec.EXACTLY);
+                Log.v(
+                    TAG, "new size=" + initialWidth + "x" + initialHeight + " + padding " +
+                            horizPadding + "x" + vertPadding
+                )
+                initialWidth += horizPadding
+                initialHeight += vertPadding
+                widthMeasureSpec = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY)
+                heightMeasureSpec = MeasureSpec.makeMeasureSpec(initialHeight, MeasureSpec.EXACTLY)
             }
         }
-
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     //=======================================================
     // State machine
     //=======================================================
-
-    private boolean canSetState(PlayerState playerState) {
-
-        boolean result = false;
-
-        switch (playerState) {
-
-            case Empty:
-            case Pause:
-            case Loading:
-                result = true;
-                break;
-            case Ready:
-                result = (PlayerState.Loading == mPlayerState);
-                break;
-            case Playing:
-                result = ((mPlayerState == PlayerState.Ready)
-                        || (mPlayerState == PlayerState.Pause));
-                break;
+    private fun canSetState(playerState: PlayerState): Boolean {
+        var result = false
+        result = when (playerState) {
+            PlayerState.Empty, PlayerState.Pause, PlayerState.Loading -> true
+            PlayerState.Ready -> PlayerState.Loading == mPlayerState
+            PlayerState.Playing -> mPlayerState == PlayerState.Ready
+                    || mPlayerState == PlayerState.Pause
         }
-
-        return result;
+        return result
     }
 
     /**
@@ -279,129 +227,98 @@ public class VASTPlayer extends RelativeLayout implements
      * @param playerState state to set
      * @return
      */
-    private void setState(PlayerState playerState) {
-        Log.v(TAG, "setState: " + playerState.name());
+    private fun setState(playerState: PlayerState) {
+        Log.v(TAG, "setState: " + playerState.name)
         if (canSetState(playerState)) {
-            switch (playerState) {
-                case Empty:
-                    setEmptyState();
-                    break;
-                case Loading:
-                    setLoadingState();
-                    break;
-                case Ready:
-                    setReadyState();
-                    break;
-                case Playing:
-                    setPlayingState();
-                    break;
-                case Pause:
-                    setPauseState();
-                    break;
+            when (playerState) {
+                PlayerState.Empty -> setEmptyState()
+                PlayerState.Loading -> setLoadingState()
+                PlayerState.Ready -> setReadyState()
+                PlayerState.Playing -> setPlayingState()
+                PlayerState.Pause -> setPauseState()
             }
-
-            mPlayerState = playerState;
+            mPlayerState = playerState
         }
     }
 
-    private void setEmptyState() {
-
-        Log.v(TAG, "setEmptyState");
+    private fun setEmptyState() {
+        Log.v(TAG, "setEmptyState")
 
         // Visual aspect total empty
-        hideSurface();
-        hidePlayerLayout();
-        hideOpen();
-        hideLoader();
-
+        hideSurface()
+        hidePlayerLayout()
+        hideOpen()
+        hideLoader()
         /**
          * Do not change this order, since cleaning the media player before invalidating timers
          * could make the timers threads access an invalid media player
          */
-        stopTimers();
-        cleanMediaPlayer();
+        stopTimers()
+        cleanMediaPlayer()
         // Reset all other items
-        mIsDataSourceSet = false;
-        mVastModel = null;
-        mTrackingEventMap = null;
-        mProgressTracker = null;
+        mIsDataSourceSet = false
+        mVastModel = null
+        mTrackingEventMap = null
+        mProgressTracker = mutableListOf()
     }
 
-    private void setLoadingState() {
-
-        Log.v(TAG, "setLoadingState");
+    private fun setLoadingState() {
+        Log.v(TAG, "setLoadingState")
 
         // Show loader
-        hidePlayerLayout();
-
-        showSurface();
-        showLoader("");
-
-        mTrackingEventMap = mVastModel.getTrackingUrls();
-        createMediaPlayer();
-        turnVolumeOff();
-        startCaching();
+        hidePlayerLayout()
+        showSurface()
+        showLoader("")
+        mVastModel?.trackingUrls?.let { mTrackingEventMap = it }
+        createMediaPlayer()
+        turnVolumeOff()
+        startCaching()
     }
 
-    private void setReadyState() {
-
-        Log.v(TAG, "setReadyState");
-
-
-        hideLoader();
-        hidePlayerLayout();
-        showOpen();
-        showSurface();
-
-        turnVolumeOff();
+    private fun setReadyState() {
+        Log.v(TAG, "setReadyState")
+        hideLoader()
+        hidePlayerLayout()
+        showOpen()
+        showSurface()
+        turnVolumeOff()
     }
 
-    private void setPlayingState() {
-
-        Log.v(TAG, "setPlayingState");
-
-        hideLoader();
-        showOpen();
-        showSurface();
-        showPlayerLayout();
+    private fun setPlayingState() {
+        Log.v(TAG, "setPlayingState")
+        hideLoader()
+        showOpen()
+        showSurface()
+        showPlayerLayout()
         // calculateAspectRatio();
-        refreshVolume();
-        simpleExoPlayer.play();
-        startTimers();
+        refreshVolume()
+        simpleExoPlayer!!.play()
+        startTimers()
     }
 
-    private void setPauseState() {
-
-        Log.v(TAG, "setPauseState");
-
-        hideLoader();
-        hidePlayerLayout();
-
-        showOpen();
-        showSurface();
-        turnVolumeOff();
-        refreshVolume();
+    private fun setPauseState() {
+        Log.v(TAG, "setPauseState")
+        hideLoader()
+        hidePlayerLayout()
+        showOpen()
+        showSurface()
+        turnVolumeOff()
+        refreshVolume()
     }
-
     //=======================================================
     // PUBLIC
     //=======================================================
-
     /**
      * Constructor, generally used automatically by a layout inflater
      *
      * @param context
      * @param attrs
      */
-    public VASTPlayer(Context context, AttributeSet attrs) {
-
-        super(context, attrs);
-
-        mMainHandler = new Handler(getContext().getMainLooper());
-
-        createMediaPlayer();
-        createLayout();
-        setEmptyState();
+    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
+        mMainHandler = Handler(getContext().mainLooper)
+        createMediaPlayer()
+        createLayout()
+        setEmptyState()
     }
 
     /**
@@ -409,10 +326,9 @@ public class VASTPlayer extends RelativeLayout implements
      *
      * @param listener Listener
      */
-    public void setListener(Listener listener) {
-
-        Log.v(TAG, "setListener");
-        mListener = listener;
+    fun setListener(listener: Listener?) {
+        Log.v(TAG, "setListener")
+        mListener = listener
     }
 
     /**
@@ -420,10 +336,9 @@ public class VASTPlayer extends RelativeLayout implements
      *
      * @param campaignType campign type
      */
-    public void setCampaignType(CampaignType campaignType) {
-
-        Log.v(TAG, "setCampaignType");
-        mCampaignType = campaignType;
+    fun setCampaignType(campaignType: CampaignType) {
+        Log.v(TAG, "setCampaignType")
+        mCampaignType = campaignType
     }
 
     /**
@@ -431,192 +346,173 @@ public class VASTPlayer extends RelativeLayout implements
      *
      * @param name  name of the string to be shown, any empty string will disable the button
      * @param delay delay in milliseconds to show the skip button, negative values will disable
-     *              the button
+     * the button
      */
-    public void setSkip(String name, int delay) {
+    fun setSkip(name: String?, delay: Int) {
         if (TextUtils.isEmpty(name)) {
-            Log.w(TAG, "Skip name set to empty value, this will disable the button");
+            Log.w(TAG, "Skip name set to empty value, this will disable the button")
         } else if (delay < 0) {
-            Log.w(TAG, "Skip time set to negative value, this will disable the button");
+            Log.w(TAG, "Skip time set to negative value, this will disable the button")
         }
-
-        mSkipName = name;
-        mSkipDelay = delay;
+        mSkipName = name
+        mSkipDelay = delay
     }
-
     //=======================================================
     // Player actions
     //=======================================================
-
     /**
      * Starts loading a video VASTModel in the player, it will notify when it's ready with
      * CachingListener.onVASTPlayerCachingFinish(), so you can start video reproduction.
      *
      * @param model model containing the parsed VAST XML
      */
-    public void load(VASTModel model) {
-        VASTLog.v(TAG, "load");
+    fun load(model: VASTModel?) {
+        v(TAG, "load")
         // Clean, assign, load
-        setState(PlayerState.Empty);
-        mVastModel = model;
-        mIsDataSourceSet = false;
-        setState(PlayerState.Loading);
+        setState(PlayerState.Empty)
+        mVastModel = model
+        mIsDataSourceSet = false
+        setState(PlayerState.Loading)
     }
 
     /**
      * Starts video playback if possible
      */
-    public void play() {
-        VASTLog.v(TAG, "play");
+    fun play() {
+        v(TAG, "play")
         if (canSetState(PlayerState.Playing)) {
-            setState(PlayerState.Playing);
+            setState(PlayerState.Playing)
         } else if (mPlayerState == PlayerState.Empty) {
-            setState(PlayerState.Ready);
+            setState(PlayerState.Ready)
         } else {
-            VASTLog.e(TAG, "ERROR, player in wrong state: " + mPlayerState.name());
+            e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
         }
     }
 
     /**
      * Stops video playback
      */
-    public void stop() {
-        VASTLog.v(TAG, "stop");
+    fun stop() {
+        v(TAG, "stop")
         if (canSetState(PlayerState.Loading) && mIsDataSourceSet) {
-
-            stopTimers();
+            stopTimers()
             if (simpleExoPlayer != null) {
-                simpleExoPlayer.stop();
-                simpleExoPlayer.release();
-                mIsDataSourceSet = false;
-                quartileSet.clear();
+                simpleExoPlayer!!.stop()
+                simpleExoPlayer!!.release()
+                mIsDataSourceSet = false
+                quartileSet.clear()
             }
-            setState(PlayerState.Loading);
+            setState(PlayerState.Loading)
         } else {
-            VASTLog.e(TAG, "ERROR, player in wrong state: " + mPlayerState.name());
+            e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
         }
     }
 
     /**
      * Stops video playback
      */
-    public void pause() {
-
-        VASTLog.v(TAG, "pause");
-
+    fun pause() {
+        v(TAG, "pause")
         if (canSetState(PlayerState.Pause) && mIsDataSourceSet) {
-
-            if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-                stopQuartileTimer();
-                simpleExoPlayer.pause();
+            if (simpleExoPlayer != null && simpleExoPlayer!!.isPlaying) {
+                stopQuartileTimer()
+                simpleExoPlayer!!.pause()
             }
-            setState(PlayerState.Pause);
+            setState(PlayerState.Pause)
         } else {
-            VASTLog.e(TAG, "ERROR, player in wrong state: " + mPlayerState.name());
+            e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
         }
     }
 
     /**
      * Destroys current player and clears all loaded data and tracking items
      */
-    public void destroy() {
-        VASTLog.v(TAG, "clear");
-        setState(PlayerState.Empty);
+    fun destroy() {
+        v(TAG, "clear")
+        setState(PlayerState.Empty)
     }
 
     //=======================================================
     // Private
     //=======================================================
-
     // User Interaction
     //-------------------------------------------------------
-
-    public void onMuteClick() {
-
-        VASTLog.v(TAG, "onMuteClick");
-
+    fun onMuteClick() {
+        v(TAG, "onMuteClick")
         if (simpleExoPlayer != null) {
-            processEvent(mIsVideoMute ? TRACKING_EVENTS_TYPE.unmute : TRACKING_EVENTS_TYPE.mute);
-            mIsVideoMute = !mIsVideoMute;
-            refreshVolume();
+            processEvent(if (mIsVideoMute) TRACKING_EVENTS_TYPE.unmute else TRACKING_EVENTS_TYPE.mute)
+            mIsVideoMute = !mIsVideoMute
+            refreshVolume()
         }
     }
 
-    public void onSkipClick() {
-        VASTLog.v(TAG, "onSkipClick");
+    fun onSkipClick() {
+        v(TAG, "onSkipClick")
         if (simpleExoPlayer != null) {
-            mListener.onVASTPlayerClose(needShowDialogClose);
-            pause();
+            mListener!!.onVASTPlayerClose(needShowDialogClose)
+            pause()
         } else {
-            mListener.onVASTPlayerClose(needShowDialogClose);
+            mListener!!.onVASTPlayerClose(needShowDialogClose)
         }
     }
 
-    public void onSkipConfirm() {
-        processEvent(TRACKING_EVENTS_TYPE.close);
-        destroy();
+    fun onSkipConfirm() {
+        processEvent(TRACKING_EVENTS_TYPE.close)
+        destroy()
     }
 
-    public void onOpenClick() {
-        VASTLog.v(TAG, "onOpenClick");
-        openOffer();
-        pause();
+    fun onOpenClick() {
+        v(TAG, "onOpenClick")
+        openOffer()
+        pause()
     }
 
-    private void openOffer() {
-        String clickThroughUrl = mVastModel.getVideoClicks().getClickThrough();
-        VASTLog.d(TAG, "openOffer - clickThrough url: " + clickThroughUrl);
+    private fun openOffer() {
+        val clickThroughUrl = mVastModel!!.videoClicks!!.clickThrough
+        d(TAG, "openOffer - clickThrough url: $clickThroughUrl")
         // Before we send the app to the click through url, we will process ClickTracking URL's.
-        List<String> urls = mVastModel.getVideoClicks().getClickTracking();
-        fireUrls(urls);
+        val urls = mVastModel?.videoClicks?.retrieveClickTracking()
+        fireUrls(urls)
         // Navigate to the click through url
         try {
-            Uri uri = Uri.parse(clickThroughUrl);
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            getContext().startActivity(intent);
-            invokeOnPlayerOpenOffer();
-        } catch (NullPointerException e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
+            val uri = Uri.parse(clickThroughUrl)
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            context.startActivity(intent)
+            invokeOnPlayerOpenOffer()
+        } catch (e: NullPointerException) {
+            e(TAG, e.message, e)
         }
     }
 
     // Layout
     //-------------------------------------------------------
-    private void createLayout() {
-
-        VASTLog.v(TAG, "createLayout");
-
+    private fun createLayout() {
+        v(TAG, "createLayout")
         if (mRoot == null) {
-
-            mRoot = LayoutInflater.from(getContext()).inflate(R.layout.pubnative_player, null);
-
-            playerView = (PlayerView) mRoot.findViewById(R.id.playerView);
-            progressBar = (ProgressBar) mRoot.findViewById(R.id.progress);
-
-            mMute = (AppCompatImageView) mRoot.findViewById(R.id.mute);
-            mMute.setVisibility(INVISIBLE);
-            mMute.setOnClickListener(this);
-
-            mCountDown = (CountDownView) mRoot.findViewById(R.id.count_down);
-            mCountDown.setVisibility(INVISIBLE);
-
-            mSkip = (TextView) mRoot.findViewById(R.id.skip);
-            mSkip.setVisibility(INVISIBLE);
-            mSkip.setOnClickListener(this);
-
-            mOpen = mRoot.findViewById(R.id.open);
-            mOpen.setVisibility(INVISIBLE);
-            mOpen.setOnClickListener(this);
-
-            addView(mRoot, new ViewGroup.LayoutParams(
+            mRoot = LayoutInflater.from(context).inflate(R.layout.pubnative_player, null)
+            playerView = mRoot?.findViewById<View>(R.id.playerView) as PlayerView
+            progressBar = mRoot?.findViewById<View>(R.id.progress) as ProgressBar
+            mMute = mRoot?.findViewById<View>(R.id.mute) as AppCompatImageView
+            mMute?.visibility = INVISIBLE
+            mMute?.setOnClickListener(this)
+            mCountDown = mRoot?.findViewById<View>(R.id.count_down) as CountDownView
+            mCountDown?.visibility = INVISIBLE
+            mSkip = mRoot?.findViewById<View>(R.id.skip) as TextView
+            mSkip?.visibility = INVISIBLE
+            mSkip?.setOnClickListener(this)
+            mOpen = mRoot?.findViewById(R.id.open)
+            mOpen?.visibility = INVISIBLE
+            mOpen?.setOnClickListener(this)
+            addView(
+                mRoot, ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT));
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            )
         }
     }
 
-    private void showLoader(String message) {
-
+    private fun showLoader(message: String) {
         if (mPlayerState != PlayerState.Pause) {
 //            mLoader.setVisibility(VISIBLE);
 //            mLoaderText.setText(message);
@@ -624,529 +520,444 @@ public class VASTPlayer extends RelativeLayout implements
         }
     }
 
-    private void hideLoader() {
-
+    private fun hideLoader() {}
+    private fun hideOpen() {
+        mOpen!!.visibility = INVISIBLE
     }
 
-    private void hideOpen() {
-
-        mOpen.setVisibility(INVISIBLE);
+    private fun showOpen() {
+        mOpen!!.visibility = VISIBLE
     }
 
-    private void showOpen() {
-
-        mOpen.setVisibility(VISIBLE);
+    private fun hideSurface() {}
+    private fun showSurface() {}
+    private fun hidePlayerLayout() {
+        mSkip!!.visibility = INVISIBLE
+        mMute!!.visibility = INVISIBLE
+        mCountDown!!.visibility = INVISIBLE
     }
 
-    private void hideSurface() {
-    }
-
-    private void showSurface() {
-    }
-
-    private void hidePlayerLayout() {
-
-        mSkip.setVisibility(INVISIBLE);
-        mMute.setVisibility(INVISIBLE);
-        mCountDown.setVisibility(INVISIBLE);
-    }
-
-    private void showPlayerLayout() {
-        mMute.setVisibility(VISIBLE);
-        mCountDown.setVisibility(VISIBLE);
+    private fun showPlayerLayout() {
+        mMute!!.visibility = VISIBLE
+        mCountDown!!.visibility = VISIBLE
     }
 
     // Media player
     //-------------------------------------------------------
-
-    private void createMediaPlayer() {
-
-        VASTLog.v(TAG, "createMediaPlayer");
-
+    private fun createMediaPlayer() {
+        v(TAG, "createMediaPlayer")
         if (simpleExoPlayer == null) {
-            cacheDataSourceFactory = new CacheDataSource.Factory()
-                    .setCache(CacheFileManager.getInstance().getSimpleCache(getContext()))
-                    .setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory()
-                            .setAllowCrossProtocolRedirects(true))
-                    .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-
-            simpleExoPlayer = new SimpleExoPlayer.Builder(getContext())
-                    .setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory)).build();
-
-            simpleExoPlayer.addAnalyticsListener(new AnalyticsListener() {
-                @Override
-                public void onPlaybackStateChanged(EventTime eventTime, int state) {
+            cacheDataSourceFactory = CacheDataSource.Factory()
+                .setCache(instance!!.getSimpleCache(context)!!)
+                .setUpstreamDataSourceFactory(
+                    DefaultHttpDataSource.Factory()
+                        .setAllowCrossProtocolRedirects(true)
+                )
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+            simpleExoPlayer = SimpleExoPlayer.Builder(context)
+                .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory!!)).build()
+            simpleExoPlayer!!.addAnalyticsListener(object : AnalyticsListener {
+                override fun onPlaybackStateChanged(eventTime: EventTime, state: Int) {
                     if (state == Player.STATE_ENDED) {
-                        VASTLog.v(TAG, "onCompletion -- (MediaPlayer callback)");
-                        processEvent(TRACKING_EVENTS_TYPE.complete);
-                        invokeOnPlayerPlaybackFinish();
-                        mCountDown.setVisibility(INVISIBLE);
+                        v(TAG, "onCompletion -- (MediaPlayer callback)")
+                        processEvent(TRACKING_EVENTS_TYPE.complete)
+                        invokeOnPlayerPlaybackFinish()
+                        mCountDown!!.visibility = INVISIBLE
                     } else if (state == Player.STATE_READY) {
-                        VASTLog.v(TAG, "onPrepared --(MediaPlayer callback) ....about to play");
-                        setState(PlayerState.Ready);
-                        invokeOnPlayerLoadFinish();
+                        v(TAG, "onPrepared --(MediaPlayer callback) ....about to play")
+                        setState(PlayerState.Ready)
+                        invokeOnPlayerLoadFinish()
                     }
                 }
 
-                @Override
-                public void onPlayerError(EventTime eventTime, ExoPlaybackException error) {
-                    VASTLog.v(TAG, "onError -- (MediaPlayer callback)");
-
-                    processErrorEvent();
-                    mListener.onVASTPlayerCacheNotFound();
-
-                    invokeOnFail(new Exception("VASTPlayer error: " + error.getMessage()));
-                    destroy();
+                override fun onPlayerError(eventTime: EventTime, error: ExoPlaybackException) {
+                    v(TAG, "onError -- (MediaPlayer callback)")
+                    processErrorEvent()
+                    mListener!!.onVASTPlayerCacheNotFound()
+                    invokeOnFail(Exception("VASTPlayer error: " + error.message))
+                    destroy()
                 }
 
-                @Override
-                public void onVideoSizeChanged(EventTime eventTime, int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
-                    VASTLog.v(TAG, "onVideoSizeChanged -- " + width + " x " + height);
-
-                    mVideoWidth = width;
-                    mVideoHeight = height;
+                override fun onVideoSizeChanged(
+                    eventTime: EventTime,
+                    width: Int,
+                    height: Int,
+                    unappliedRotationDegrees: Int,
+                    pixelWidthHeightRatio: Float
+                ) {
+                    v(TAG, "onVideoSizeChanged -- $width x $height")
+                    mVideoWidth = width
+                    mVideoHeight = height
                 }
-            });
+            })
         }
     }
 
-    private void cleanMediaPlayer() {
-        VASTLog.v(TAG, "cleanUpMediaPlayer");
+    private fun cleanMediaPlayer() {
+        v(TAG, "cleanUpMediaPlayer")
         if (simpleExoPlayer != null) {
-            turnVolumeOff();
-            simpleExoPlayer.stop();
-            simpleExoPlayer.release();
-            simpleExoPlayer.clearVideoSurface();
-            simpleExoPlayer = null;
+            turnVolumeOff()
+            simpleExoPlayer!!.stop()
+            simpleExoPlayer!!.release()
+            simpleExoPlayer!!.clearVideoSurface()
+            simpleExoPlayer = null
         }
     }
 
-    public void refreshVolume() {
-
+    fun refreshVolume() {
         if (mIsVideoMute) {
-            turnVolumeOff();
-            mMute.setImageResource(R.drawable.ic_baseline_volume_off_24);
+            turnVolumeOff()
+            mMute!!.setImageResource(R.drawable.ic_baseline_volume_off_24)
         } else {
-            turnVolumeOn();
-            mMute.setImageResource(R.drawable.ic_baseline_volume_up_24);
+            turnVolumeOn()
+            mMute!!.setImageResource(R.drawable.ic_baseline_volume_up_24)
         }
     }
 
-    public void turnVolumeOff() {
-        simpleExoPlayer.setVolume(0.0f);
+    fun turnVolumeOff() {
+        simpleExoPlayer!!.volume = 0.0f
     }
 
-    public void turnVolumeOn() {
-        simpleExoPlayer.setVolume(1.0f);
+    fun turnVolumeOn() {
+        simpleExoPlayer!!.volume = 1.0f
     }
 
-    protected void calculateAspectRatio() {
-
-        VASTLog.v(TAG, "calculateAspectRatio");
-
+    protected fun calculateAspectRatio() {
+        v(TAG, "calculateAspectRatio")
         if (mVideoWidth == 0 || mVideoHeight == 0) {
-
-            VASTLog.w(TAG, "calculateAspectRatio - video source width or height is 0, skipping...");
-            return;
+            w(TAG, "calculateAspectRatio - video source width or height is 0, skipping...")
+            return
         }
-
-        double widthRatio = 1.0 * getWidth() / mVideoWidth;
-        double heightRatio = 1.0 * getHeight() / mVideoHeight;
-
-        double scale = Math.max(widthRatio, heightRatio);
-
-        int surfaceWidth = (int) (mVideoWidth);
-        int surfaceHeight = (int) (mVideoHeight);
-
-        VASTLog.i(TAG, " view size:     " + getWidth() + "x" + getHeight());
-        VASTLog.i(TAG, " video size:    " + mVideoWidth + "x" + mVideoHeight);
-        VASTLog.i(TAG, " surface size:  " + surfaceWidth + "x" + surfaceHeight);
-
-        updateLayout();
-
-        setAspectRatio((double) mVideoWidth / mVideoHeight);
+        val widthRatio = 1.0 * width / mVideoWidth
+        val heightRatio = 1.0 * height / mVideoHeight
+        val scale = Math.max(widthRatio, heightRatio)
+        i(TAG, " view size:     " + width + "x" + height)
+        i(TAG, " video size:    " + mVideoWidth + "x" + mVideoHeight)
+        i(TAG, " surface size:  " + mVideoWidth + "x" + mVideoHeight)
+        updateLayout()
+        setAspectRatio(mVideoWidth.toDouble() / mVideoHeight)
     }
 
-    private void updateLayout() {
-
-        VASTLog.v(TAG, "updateLayout");
-
-        RelativeLayout.LayoutParams muteParams = (RelativeLayout.LayoutParams) mMute.getLayoutParams();
-        muteParams.addRule(RelativeLayout.ALIGN_TOP, R.id.playerView);
-        muteParams.addRule(RelativeLayout.ALIGN_LEFT, R.id.playerView);
-        mMute.setLayoutParams(muteParams);
-
-        RelativeLayout.LayoutParams openParams = (RelativeLayout.LayoutParams) mOpen.getLayoutParams();
-        openParams.addRule(RelativeLayout.ALIGN_TOP, R.id.playerView);
-        openParams.addRule(RelativeLayout.ALIGN_RIGHT, R.id.playerView);
-        mOpen.setLayoutParams(openParams);
-
-        RelativeLayout.LayoutParams countDownParams = (RelativeLayout.LayoutParams) mCountDown.getLayoutParams();
-        countDownParams.addRule(RelativeLayout.ALIGN_BOTTOM, R.id.playerView);
-        countDownParams.addRule(RelativeLayout.ALIGN_LEFT, R.id.playerView);
-        mCountDown.setLayoutParams(countDownParams);
-
-        RelativeLayout.LayoutParams skipParams = (RelativeLayout.LayoutParams) mSkip.getLayoutParams();
-        skipParams.addRule(RelativeLayout.ALIGN_BOTTOM, R.id.playerView);
-        skipParams.addRule(RelativeLayout.ALIGN_RIGHT, R.id.playerView);
-        mSkip.setLayoutParams(skipParams);
-
+    private fun updateLayout() {
+        v(TAG, "updateLayout")
+        val muteParams = mMute!!.layoutParams as LayoutParams
+        muteParams.addRule(ALIGN_TOP, R.id.playerView)
+        muteParams.addRule(ALIGN_LEFT, R.id.playerView)
+        mMute!!.layoutParams = muteParams
+        val openParams = mOpen!!.layoutParams as LayoutParams
+        openParams.addRule(ALIGN_TOP, R.id.playerView)
+        openParams.addRule(ALIGN_RIGHT, R.id.playerView)
+        mOpen!!.layoutParams = openParams
+        val countDownParams = mCountDown!!.layoutParams as LayoutParams
+        countDownParams.addRule(ALIGN_BOTTOM, R.id.playerView)
+        countDownParams.addRule(ALIGN_LEFT, R.id.playerView)
+        mCountDown!!.layoutParams = countDownParams
+        val skipParams = mSkip!!.layoutParams as LayoutParams
+        skipParams.addRule(ALIGN_BOTTOM, R.id.playerView)
+        skipParams.addRule(ALIGN_RIGHT, R.id.playerView)
+        mSkip!!.layoutParams = skipParams
     }
 
-    private void startCaching() {
-
-        VASTLog.v(TAG, "startCaching");
-
+    private fun startCaching() {
+        v(TAG, "startCaching")
         try {
             if (!mIsDataSourceSet) {
-                mIsDataSourceSet = true;
-                String videoURL = mVastModel.getPickedMediaFileURL();
-                MediaItem mediaItem = MediaItem.fromUri(videoURL);
-                ProgressiveMediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(mediaItem);
-
-                playerView.setPlayer(simpleExoPlayer);
-                simpleExoPlayer.seekTo(0, 0);
-                simpleExoPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
-                simpleExoPlayer.setMediaSource(mediaSource, true);
-                simpleExoPlayer.prepare();
+                mIsDataSourceSet = true
+                val videoURL = mVastModel!!.pickedMediaFileURL
+                val mediaItem = MediaItem.fromUri(
+                    videoURL!!
+                )
+                val mediaSource = ProgressiveMediaSource.Factory(cacheDataSourceFactory!!).createMediaSource(mediaItem)
+                playerView!!.player = simpleExoPlayer
+                simpleExoPlayer!!.seekTo(0, 0)
+                simpleExoPlayer!!.repeatMode = Player.REPEAT_MODE_OFF
+                simpleExoPlayer!!.setMediaSource(mediaSource, true)
+                simpleExoPlayer!!.prepare()
             }
-
-            simpleExoPlayer.prepare();
-
-        } catch (Exception exception) {
-
-            invokeOnFail(exception);
-            destroy();
+            simpleExoPlayer!!.prepare()
+        } catch (exception: Exception) {
+            invokeOnFail(exception)
+            destroy()
         }
     }
 
     // Event processing
     //-------------------------------------------------------
-    private void processEvent(TRACKING_EVENTS_TYPE eventName) {
-
-        VASTLog.v(TAG, "processEvent: " + eventName);
-
+    private fun processEvent(eventName: TRACKING_EVENTS_TYPE) {
+        v(TAG, "processEvent: $eventName")
         if (mTrackingEventMap != null) {
-
-            List<String> urls = mTrackingEventMap.get(eventName);
-            fireUrls(urls);
+            val urls = mTrackingEventMap!![eventName]!!
+            fireUrls(urls)
         }
     }
 
-    private void processImpressions() {
-
-        VASTLog.v(TAG, "processImpressions");
-
-        List<String> impressions = mVastModel.getImpressions();
-        fireUrls(impressions);
+    private fun processImpressions() {
+        v(TAG, "processImpressions")
+        val impressions = mVastModel!!.impressions
+        fireUrls(impressions)
     }
 
-    private void processErrorEvent() {
-
-        VASTLog.v(TAG, "processErrorEvent");
-
-        List<String> errorUrls = mVastModel.getErrorUrl();
-        fireUrls(errorUrls);
+    private fun processErrorEvent() {
+        v(TAG, "processErrorEvent")
+        val errorUrls = mVastModel!!.errorUrl
+        fireUrls(errorUrls)
     }
 
-    private void fireUrls(List<String> urls) {
-
-        VASTLog.v(TAG, "fireUrls");
-
+    private fun fireUrls(urls: List<String>?) {
+        v(TAG, "fireUrls")
         if (urls != null) {
-
-            for (String url : urls) {
-
-                VASTLog.v(TAG, "\tfiring url:" + url);
-                HttpTools.httpGetURL(url);
+            for (url in urls) {
+                v(TAG, "\tfiring url:$url")
+                httpGetURL(url)
             }
-
         } else {
-
-            VASTLog.d(TAG, "\turl list is null");
+            d(TAG, "\turl list is null")
         }
     }
 
     //=======================================================
     // Timers
     //=======================================================
-
-    private void stopTimers() {
-
-        VASTLog.v(TAG, "stopTimers");
-
-        stopQuartileTimer();
-        stopLayoutTimer();
-        stopVideoProgressTimer();
-
-        mMainHandler.removeMessages(0);
+    private fun stopTimers() {
+        v(TAG, "stopTimers")
+        stopQuartileTimer()
+        stopLayoutTimer()
+        stopVideoProgressTimer()
+        mMainHandler!!.removeMessages(0)
     }
 
-    private void startTimers() {
-        setSkip("Close", mVastModel.getSkipOffset());
-        VASTLog.v(TAG, "startTimers");
+    private fun startTimers() {
+        setSkip("Close", mVastModel!!.skipOffset)
+        v(TAG, "startTimers")
 
         // Stop previous timers so they don't remain hold
-        stopTimers();
+        stopTimers()
 
         // start timers
-        startQuartileTimer();
-        startLayoutTimer();
-        startVideoProgressTimer();
+        startQuartileTimer()
+        startLayoutTimer()
+        startVideoProgressTimer()
     }
 
     // Progress timer
     //-------------------------------------------------------
-    private void startVideoProgressTimer() {
-
-        VASTLog.d(TAG, "startVideoProgressTimer");
-
-        mProgressTimer = new Timer();
-        mProgressTracker = new ArrayList<Integer>();
-        mProgressTimer.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                if (mProgressTracker.size() > MAX_PROGRESS_TRACKING_POINTS) {
-                    int firstPosition = mProgressTracker.get(0);
-                    int lastPosition = mProgressTracker.get(mProgressTracker.size() - 1);
+    private fun startVideoProgressTimer() {
+        d(TAG, "startVideoProgressTimer")
+        mProgressTimer = Timer()
+        mProgressTracker = ArrayList()
+        mProgressTimer!!.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                if (mProgressTracker.size > MAX_PROGRESS_TRACKING_POINTS) {
+                    val firstPosition = mProgressTracker[0]
+                    val lastPosition = mProgressTracker[mProgressTracker.size - 1]
                     if (lastPosition > firstPosition) {
                         if (mIsBufferingShown) {
-                            mIsBufferingShown = false;
-                            mMainHandler.post(() -> hideLoader());
+                            mIsBufferingShown = false
+                            mMainHandler!!.post { hideLoader() }
                         }
                     } else {
                         if (!mIsBufferingShown) {
-                            mIsBufferingShown = true;
-                            mMainHandler.post(() -> showLoader(TEXT_BUFFERING));
+                            mIsBufferingShown = true
+                            mMainHandler!!.post { showLoader(TEXT_BUFFERING) }
                         }
                     }
-                    mProgressTracker.remove(0);
+                    mProgressTracker.removeAt(0)
                 }
-                mMainHandler.post(() -> {
+                mMainHandler!!.post {
                     try {
-                        mProgressTracker.add((int) simpleExoPlayer.getCurrentPosition());
-                    } catch (Exception ignored) {
+                        mProgressTracker.add(simpleExoPlayer!!.currentPosition.toInt())
+                    } catch (ignored: Exception) {
                     }
-                });
+                }
             }
-
-        }, 0, TIMER_PROGRESS_INTERVAL);
+        }, 0, TIMER_PROGRESS_INTERVAL)
     }
 
-    private void stopVideoProgressTimer() {
-
-        VASTLog.d(TAG, "stopVideoProgressTimer");
-
+    private fun stopVideoProgressTimer() {
+        d(TAG, "stopVideoProgressTimer")
         if (mProgressTimer != null) {
-
-            mProgressTimer.cancel();
-            mProgressTimer = null;
+            mProgressTimer!!.cancel()
+            mProgressTimer = null
         }
     }
 
-    private final Set<String> quartileSet = new HashSet<>();
+    private val quartileSet: MutableSet<String> = HashSet()
 
     // Quartile timer
     //-------------------------------------------------------
-    private void startQuartileTimer() {
-        progressBar.setVisibility(VISIBLE);
-        VASTLog.v(TAG, "startQuartileTimer");
-        mTrackingEventsTimer = new CountDownTimer(simpleExoPlayer.getDuration(), 250) {
-            public void onTick(long millisUntilFinished) {
-                int percentage = (int) ((simpleExoPlayer.getCurrentPosition() * 100) / simpleExoPlayer.getDuration());
-                progressBar.setProgress(percentage);
-                if (simpleExoPlayer.getCurrentPosition() == 0) {
-                    return;
+    private fun startQuartileTimer() {
+        progressBar!!.visibility = VISIBLE
+        v(TAG, "startQuartileTimer")
+        mTrackingEventsTimer = object : CountDownTimer(simpleExoPlayer!!.duration, 250) {
+            override fun onTick(millisUntilFinished: Long) {
+                val percentage = (simpleExoPlayer!!.currentPosition * 100 / simpleExoPlayer!!.duration).toInt()
+                progressBar!!.progress = percentage
+                if (simpleExoPlayer!!.currentPosition == 0L) {
+                    return
                 }
                 if (percentage < 25 && !quartileSet.contains(TRACKING_EVENTS_TYPE.start.toString())) {
-                    VASTLog.i(TAG, "Video at start: (" + percentage + "%)");
-                    processImpressions();
-                    processEvent(TRACKING_EVENTS_TYPE.start);
-                    quartileSet.add(TRACKING_EVENTS_TYPE.start.toString());
-                    invokeOnPlayerPlaybackStart();
-                } else if (percentage >= 25 && percentage < 50 && !quartileSet.contains(TRACKING_EVENTS_TYPE.firstQuartile.toString())) {
-                    VASTLog.i(TAG, "Video at first quartile: (" + percentage + "%)");
-                    processEvent(TRACKING_EVENTS_TYPE.firstQuartile);
-                    quartileSet.add(TRACKING_EVENTS_TYPE.firstQuartile.toString());
-                    mListener.onVASTPlayerOnFirstQuartile();
-                } else if (percentage >= 50 && percentage < 75 && !quartileSet.contains(TRACKING_EVENTS_TYPE.midpoint.toString())) {
-                    VASTLog.i(TAG, "Video at midpoint: (" + percentage + "%)");
-                    processEvent(TRACKING_EVENTS_TYPE.midpoint);
-                    quartileSet.add(TRACKING_EVENTS_TYPE.midpoint.toString());
-                    mListener.onVASTPlayerOnMidpoint();
-                } else if (percentage >= 75 && percentage < 100 && !quartileSet.contains(TRACKING_EVENTS_TYPE.thirdQuartile.toString())) {
-                    VASTLog.i(TAG, "Video at third quartile: (" + percentage + "%)");
-                    processEvent(TRACKING_EVENTS_TYPE.thirdQuartile);
-                    quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString());
-                    mListener.onVASTPlayerOnThirdQuartile();
+                    i(TAG, "Video at start: ($percentage%)")
+                    processImpressions()
+                    processEvent(TRACKING_EVENTS_TYPE.start)
+                    quartileSet.add(TRACKING_EVENTS_TYPE.start.toString())
+                    invokeOnPlayerPlaybackStart()
+                } else if (percentage in 25..49 && !quartileSet.contains(TRACKING_EVENTS_TYPE.firstQuartile.toString())) {
+                    i(TAG, "Video at first quartile: ($percentage%)")
+                    processEvent(TRACKING_EVENTS_TYPE.firstQuartile)
+                    quartileSet.add(TRACKING_EVENTS_TYPE.firstQuartile.toString())
+                    mListener!!.onVASTPlayerOnFirstQuartile()
+                } else if (percentage in 50..74 && !quartileSet.contains(TRACKING_EVENTS_TYPE.midpoint.toString())) {
+                    i(TAG, "Video at midpoint: ($percentage%)")
+                    processEvent(TRACKING_EVENTS_TYPE.midpoint)
+                    quartileSet.add(TRACKING_EVENTS_TYPE.midpoint.toString())
+                    mListener!!.onVASTPlayerOnMidpoint()
+                } else if (percentage in 75..99 && !quartileSet.contains(TRACKING_EVENTS_TYPE.thirdQuartile.toString())) {
+                    i(TAG, "Video at third quartile: ($percentage%)")
+                    processEvent(TRACKING_EVENTS_TYPE.thirdQuartile)
+                    quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString())
+                    mListener!!.onVASTPlayerOnThirdQuartile()
                 }
             }
 
-            public void onFinish() {
-                progressBar.setVisibility(GONE);
+            override fun onFinish() {
+                progressBar?.visibility = GONE
             }
-        }.start();
+        }.start()
     }
 
-    private void stopQuartileTimer() {
-
-        VASTLog.v(TAG, "stopQuartileTimer");
-
+    private fun stopQuartileTimer() {
+        v(TAG, "stopQuartileTimer")
         if (mTrackingEventsTimer != null) {
-
-            mTrackingEventsTimer.cancel();
-            mTrackingEventsTimer = null;
+            mTrackingEventsTimer!!.cancel()
+            mTrackingEventsTimer = null
         }
     }
 
-    private boolean needShowDialogClose;
+    private var needShowDialogClose = false
 
     // Layout timer
     //-------------------------------------------------------
-    private void startLayoutTimer() {
-        VASTLog.v(TAG, "startLayoutTimer");
-        mLayoutTimer = new Timer();
-        mLayoutTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
+    private fun startLayoutTimer() {
+        v(TAG, "startLayoutTimer")
+        mLayoutTimer = Timer()
+        mLayoutTimer?.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
                 if (simpleExoPlayer == null) {
-                    cancel();
-                    return;
+                    cancel()
+                    return
                 }
                 // Execute with handler to be sure we execute this on the UIThread
-                mMainHandler.post(() -> {
+                mMainHandler!!.post {
                     try {
-                        if (simpleExoPlayer != null && simpleExoPlayer.isPlaying()) {
-                            int currentPosition = (int) simpleExoPlayer.getCurrentPosition() / 1000;
-                            if (type == AdvType.REWARDED && mVastModel.getSkipOffset() != -1) {
-                                mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
-
-                                mSkip.setText(mSkipName);
-                                mSkip.setVisibility(View.VISIBLE);
-
-                                needShowDialogClose = currentPosition < mSkipDelay;
-
-                            } else if (type == AdvType.REWARDED && mVastModel.getSkipOffset() == -1) {
-                                mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-                                needShowDialogClose = true;
-                            } else if (type == AdvType.INTERSTITIAL && mVastModel.getSkipOffset() != -1) {
-                                mCountDown.setProgress(currentPosition, mVastModel.getSkipOffset());
-
+                        if (simpleExoPlayer != null && simpleExoPlayer!!.isPlaying) {
+                            val currentPosition = simpleExoPlayer!!.currentPosition.toInt() / 1000
+                            if (type === AdvType.REWARDED && mVastModel!!.skipOffset != -1) {
+                                mCountDown!!.setProgress(currentPosition, mVastModel!!.skipOffset)
+                                mSkip!!.text = mSkipName
+                                mSkip!!.visibility = VISIBLE
+                                needShowDialogClose = currentPosition < mSkipDelay
+                            } else if (type === AdvType.REWARDED && mVastModel!!.skipOffset == -1) {
+                                mCountDown!!.setProgress(currentPosition, simpleExoPlayer!!.duration.toInt())
+                                needShowDialogClose = true
+                            } else if (type === AdvType.INTERSTITIAL && mVastModel!!.skipOffset != -1) {
+                                mCountDown!!.setProgress(currentPosition, mVastModel!!.skipOffset)
                                 if (currentPosition > mSkipDelay) {
-                                    mSkip.setText(mSkipName);
-                                    mSkip.setVisibility(View.VISIBLE);
+                                    mSkip!!.text = mSkipName
+                                    mSkip!!.visibility = VISIBLE
                                 }
-                                needShowDialogClose = false;
-                            } else if (type == AdvType.INTERSTITIAL && mVastModel.getSkipOffset() == -1) {
-                                mCountDown.setProgress(currentPosition, (int) simpleExoPlayer.getDuration());
-                                mSkip.setText(mSkipName);
-                                mSkip.setVisibility(View.VISIBLE);
-
-                                needShowDialogClose = false;
+                                needShowDialogClose = false
+                            } else if (type === AdvType.INTERSTITIAL && mVastModel!!.skipOffset == -1) {
+                                mCountDown!!.setProgress(currentPosition, simpleExoPlayer!!.duration.toInt())
+                                mSkip!!.text = mSkipName
+                                mSkip!!.visibility = VISIBLE
+                                needShowDialogClose = false
                             }
                         }
-
-                    } catch (Exception e) {
-                        Log.e(TAG, "Layout timer error: " + e);
-                        cancel();
-                        return;
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Layout timer error: $e")
+                        cancel()
+                        return@post
                     }
-                });
+                }
             }
-        }, 0, TIMER_LAYOUT_INTERVAL);
+        }, 0, TIMER_LAYOUT_INTERVAL)
     }
 
-    private void stopLayoutTimer() {
-
-        VASTLog.d(TAG, "stopLayoutTimer");
-
-        if (mLayoutTimer != null) {
-
-            mLayoutTimer.cancel();
-            mLayoutTimer = null;
-        }
+    private fun stopLayoutTimer() {
+        d(TAG, "stopLayoutTimer")
+        mLayoutTimer?.cancel()
+        mLayoutTimer = null
     }
 
     // Listener helpers
     //-------------------------------------------------------
-
-    private void invokeOnPlayerOpenOffer() {
-
-        VASTLog.v(TAG, "invokeOnPlayerClick");
-
+    private fun invokeOnPlayerOpenOffer() {
+        v(TAG, "invokeOnPlayerClick")
         if (mListener != null) {
-
-            mListener.onVASTPlayerOpenOffer();
+            mListener!!.onVASTPlayerOpenOffer()
         }
     }
 
-    private void invokeOnPlayerLoadFinish() {
-        VASTLog.v(TAG, "invokeOnPlayerLoadFinish");
+    private fun invokeOnPlayerLoadFinish() {
+        v(TAG, "invokeOnPlayerLoadFinish")
         if (mListener != null) {
-            mListener.onVASTPlayerLoadFinish();
+            mListener!!.onVASTPlayerLoadFinish()
         }
     }
 
-    private void invokeOnFail(Exception exception) {
-
-        VASTLog.v(TAG, "invokeOnFail");
-
+    private fun invokeOnFail(exception: Exception) {
+        v(TAG, "invokeOnFail")
         if (mListener != null) {
-
-            mListener.onVASTPlayerFail(exception);
+            mListener!!.onVASTPlayerFail(exception)
         }
     }
 
-    private void invokeOnPlayerPlaybackStart() {
-
-        VASTLog.v(TAG, "invokeOnPlayerPlaybackStart");
-
+    private fun invokeOnPlayerPlaybackStart() {
+        v(TAG, "invokeOnPlayerPlaybackStart")
         if (mListener != null) {
-
-            mListener.onVASTPlayerPlaybackStart();
+            mListener!!.onVASTPlayerPlaybackStart()
         }
     }
 
-    private void invokeOnPlayerPlaybackFinish() {
-        VASTLog.v(TAG, "invokeOnPlayerPlaybackFinish");
+    private fun invokeOnPlayerPlaybackFinish() {
+        v(TAG, "invokeOnPlayerPlaybackFinish")
         if (mListener != null) {
-            mListener.onVASTPlayerPlaybackFinish();
+            mListener!!.onVASTPlayerPlaybackFinish()
         }
     }
 
     //=============================================
     // CALLBACKS
     //=============================================
-
     // MediaPlayer.OnCompletionListener
     //---------------------------------------------
-
-
     // View.OnClickListener
     //---------------------------------------------
-    public void onClick(View view) {
-        VASTLog.v(TAG, "onClick -- (View.OnClickListener callback)");
-        if (mOpen == view) {
-            onOpenClick();
-        } else if (mSkip == view) {
-            onSkipClick();
-        } else if (mMute == view) {
-            onMuteClick();
+    override fun onClick(view: View) {
+        v(TAG, "onClick -- (View.OnClickListener callback)")
+        if (mOpen === view) {
+            onOpenClick()
+        } else if (mSkip === view) {
+            onSkipClick()
+        } else if (mMute === view) {
+            onMuteClick()
         }
     }
 
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        Log.v(TAG, "onSizeChanged")
+        super.onSizeChanged(w, h, oldw, oldh)
+        Handler().post {
+            // calculateAspectRatio();
+        }
+    }
 
-        Log.v(TAG, "onSizeChanged");
-        super.onSizeChanged(w, h, oldw, oldh);
-        new Handler().post(new Runnable() {
-
-            @Override
-            public void run() {
-                // calculateAspectRatio();
-            }
-        });
+    companion object {
+        private val TAG = VASTPlayer::class.java.name
+        private const val TEXT_BUFFERING = "Buffering..."
+        private const val TIMER_TRACKING_INTERVAL: Long = 250
+        private const val TIMER_PROGRESS_INTERVAL: Long = 50
+        private const val TIMER_LAYOUT_INTERVAL: Long = 50
+        private const val MAX_PROGRESS_TRACKING_POINTS = 20
     }
 }

@@ -28,37 +28,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.model
 
-package net.pubnative.player.model;
-
-public class Tracking {
-
-    private String               value;
-    private TRACKING_EVENTS_TYPE event;
-
-    public String getValue() {
-
-        return value;
-    }
-
-    public void setValue(String value) {
-
-        this.value = value;
-    }
-
-    public TRACKING_EVENTS_TYPE getEvent() {
-
-        return event;
-    }
-
-    public void setEvent(TRACKING_EVENTS_TYPE event) {
-
-        this.event = event;
-    }
-
-    @Override
-    public String toString() {
-
-        return "Tracking [event=" + event + ", value=" + value + "]";
+class Tracking {
+    var value: String? = null
+    var event: TRACKING_EVENTS_TYPE? = null
+    override fun toString(): String {
+        return "Tracking [event=$event, value=$value]"
     }
 }

@@ -28,25 +28,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.model
 
-package net.pubnative.player.model;
-
-public enum TRACKING_EVENTS_TYPE {
-    creativeView,
-    start,
-    midpoint,
-    firstQuartile,
-    thirdQuartile,
-    complete,
-    mute,
-    unmute,
-    pause,
-    rewind,
-    resume,
-    fullscreen,
-    expand,
-    collapse,
-    acceptInvitation,
-    skip,
-    close
+enum class TRACKING_EVENTS_TYPE {
+    creativeView, start, midpoint, firstQuartile, thirdQuartile, complete, mute, unmute, pause, rewind, resume, fullscreen, expand, collapse, acceptInvitation, skip, close
 }

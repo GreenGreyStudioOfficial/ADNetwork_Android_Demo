@@ -28,84 +28,65 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.util
 
-package net.pubnative.player.util;
+import android.util.Log
+import net.pubnative.player.util.VASTLog.LOG_LEVEL
+import net.pubnative.player.util.VASTLog
 
-import android.util.Log;
+object VASTLog {
+    private val TAG = VASTLog::class.java.name
+    private var LEVEL = LOG_LEVEL.verbose
+    @JvmStatic
+	fun v(tag: String?, msg: String?) {
+        if (LEVEL.value <= LOG_LEVEL.verbose.value) {
+            Log.v(tag, msg!!)
+        }
+    }
 
-public class VASTLog {
+    @JvmStatic
+	fun d(tag: String?, msg: String?) {
+        if (LEVEL.value <= LOG_LEVEL.debug.value) {
+            Log.d(tag, msg!!)
+        }
+    }
 
-	private static String TAG = VASTLog.class.getName();
+    @JvmStatic
+	fun i(tag: String?, msg: String?) {
+        if (LEVEL.value <= LOG_LEVEL.info.value) {
+            Log.i(tag, msg!!)
+        }
+    }
 
-	public enum LOG_LEVEL {
+    @JvmStatic
+	fun w(tag: String?, msg: String?) {
+        if (LEVEL.value <= LOG_LEVEL.warning.value) {
+            Log.w(tag, msg!!)
+        }
+    }
 
-		verbose (1),
-		debug (2),
-		info (3),
-		warning (4),
-		error (5),
-		none (6);
+    fun e(tag: String?, msg: String?) {
+        if (LEVEL.value <= LOG_LEVEL.error.value) {
+            Log.e(tag, msg!!)
+        }
+    }
 
-		private int value;
+    @JvmStatic
+	fun e(tag: String?, msg: String?, tr: Throwable?) {
+        if (LEVEL.value <= LOG_LEVEL.error.value) {
+            Log.e(tag, msg, tr)
+        }
+    }
 
-		private LOG_LEVEL(int value) {
-			this.value = value;
+    var loggingLevel: LOG_LEVEL
+        get() = LEVEL
+        set(logLevel) {
+            Log.i(TAG, "Changing logging level from :$LEVEL. To:$logLevel")
+            LEVEL = logLevel
+        }
 
-		}
+    enum class LOG_LEVEL(val value: Int) {
+        verbose(1), debug(2), info(3), warning(4), error(5), none(6);
 
-		public int getValue() {
-			return value;
-		}
-
-	}
-
-
-	private static LOG_LEVEL LEVEL = LOG_LEVEL.verbose
-			;
-
-	public static void v(String tag, String msg) {
-		if (LEVEL.getValue() <= LOG_LEVEL.verbose.getValue()) {
-			Log.v(tag, msg);
-		}
-	}
-
-	public static void d(String tag, String msg) {
-		if (LEVEL.getValue() <= LOG_LEVEL.debug.getValue()) {
-			Log.d(tag, msg);
-		}
-	}
-
-	public static void i(String tag, String msg) {
-		if (LEVEL.getValue() <= LOG_LEVEL.info.getValue()) {
-			Log.i(tag, msg);
-		}
-	}
-
-	public static void w(String tag, String msg) {
-		if (LEVEL.getValue() <= LOG_LEVEL.warning.getValue()) {
-			Log.w(tag, msg);
-		}
-	}
-
-	public static void e(String tag, String msg) {
-		if (LEVEL.getValue() <= LOG_LEVEL.error.getValue()) {
-			Log.e(tag, msg);
-		}
-	}
-
-	public static void e(String tag, String msg, Throwable tr) {
-		if (LEVEL.getValue() <= LOG_LEVEL.error.getValue()) {
-			Log.e(tag, msg, tr );
-		}
-	}
-
-	public static void setLoggingLevel(LOG_LEVEL logLevel) {
-		Log.i(TAG, "Changing logging level from :"+LEVEL+". To:"+logLevel);
-		LEVEL = logLevel;
-	}
-
-	public static LOG_LEVEL getLoggingLevel() {
-		return LEVEL;
-	}
-
+    }
 }

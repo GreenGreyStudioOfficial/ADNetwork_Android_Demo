@@ -108,7 +108,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                 Log.e("onVASTCacheError", "error: $error")
             }
 
-            override fun onVASTParserFinished(model: VASTModel) {
+            override fun onVASTParserFinished(model: VASTModel?) {
                 vastModel = model
                 AdvApplication.instance.startActivity(
                     Intent(
@@ -124,7 +124,7 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
             this.iAdShowListener = iAdShowListener
             parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
         } ?: run {
-            CacheFileManager.getInstance().clearCache(AdvApplication.instance)
+            CacheFileManager.instance?.clearCache(AdvApplication.instance)
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }

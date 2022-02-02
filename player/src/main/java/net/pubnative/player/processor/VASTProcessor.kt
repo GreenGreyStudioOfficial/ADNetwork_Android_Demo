@@ -28,198 +28,140 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.processor
 
-package net.pubnative.player.processor;
-
-import net.pubnative.player.VASTParser;
-import net.pubnative.player.model.VASTModel;
-import net.pubnative.player.model.VAST_DOC_ELEMENTS;
-import net.pubnative.player.util.VASTLog;
-import net.pubnative.player.util.XmlTools;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.nio.charset.Charset;
-
-import javax.xml.parsers.DocumentBuilderFactory;
+import net.pubnative.player.VASTParser
+import net.pubnative.player.model.VASTModel
+import net.pubnative.player.model.VAST_DOC_ELEMENTS
+import net.pubnative.player.processor.VASTModelPostValidator.validate
+import net.pubnative.player.util.VASTLog
+import net.pubnative.player.util.XmlTools
+import org.w3c.dom.Document
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.UnsupportedEncodingException
+import java.net.URL
+import java.nio.charset.Charset
+import javax.xml.parsers.DocumentBuilderFactory
 
 /**
  * This class is responsible for taking a VAST 2.0 XML file, parsing it,
  * validating it, and creating a valid VASTModel object corresponding to it.
- * 
+ *
  * It can handle "regular" VAST XML files as well as VAST wrapper files.
  */
-public final class VASTProcessor {
-
-    private static final String TAG = VASTProcessor.class.getName();
-
-    // Maximum number of VAST files that can be read (wrapper file(s) + actual
-    // target file)
-    private static final int     MAX_VAST_LEVELS  = 5;
-    private static final boolean IS_VALIDATION_ON = false;
-
-    private VASTMediaPicker mediaPicker;
-    private VASTModel       vastModel;
-    private StringBuilder mergedVastDocs = new StringBuilder(500);
-
-    public VASTProcessor(VASTMediaPicker mediaPicker) {
-
-        this.mediaPicker = mediaPicker;
-    }
-
-    public VASTModel getModel() {
-
-        return vastModel;
-    }
-
-    public int process(String xmlData) {
-
-        VASTLog.d(TAG, "process");
-        vastModel = null;
-        InputStream is = null;
-
-        try {
-            is = new ByteArrayInputStream(xmlData.getBytes(Charset.defaultCharset().name()));
-        } catch (UnsupportedEncodingException e) {
-            VASTLog.e(TAG, e.getMessage(), e);
-            return VASTParser.ERROR_XML_PARSE;
+class VASTProcessor(private val mediaPicker: VASTMediaPicker) {
+    var model: VASTModel? = null
+        private set
+    private val mergedVastDocs = StringBuilder(500)
+    fun process(xmlData: String): Int {
+        VASTLog.d(TAG, "process")
+        model = null
+        var `is`: InputStream? = null
+        `is` = try {
+            ByteArrayInputStream(xmlData.toByteArray(charset(Charset.defaultCharset().name())))
+        } catch (e: UnsupportedEncodingException) {
+            VASTLog.e(TAG, e.message, e)
+            return VASTParser.ERROR_XML_PARSE
         }
-
-        int error = processUri(is, 0);
-
+        val error = processUri(`is`, 0)
         try {
-            is.close();
-        } catch (IOException e) { }
-
+            `is`?.close()
+        } catch (e: IOException) {
+        }
         if (error != VASTParser.ERROR_NONE) {
-
-            return error;
+            return error
         }
-
-        Document mainDoc = wrapMergedVastDocWithVasts();
-        vastModel = new VASTModel(mainDoc);
+        val mainDoc = wrapMergedVastDocWithVasts()
+        mainDoc?.let { model = VASTModel(mainDoc) }
 
         if (mainDoc == null) {
-
-            return VASTParser.ERROR_XML_PARSE;
+            return VASTParser.ERROR_XML_PARSE
         }
-
-        if (!VASTModelPostValidator.validate(vastModel, mediaPicker)) {
-
-            return VASTParser.ERROR_POST_VALIDATION;
-        }
-
-        return VASTParser.ERROR_NONE;
+        return if (!validate(model, mediaPicker)) {
+            VASTParser.ERROR_POST_VALIDATION
+        } else VASTParser.ERROR_NONE
     }
 
-    private Document wrapMergedVastDocWithVasts() {
-
-        VASTLog.d(TAG, "wrapmergedVastDocWithVasts");
-        mergedVastDocs.insert(0, "<VASTS>");
-        mergedVastDocs.append("</VASTS>");
-
-        String merged = mergedVastDocs.toString();
-        VASTLog.v(TAG, "Merged VAST doc:\n" + merged);
-
-        Document doc = XmlTools.stringToDocument(merged);
-        return doc;
-
+    private fun wrapMergedVastDocWithVasts(): Document? {
+        VASTLog.d(TAG, "wrapmergedVastDocWithVasts")
+        mergedVastDocs.insert(0, "<VASTS>")
+        mergedVastDocs.append("</VASTS>")
+        val merged = mergedVastDocs.toString()
+        VASTLog.v(TAG, "Merged VAST doc:\n$merged")
+        return XmlTools.stringToDocument(merged)
     }
-    private int processUri(InputStream is, int depth) {
 
-        VASTLog.d(TAG, "processUri");
-
+    private fun processUri(`is`: InputStream?, depth: Int): Int {
+        VASTLog.d(TAG, "processUri")
         if (depth >= MAX_VAST_LEVELS) {
-
-            String message = "VAST wrapping exceeded max limit of " + MAX_VAST_LEVELS + ".";
-            VASTLog.e(TAG, message);
-            return VASTParser.ERROR_EXCEEDED_WRAPPER_LIMIT;
+            val message = "VAST wrapping exceeded max limit of " + MAX_VAST_LEVELS + "."
+            VASTLog.e(TAG, message)
+            return VASTParser.ERROR_EXCEEDED_WRAPPER_LIMIT
         }
-
-        Document doc = createDoc(is);
-
-        if (doc == null) {
-
-            return VASTParser.ERROR_XML_PARSE;
-        }
-
-        merge(doc);
+        val doc = createDoc(`is`) ?: return VASTParser.ERROR_XML_PARSE
+        merge(doc)
 
         // check to see if this is a VAST wrapper ad
-        NodeList uriToNextDoc = doc.getElementsByTagName(VAST_DOC_ELEMENTS.vastAdTagURI.getValue());
-
-        if (uriToNextDoc == null || uriToNextDoc.getLength() == 0) {
+        val uriToNextDoc = doc.getElementsByTagName(VAST_DOC_ELEMENTS.VAST_AD_TAG_URI.value)
+        return if (uriToNextDoc == null || uriToNextDoc.length == 0) {
 
             // This isn't a wrapper ad, so we're done.
-            return VASTParser.ERROR_NONE;
-
+            VASTParser.ERROR_NONE
         } else {
 
             // This is a wrapper ad, so move on to the wrapped ad and process
             // it.
-            VASTLog.d(TAG, "Doc is a wrapper. ");
-            Node node = uriToNextDoc.item(0);
-            String nextUri = XmlTools.getElementValue(node);
-            VASTLog.d(TAG, "Wrapper URL: " + nextUri);
-            InputStream nextInputStream = null;
-
-            try {
-
-                URL nextUrl = new URL(nextUri);
-                nextInputStream = nextUrl.openStream();
-
-            } catch (Exception e) {
-
-                VASTLog.e(TAG, e.getMessage(), e);
-                return VASTParser.ERROR_XML_OPEN_OR_READ;
+            VASTLog.d(TAG, "Doc is a wrapper. ")
+            val node = uriToNextDoc.item(0)
+            val nextUri = XmlTools.getElementValue(node)
+            VASTLog.d(TAG, "Wrapper URL: $nextUri")
+            var nextInputStream: InputStream? = null
+            nextInputStream = try {
+                val nextUrl = URL(nextUri)
+                nextUrl.openStream()
+            } catch (e: Exception) {
+                VASTLog.e(TAG, e.message, e)
+                return VASTParser.ERROR_XML_OPEN_OR_READ
             }
-
-            int error = processUri(nextInputStream, depth + 1);
+            val error = processUri(nextInputStream, depth + 1)
             try {
-
-                nextInputStream.close();
-
-            } catch (IOException e) {
+                nextInputStream?.close()
+            } catch (e: IOException) {
             }
-            return error;
+            error
         }
     }
 
-    private Document createDoc(InputStream is) {
-
-        VASTLog.d(TAG, "About to create doc from InputStream");
-        try {
-
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
-            doc.getDocumentElement().normalize();
-            VASTLog.d(TAG, "Doc successfully created.");
-            return doc;
-
-        } catch (Exception e) {
-
-            VASTLog.e(TAG, e.getMessage(), e);
-            return null;
+    private fun createDoc(`is`: InputStream?): Document? {
+        VASTLog.d(TAG, "About to create doc from InputStream")
+        return try {
+            val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(`is`)
+            doc.documentElement.normalize()
+            VASTLog.d(TAG, "Doc successfully created.")
+            doc
+        } catch (e: Exception) {
+            VASTLog.e(TAG, e.message, e)
+            null
         }
     }
 
-    private void merge(Document newDoc) {
+    private fun merge(newDoc: Document) {
+        VASTLog.d(TAG, "About to merge doc into main doc.")
+        val nl = newDoc.getElementsByTagName("VAST")
+        val newDocElement = nl.item(0)
+        val doc = XmlTools.xmlDocumentToString(newDocElement)
+        mergedVastDocs.append(doc)
+        VASTLog.d(TAG, "Merge successful.")
+    }
 
-        VASTLog.d(TAG, "About to merge doc into main doc.");
+    companion object {
+        private val TAG = VASTProcessor::class.java.name
 
-        NodeList nl = newDoc.getElementsByTagName("VAST");
-
-        Node newDocElement = nl.item(0);
-
-        String doc = XmlTools.xmlDocumentToString(newDocElement);
-        mergedVastDocs.append(doc);
-
-        VASTLog.d(TAG, "Merge successful.");
+        // Maximum number of VAST files that can be read (wrapper file(s) + actual
+        // target file)
+        private const val MAX_VAST_LEVELS = 5
+        private const val IS_VALIDATION_ON = false
     }
 }

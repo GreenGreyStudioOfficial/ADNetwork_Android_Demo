@@ -28,61 +28,45 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.util
 
-package net.pubnative.player.util;
+import android.text.TextUtils
+import net.pubnative.player.util.VASTLog
+import net.pubnative.player.util.HttpTools
+import java.lang.Exception
+import java.net.HttpURLConnection
+import java.net.URL
 
-import android.text.TextUtils;
+object HttpTools {
+    private val TAG = HttpTools::class.java.name
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-public class HttpTools {
-
-    private static final String TAG = HttpTools.class.getName();
-
-    public static void httpGetURL(final String url) {
-
+    fun httpGetURL(url: String) {
         if (!TextUtils.isEmpty(url)) {
-            new Thread() {
-
-                @Override
-                public void run() {
-
-                    HttpURLConnection conn = null;
-
+            object : Thread() {
+                override fun run() {
+                    var conn: HttpURLConnection? = null
                     try {
-                        VASTLog.v(TAG, "connection to URL:" + url);
-                        URL httpUrl = new URL(url);
-
-                        HttpURLConnection.setFollowRedirects(true);
-                        conn = (HttpURLConnection) httpUrl.openConnection();
-                        conn.setConnectTimeout(5000);
-                        conn.setRequestProperty("Connection", "close");
-                        conn.setRequestMethod("GET");
-                        conn.connect();
-
-                        int code = conn.getResponseCode();
-                        VASTLog.v(TAG, "response code:" + code + ", for URL:" + url);
-
-                        conn.getInputStream().close();
-                        conn.getOutputStream().close();
-
-                    } catch (Exception e) {
-
-                        VASTLog.w(TAG, url + ": " + e.getMessage() + ":" + e.toString());
-
+                        VASTLog.v(TAG, "connection to URL:$url")
+                        val httpUrl = URL(url)
+                        HttpURLConnection.setFollowRedirects(true)
+                        conn = httpUrl.openConnection() as HttpURLConnection
+                        conn.connectTimeout = 5000
+                        conn.setRequestProperty("Connection", "close")
+                        conn.requestMethod = "GET"
+                        conn.connect()
+                        val code = conn.responseCode
+                        VASTLog.v(TAG, "response code:$code, for URL:$url")
+                        conn.inputStream.close()
+                        conn.outputStream.close()
+                    } catch (e: Exception) {
+                        VASTLog.w(TAG, url + ": " + e.message + ":" + e.toString())
                     } finally {
-                        if (conn != null) {
-                            conn.disconnect();
-                        }
+                        conn?.disconnect()
                     }
-
                 }
-            }.start();
-
+            }.start()
         } else {
-
-            VASTLog.w(TAG, "url is null or empty");
+            VASTLog.w(TAG, "url is null or empty")
         }
     }
 }

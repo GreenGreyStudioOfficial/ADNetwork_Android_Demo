@@ -1,6 +1,5 @@
-package net.pubnative.player;
+package net.pubnative.player
 
-public enum AdvType {
-    INTERSTITIAL,
-    REWARDED
+enum class AdvType {
+    INTERSTITIAL, REWARDED
 }

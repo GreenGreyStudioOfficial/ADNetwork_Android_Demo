@@ -28,67 +28,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
+package net.pubnative.player.model
 
-package net.pubnative.player.model;
+class VideoClicks {
+    var clickThrough: String? = null
+    var clickTracking: MutableList<String> = mutableListOf()
+    var customClick: MutableList<String> = mutableListOf()
+    fun retrieveClickTracking(): MutableList<String> = clickTracking
 
-import java.util.ArrayList;
-import java.util.List;
 
-public class VideoClicks {
+    fun retrieveCustomClick(): List<String> = customClick
 
-    private String       clickThrough;
-    private List<String> clickTracking;
-    private List<String> customClick;
 
-    public String getClickThrough() {
-
-        return clickThrough;
+    override fun toString(): String {
+        return "VideoClicks [clickThrough=" + clickThrough + ", clickTracking=[" + listToString(clickTracking) + "], customClick=[" + listToString(
+            customClick
+        ) + "] ]"
     }
 
-    public void setClickThrough(String clickThrough) {
-
-        this.clickThrough = clickThrough;
-    }
-
-    public List<String> getClickTracking() {
-
-        if (clickTracking == null) {
-
-            clickTracking = new ArrayList<String>();
-        }
-
-        return this.clickTracking;
-    }
-
-    public List<String> getCustomClick() {
-
-        if (customClick == null) {
-
-            customClick = new ArrayList<String>();
-        }
-
-        return this.customClick;
-    }
-
-    @Override
-    public String toString() {
-
-        return "VideoClicks [clickThrough=" + clickThrough + ", clickTracking=[" + listToString(clickTracking) + "], customClick=[" + listToString(customClick) + "] ]";
-    }
-
-    private String listToString(List<String> list) {
-
-        StringBuffer sb = new StringBuffer();
-
+    private fun listToString(list: List<String>?): String {
+        val sb = StringBuffer()
         if (list == null) {
-
-            return "";
+            return ""
         }
-
-        for (int x = 0; x < list.size(); x++) {
-
-            sb.append(list.get(x).toString());
+        for (x in list.indices) {
+            sb.append(list[x])
         }
-        return sb.toString();
+        return sb.toString()
     }
 }
