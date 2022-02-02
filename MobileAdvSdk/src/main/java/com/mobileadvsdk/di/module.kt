@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit
 
 fun mainModule(host: String) = Kodein.Module("main") {
 
-
     bind<DataApiService>() with singleton {
         instance<Retrofit>("dataService").create(DataApiService::class.java)
     }

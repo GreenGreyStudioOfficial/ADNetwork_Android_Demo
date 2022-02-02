@@ -9,14 +9,14 @@ import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdNetworkSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
+import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
 import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.observe
+import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
 import kotlinx.android.synthetic.main.dialog_close_advert.view.*
-import net.pubnative.player.AdvType
-import net.pubnative.player.VASTPlayer
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.subKodein
@@ -54,7 +54,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     private fun getAdvData() = advData.seatbid[0].bid[0]
     private fun getAdvertiseType() =
-        if (advData.advertiseType?.name == AdvType.REWARDED.name) AdvType.REWARDED else AdvType.INTERSTITIAL
+        if (advData.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
 
     private fun getAdvId(): String = getAdvData().id ?: ""
 

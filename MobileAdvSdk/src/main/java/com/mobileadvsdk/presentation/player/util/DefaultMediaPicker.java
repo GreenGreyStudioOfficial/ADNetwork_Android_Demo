@@ -29,14 +29,14 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package net.pubnative.player.util;
+package com.mobileadvsdk.presentation.player.util;
 
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
-import net.pubnative.player.model.VASTMediaFile;
-import net.pubnative.player.processor.VASTMediaPicker;
+import com.mobileadvsdk.presentation.player.model.VASTMediaFile;
+import com.mobileadvsdk.presentation.player.processor.VASTMediaPicker;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,25 +54,18 @@ public class DefaultMediaPicker implements VASTMediaPicker {
     private int deviceWidth;
     private int deviceHeight;
     private int deviceArea;
-    private Context context;
+    private final Context context;
 
     public DefaultMediaPicker(Context context) {
         this.context = context;
         setDeviceWidthHeight();
     }
 
-    public DefaultMediaPicker(int width, int height) {
-
-        setDeviceWidthHeight(width, height);
-    }
-
     @Override
     // given a list of MediaFiles, select the most appropriate one.
     public VASTMediaFile pickVideo(List<VASTMediaFile> mediaFiles) {
-
         //make sure that the list of media files contains the correct attributes
         if (mediaFiles == null || prefilterMediaFiles(mediaFiles) == 0) {
-
             return null;
         }
 
@@ -163,23 +156,21 @@ public class DefaultMediaPicker implements VASTMediaPicker {
     }
 
     private boolean isMediaFileCompatible(VASTMediaFile media) {
-
         // check if the MediaFile is compatible with the device.
         // further checks can be added here
-        return media.getType().matches(SUPPORTED_VIDEO_TYPE_REGEX);
+        String type = media.getType();
+        if (type != null) {
+            return type.matches(SUPPORTED_VIDEO_TYPE_REGEX);
+        }
+        return false;
     }
 
     private VASTMediaFile getBestMatch(List<VASTMediaFile> list) {
-
         VASTLog.d(TAG, "getBestMatch");
-
         // Iterate through the sorted list and return the first compatible media.
         // If none of the media file is compatible, return null
-
         for (VASTMediaFile media : list) {
-
             if (isMediaFileCompatible(media)) {
-
                 return media;
             }
         }

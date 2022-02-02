@@ -38,7 +38,7 @@
         tools:visibility="visible" />
 
     <!--PLAYER COUNTDOWN-->
-    <net.pubnative.player.widget.CountDownView
+    <com.mobileadvsdk.presentation.player.CountDownView
         android:id="@+id/count_down"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

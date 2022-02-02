@@ -9,4 +9,3 @@ dependencyResolutionManagement {
 rootProject.name = "AdvSDK"
 include ':app'
 include ':MobileAdvSdk'
-include ':player'

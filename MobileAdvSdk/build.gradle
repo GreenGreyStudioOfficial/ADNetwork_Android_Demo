@@ -68,12 +68,9 @@ dependencies {
 
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0"
-    implementation project(path: ':player')
     implementation 'com.google.android.gms:play-services-location:19.0.1'
     implementation 'pub.devrel:easypermissions:3.0.0'
 
-
-//    testImplementation 'junit:junit:4.+'
-//    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-//    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation 'com.google.android.exoplayer:exoplayer:2.13.3'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.13.3'
 }

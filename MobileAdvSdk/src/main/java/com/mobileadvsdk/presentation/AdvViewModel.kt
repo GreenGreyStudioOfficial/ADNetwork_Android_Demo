@@ -21,13 +21,13 @@ import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.*
 import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.di.mainModule
+import com.mobileadvsdk.presentation.player.VASTParser
+import com.mobileadvsdk.presentation.player.model.VASTModel
+import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import io.reactivex.Scheduler
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
-import net.pubnative.player.VASTParser
-import net.pubnative.player.model.VASTModel
-import net.pubnative.player.processor.CacheFileManager
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
@@ -95,8 +95,8 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
 
     lateinit var iAdShowListener: IAdShowListener
 
-    private fun parseAdvData(lurl: String?, vast: String) =
-        VASTParser(AdvApplication.instance).setListener(object : VASTParser.Listener {
+    private fun parseAdvData(lurl: String?, vast: String) {
+        disposables += VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
                 Log.e("onVASTParserError", "error: $error")
                 iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
@@ -117,14 +117,15 @@ class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware
                     ).addFlags(FLAG_ACTIVITY_NEW_TASK)
                 )
             }
-        }).execute(vast)
+        }).parseVast(vast)
+    }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
         advDataLive.value?.let {
             this.iAdShowListener = iAdShowListener
             parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
         } ?: run {
-            CacheFileManager.instance?.clearCache(AdvApplication.instance)
+            CacheFileManager.clearCache()
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }

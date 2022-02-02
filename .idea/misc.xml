@@ -4,8 +4,12 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/project_lib/mobadvsdk/MobileAdvSdk/src/main/res/layout/activity_transparent.xml" value="0.16354166666666667" />
+        <entry key="MobileAdvSdk/src/main/res/drawable/pubnative_rounded_shape.xml" value="0.224" />
+        <entry key="MobileAdvSdk/src/main/res/drawable/pubnative_rounded_shape_gray.xml" value="0.224" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_adv.xml" value="0.14817629179331307" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="MobileAdvSdk/src/main/res/layout/pubnative_player.xml" value="0.23385416666666667" />
+        <entry key="MobileAdvSdk/src/main/res/layout/pubnative_player_count_down.xml" value="0.24954710144927536" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.45" />
         <entry key="app/src/main/res/layout/item_logs.xml" value="0.5" />
         <entry key="player/src/main/res/drawable/ic_baseline_volume_off_24.xml" value="0.24114583333333334" />

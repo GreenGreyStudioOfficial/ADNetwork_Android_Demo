@@ -1,41 +1,10 @@
-//
-// Copyright (c) 2016, PubNative, Nexage Inc.
-// All rights reserved.
-// Provided under BSD-3 license as follows:
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// Redistributions in binary form must reproduce the above copyright notice, this
-// list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// Neither the name of Nexage, PubNative nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-package net.pubnative.player
+package com.mobileadvsdk.presentation.player
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.CountDownTimer
 import android.os.Handler
-import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
@@ -50,30 +19,32 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.analytics.AnalyticsListener
-import com.google.android.exoplayer2.analytics.AnalyticsListener.EventTime
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
-import net.pubnative.player.model.TRACKING_EVENTS_TYPE
-import net.pubnative.player.model.VASTModel
-import net.pubnative.player.processor.CacheFileManager.Companion.instance
-import net.pubnative.player.util.HttpTools.httpGetURL
-import net.pubnative.player.util.VASTLog.d
-import net.pubnative.player.util.VASTLog.e
-import net.pubnative.player.util.VASTLog.i
-import net.pubnative.player.util.VASTLog.v
-import net.pubnative.player.util.VASTLog.w
-import net.pubnative.player.widget.CountDownView
+import com.mobileadvsdk.R
+import com.mobileadvsdk.datasource.domain.model.AdvertiseType
+import com.mobileadvsdk.presentation.player.model.TrackingEventsType
+import com.mobileadvsdk.presentation.player.model.VASTModel
+import com.mobileadvsdk.presentation.player.processor.CacheFileManager
+import com.mobileadvsdk.presentation.player.util.HttpTools.httpGetURL
+import com.mobileadvsdk.presentation.player.util.VASTLog.d
+import com.mobileadvsdk.presentation.player.util.VASTLog.e
+import com.mobileadvsdk.presentation.player.util.VASTLog.i
+import com.mobileadvsdk.presentation.player.util.VASTLog.v
+import com.mobileadvsdk.presentation.player.util.VASTLog.w
 import java.util.*
+import kotlin.math.abs
 
 class VASTPlayer : RelativeLayout, View.OnClickListener {
-    private var cacheDataSourceFactory: CacheDataSource.Factory? = null
+    private lateinit var cacheDataSourceFactory: CacheDataSource.Factory
     private var playerView: PlayerView? = null
     private var progressBar: ProgressBar? = null
-    private var type = AdvType.INTERSTITIAL
-    fun setType(type: AdvType) {
+    private var type = AdvertiseType.INTERSTITIAL
+
+    fun setType(type: AdvertiseType) {
         this.type = type
     }
 
@@ -115,7 +86,7 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     private var mTrackingEventsTimer: CountDownTimer? = null
 
     // TRACKING
-    private var mTrackingEventMap: HashMap<TRACKING_EVENTS_TYPE, MutableList<String>>? = null
+    private var mTrackingEventMap: HashMap<TrackingEventsType, MutableList<String>>? = null
 
     // DATA
     private var mVastModel: VASTModel? = null
@@ -146,8 +117,8 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     private var mProgressTracker: MutableList<Int> = mutableListOf()
     private var mTargetAspect = -1.0
 
-    constructor(context: Context?) : super(context) {}
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {}
+    constructor(context: Context?) : super(context)
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     /**
      * Sets the desired aspect ratio.  The value is `width / height`.
@@ -162,14 +133,13 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-
         // Target aspect ratio will be < 0 if it hasn't been set yet.  In that case,
         // we just use whatever we've been handed.
-        var widthMeasureSpec = widthMeasureSpec
-        var heightMeasureSpec = heightMeasureSpec
+        var widthMeasure = widthMeasureSpec
+        var heightMeasure = heightMeasureSpec
         if (mTargetAspect > 0) {
-            var initialWidth = MeasureSpec.getSize(widthMeasureSpec)
-            var initialHeight = MeasureSpec.getSize(heightMeasureSpec)
+            var initialWidth = MeasureSpec.getSize(widthMeasure)
+            var initialHeight = MeasureSpec.getSize(heightMeasure)
 
             // factor the padding out
             val horizPadding = paddingLeft + paddingRight
@@ -178,7 +148,7 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
             initialHeight -= vertPadding
             val viewAspectRatio = initialWidth.toDouble() / initialHeight
             val aspectDiff = mTargetAspect / viewAspectRatio - 1
-            if (Math.abs(aspectDiff) < 0.01) {
+            if (abs(aspectDiff) < 0.01) {
                 // We're very close already.  We don't want to risk switching from e.g. non-scaled
                 // 1280x720 to scaled 1280x719 because of some floating-point round-off error,
                 // so if we're really close just leave it alone.
@@ -200,26 +170,23 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
                 )
                 initialWidth += horizPadding
                 initialHeight += vertPadding
-                widthMeasureSpec = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY)
-                heightMeasureSpec = MeasureSpec.makeMeasureSpec(initialHeight, MeasureSpec.EXACTLY)
+                widthMeasure = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY)
+                heightMeasure = MeasureSpec.makeMeasureSpec(initialHeight, MeasureSpec.EXACTLY)
             }
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        super.onMeasure(widthMeasure, heightMeasure)
     }
 
     //=======================================================
     // State machine
     //=======================================================
-    private fun canSetState(playerState: PlayerState): Boolean {
-        var result = false
-        result = when (playerState) {
+    private fun canSetState(playerState: PlayerState): Boolean =
+        when (playerState) {
             PlayerState.Empty, PlayerState.Pause, PlayerState.Loading -> true
             PlayerState.Ready -> PlayerState.Loading == mPlayerState
             PlayerState.Playing -> mPlayerState == PlayerState.Ready
                     || mPlayerState == PlayerState.Pause
         }
-        return result
-    }
 
     /**
      * this method controls the associated state machine of the video player behaviour
@@ -245,10 +212,8 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         Log.v(TAG, "setEmptyState")
 
         // Visual aspect total empty
-        hideSurface()
         hidePlayerLayout()
         hideOpen()
-        hideLoader()
         /**
          * Do not change this order, since cleaning the media player before invalidating timers
          * could make the timers threads access an invalid media player
@@ -267,9 +232,9 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
 
         // Show loader
         hidePlayerLayout()
-        showSurface()
-        showLoader("")
-        mVastModel?.trackingUrls?.let { mTrackingEventMap = it }
+        mVastModel?.trackingUrls?.let {
+            mTrackingEventMap = it
+        }
         createMediaPlayer()
         turnVolumeOff()
         startCaching()
@@ -277,31 +242,25 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     private fun setReadyState() {
         Log.v(TAG, "setReadyState")
-        hideLoader()
         hidePlayerLayout()
         showOpen()
-        showSurface()
         turnVolumeOff()
     }
 
     private fun setPlayingState() {
         Log.v(TAG, "setPlayingState")
-        hideLoader()
         showOpen()
-        showSurface()
         showPlayerLayout()
         // calculateAspectRatio();
         refreshVolume()
-        simpleExoPlayer!!.play()
+        simpleExoPlayer?.play()
         startTimers()
     }
 
     private fun setPauseState() {
         Log.v(TAG, "setPauseState")
-        hideLoader()
         hidePlayerLayout()
         showOpen()
-        showSurface()
         turnVolumeOff()
         refreshVolume()
     }
@@ -344,17 +303,14 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     /**
      * This will set up the skip button behaviour setting a name and a delay for it to show up
      *
-     * @param name  name of the string to be shown, any empty string will disable the button
      * @param delay delay in milliseconds to show the skip button, negative values will disable
      * the button
      */
-    fun setSkip(name: String?, delay: Int) {
-        if (TextUtils.isEmpty(name)) {
-            Log.w(TAG, "Skip name set to empty value, this will disable the button")
-        } else if (delay < 0) {
+    private fun setSkip(delay: Int) {
+        if (delay < 0) {
             Log.w(TAG, "Skip time set to negative value, this will disable the button")
         }
-        mSkipName = name
+        mSkipName = "Close"
         mSkipDelay = delay
     }
     //=======================================================
@@ -380,12 +336,16 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
      */
     fun play() {
         v(TAG, "play")
-        if (canSetState(PlayerState.Playing)) {
-            setState(PlayerState.Playing)
-        } else if (mPlayerState == PlayerState.Empty) {
-            setState(PlayerState.Ready)
-        } else {
-            e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
+        when {
+            canSetState(PlayerState.Playing) -> {
+                setState(PlayerState.Playing)
+            }
+            mPlayerState == PlayerState.Empty -> {
+                setState(PlayerState.Ready)
+            }
+            else -> {
+                e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
+            }
         }
     }
 
@@ -396,12 +356,10 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         v(TAG, "stop")
         if (canSetState(PlayerState.Loading) && mIsDataSourceSet) {
             stopTimers()
-            if (simpleExoPlayer != null) {
-                simpleExoPlayer!!.stop()
-                simpleExoPlayer!!.release()
-                mIsDataSourceSet = false
-                quartileSet.clear()
-            }
+            simpleExoPlayer?.stop()
+            simpleExoPlayer?.release()
+            mIsDataSourceSet = false
+            quartileSet.clear()
             setState(PlayerState.Loading)
         } else {
             e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
@@ -414,9 +372,9 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     fun pause() {
         v(TAG, "pause")
         if (canSetState(PlayerState.Pause) && mIsDataSourceSet) {
-            if (simpleExoPlayer != null && simpleExoPlayer!!.isPlaying) {
+            if (simpleExoPlayer != null && simpleExoPlayer?.isPlaying == true) {
                 stopQuartileTimer()
-                simpleExoPlayer!!.pause()
+                simpleExoPlayer?.pause()
             }
             setState(PlayerState.Pause)
         } else {
@@ -437,10 +395,10 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     //=======================================================
     // User Interaction
     //-------------------------------------------------------
-    fun onMuteClick() {
+    private fun onMuteClick() {
         v(TAG, "onMuteClick")
         if (simpleExoPlayer != null) {
-            processEvent(if (mIsVideoMute) TRACKING_EVENTS_TYPE.unmute else TRACKING_EVENTS_TYPE.mute)
+            processEvent(if (mIsVideoMute) TrackingEventsType.unmute else TrackingEventsType.mute)
             mIsVideoMute = !mIsVideoMute
             refreshVolume()
         }
@@ -448,16 +406,16 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     fun onSkipClick() {
         v(TAG, "onSkipClick")
-        if (simpleExoPlayer != null) {
-            mListener!!.onVASTPlayerClose(needShowDialogClose)
+        simpleExoPlayer?.let {
+            mListener?.onVASTPlayerClose(needShowDialogClose)
             pause()
-        } else {
-            mListener!!.onVASTPlayerClose(needShowDialogClose)
+        } ?: run {
+            mListener?.onVASTPlayerClose(needShowDialogClose)
         }
     }
 
     fun onSkipConfirm() {
-        processEvent(TRACKING_EVENTS_TYPE.close)
+        processEvent(TrackingEventsType.close)
         destroy()
     }
 
@@ -468,19 +426,17 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     }
 
     private fun openOffer() {
-        val clickThroughUrl = mVastModel!!.videoClicks!!.clickThrough
+        val clickThroughUrl = mVastModel?.videoClicks?.clickThrough
         d(TAG, "openOffer - clickThrough url: $clickThroughUrl")
         // Before we send the app to the click through url, we will process ClickTracking URL's.
         val urls = mVastModel?.videoClicks?.retrieveClickTracking()
         fireUrls(urls)
         // Navigate to the click through url
-        try {
+        clickThroughUrl?.let {
             val uri = Uri.parse(clickThroughUrl)
             val intent = Intent(Intent.ACTION_VIEW, uri)
             context.startActivity(intent)
             invokeOnPlayerOpenOffer()
-        } catch (e: NullPointerException) {
-            e(TAG, e.message, e)
         }
     }
 
@@ -512,34 +468,23 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         }
     }
 
-    private fun showLoader(message: String) {
-        if (mPlayerState != PlayerState.Pause) {
-//            mLoader.setVisibility(VISIBLE);
-//            mLoaderText.setText(message);
-//            mLoaderText.setVisibility(TextUtils.isEmpty(message) ? GONE : VISIBLE);
-        }
-    }
-
-    private fun hideLoader() {}
     private fun hideOpen() {
-        mOpen!!.visibility = INVISIBLE
+        mOpen?.visibility = INVISIBLE
     }
 
     private fun showOpen() {
-        mOpen!!.visibility = VISIBLE
+        mOpen?.visibility = VISIBLE
     }
 
-    private fun hideSurface() {}
-    private fun showSurface() {}
     private fun hidePlayerLayout() {
-        mSkip!!.visibility = INVISIBLE
-        mMute!!.visibility = INVISIBLE
-        mCountDown!!.visibility = INVISIBLE
+        mSkip?.visibility = INVISIBLE
+        mMute?.visibility = INVISIBLE
+        mCountDown?.visibility = INVISIBLE
     }
 
     private fun showPlayerLayout() {
-        mMute!!.visibility = VISIBLE
-        mCountDown!!.visibility = VISIBLE
+        mMute?.visibility = VISIBLE
+        mCountDown?.visibility = VISIBLE
     }
 
     // Media player
@@ -548,21 +493,21 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         v(TAG, "createMediaPlayer")
         if (simpleExoPlayer == null) {
             cacheDataSourceFactory = CacheDataSource.Factory()
-                .setCache(instance!!.getSimpleCache(context)!!)
+                .setCache(CacheFileManager.getSimpleCache())
                 .setUpstreamDataSourceFactory(
                     DefaultHttpDataSource.Factory()
                         .setAllowCrossProtocolRedirects(true)
                 )
                 .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
             simpleExoPlayer = SimpleExoPlayer.Builder(context)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory!!)).build()
-            simpleExoPlayer!!.addAnalyticsListener(object : AnalyticsListener {
-                override fun onPlaybackStateChanged(eventTime: EventTime, state: Int) {
+                .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory)).build()
+            simpleExoPlayer?.addAnalyticsListener(object : AnalyticsListener {
+                override fun onPlaybackStateChanged(eventTime: AnalyticsListener.EventTime, state: Int) {
                     if (state == Player.STATE_ENDED) {
                         v(TAG, "onCompletion -- (MediaPlayer callback)")
-                        processEvent(TRACKING_EVENTS_TYPE.complete)
+                        processEvent(TrackingEventsType.complete)
                         invokeOnPlayerPlaybackFinish()
-                        mCountDown!!.visibility = INVISIBLE
+                        mCountDown?.visibility = INVISIBLE
                     } else if (state == Player.STATE_READY) {
                         v(TAG, "onPrepared --(MediaPlayer callback) ....about to play")
                         setState(PlayerState.Ready)
@@ -570,16 +515,16 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
                     }
                 }
 
-                override fun onPlayerError(eventTime: EventTime, error: ExoPlaybackException) {
+                override fun onPlayerError(eventTime: AnalyticsListener.EventTime, error: ExoPlaybackException) {
                     v(TAG, "onError -- (MediaPlayer callback)")
                     processErrorEvent()
-                    mListener!!.onVASTPlayerCacheNotFound()
+                    mListener?.onVASTPlayerCacheNotFound()
                     invokeOnFail(Exception("VASTPlayer error: " + error.message))
                     destroy()
                 }
 
                 override fun onVideoSizeChanged(
-                    eventTime: EventTime,
+                    eventTime: AnalyticsListener.EventTime,
                     width: Int,
                     height: Int,
                     unappliedRotationDegrees: Int,
@@ -597,9 +542,9 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         v(TAG, "cleanUpMediaPlayer")
         if (simpleExoPlayer != null) {
             turnVolumeOff()
-            simpleExoPlayer!!.stop()
-            simpleExoPlayer!!.release()
-            simpleExoPlayer!!.clearVideoSurface()
+            simpleExoPlayer?.stop()
+            simpleExoPlayer?.release()
+            simpleExoPlayer?.clearVideoSurface()
             simpleExoPlayer = null
         }
     }
@@ -607,19 +552,19 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     fun refreshVolume() {
         if (mIsVideoMute) {
             turnVolumeOff()
-            mMute!!.setImageResource(R.drawable.ic_baseline_volume_off_24)
+            mMute?.setImageResource(R.drawable.ic_baseline_volume_off_24)
         } else {
             turnVolumeOn()
-            mMute!!.setImageResource(R.drawable.ic_baseline_volume_up_24)
+            mMute?.setImageResource(R.drawable.ic_baseline_volume_up_24)
         }
     }
 
     fun turnVolumeOff() {
-        simpleExoPlayer!!.volume = 0.0f
+        simpleExoPlayer?.volume = 0.0f
     }
 
     fun turnVolumeOn() {
-        simpleExoPlayer!!.volume = 1.0f
+        simpleExoPlayer?.volume = 1.0f
     }
 
     protected fun calculateAspectRatio() {
@@ -640,22 +585,22 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     private fun updateLayout() {
         v(TAG, "updateLayout")
-        val muteParams = mMute!!.layoutParams as LayoutParams
+        val muteParams = mMute?.layoutParams as LayoutParams
         muteParams.addRule(ALIGN_TOP, R.id.playerView)
         muteParams.addRule(ALIGN_LEFT, R.id.playerView)
-        mMute!!.layoutParams = muteParams
-        val openParams = mOpen!!.layoutParams as LayoutParams
+        mMute?.layoutParams = muteParams
+        val openParams = mOpen?.layoutParams as LayoutParams
         openParams.addRule(ALIGN_TOP, R.id.playerView)
         openParams.addRule(ALIGN_RIGHT, R.id.playerView)
-        mOpen!!.layoutParams = openParams
-        val countDownParams = mCountDown!!.layoutParams as LayoutParams
+        mOpen?.layoutParams = openParams
+        val countDownParams = mCountDown?.layoutParams as LayoutParams
         countDownParams.addRule(ALIGN_BOTTOM, R.id.playerView)
         countDownParams.addRule(ALIGN_LEFT, R.id.playerView)
-        mCountDown!!.layoutParams = countDownParams
-        val skipParams = mSkip!!.layoutParams as LayoutParams
+        mCountDown?.layoutParams = countDownParams
+        val skipParams = mSkip?.layoutParams as LayoutParams
         skipParams.addRule(ALIGN_BOTTOM, R.id.playerView)
         skipParams.addRule(ALIGN_RIGHT, R.id.playerView)
-        mSkip!!.layoutParams = skipParams
+        mSkip?.layoutParams = skipParams
     }
 
     private fun startCaching() {
@@ -663,18 +608,16 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         try {
             if (!mIsDataSourceSet) {
                 mIsDataSourceSet = true
-                val videoURL = mVastModel!!.pickedMediaFileURL
-                val mediaItem = MediaItem.fromUri(
-                    videoURL!!
-                )
-                val mediaSource = ProgressiveMediaSource.Factory(cacheDataSourceFactory!!).createMediaSource(mediaItem)
-                playerView!!.player = simpleExoPlayer
-                simpleExoPlayer!!.seekTo(0, 0)
-                simpleExoPlayer!!.repeatMode = Player.REPEAT_MODE_OFF
-                simpleExoPlayer!!.setMediaSource(mediaSource, true)
-                simpleExoPlayer!!.prepare()
+                val videoURL = mVastModel?.pickedMediaFileURL ?: ""
+                val mediaItem = MediaItem.fromUri(videoURL)
+                val mediaSource = ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(mediaItem)
+                playerView?.player = simpleExoPlayer
+                simpleExoPlayer?.seekTo(0, 0)
+                simpleExoPlayer?.repeatMode = Player.REPEAT_MODE_OFF
+                simpleExoPlayer?.setMediaSource(mediaSource, true)
+                simpleExoPlayer?.prepare()
             }
-            simpleExoPlayer!!.prepare()
+            simpleExoPlayer?.prepare()
         } catch (exception: Exception) {
             invokeOnFail(exception)
             destroy()
@@ -683,23 +626,23 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     // Event processing
     //-------------------------------------------------------
-    private fun processEvent(eventName: TRACKING_EVENTS_TYPE) {
+    private fun processEvent(eventName: TrackingEventsType) {
         v(TAG, "processEvent: $eventName")
-        if (mTrackingEventMap != null) {
-            val urls = mTrackingEventMap!![eventName]!!
+        mTrackingEventMap?.let {
+            val urls = it[eventName]
             fireUrls(urls)
         }
     }
 
     private fun processImpressions() {
         v(TAG, "processImpressions")
-        val impressions = mVastModel!!.impressions
+        val impressions = mVastModel?.impressions
         fireUrls(impressions)
     }
 
     private fun processErrorEvent() {
         v(TAG, "processErrorEvent")
-        val errorUrls = mVastModel!!.errorUrl
+        val errorUrls = mVastModel?.errorUrl
         fireUrls(errorUrls)
     }
 
@@ -723,11 +666,11 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         stopQuartileTimer()
         stopLayoutTimer()
         stopVideoProgressTimer()
-        mMainHandler!!.removeMessages(0)
+        mMainHandler?.removeMessages(0)
     }
 
     private fun startTimers() {
-        setSkip("Close", mVastModel!!.skipOffset)
+        setSkip(mVastModel?.skipOffset ?: 1)
         v(TAG, "startTimers")
 
         // Stop previous timers so they don't remain hold
@@ -745,7 +688,7 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
         d(TAG, "startVideoProgressTimer")
         mProgressTimer = Timer()
         mProgressTracker = ArrayList()
-        mProgressTimer!!.scheduleAtFixedRate(object : TimerTask() {
+        mProgressTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 if (mProgressTracker.size > MAX_PROGRESS_TRACKING_POINTS) {
                     val firstPosition = mProgressTracker[0]
@@ -753,19 +696,17 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
                     if (lastPosition > firstPosition) {
                         if (mIsBufferingShown) {
                             mIsBufferingShown = false
-                            mMainHandler!!.post { hideLoader() }
                         }
                     } else {
                         if (!mIsBufferingShown) {
                             mIsBufferingShown = true
-                            mMainHandler!!.post { showLoader(TEXT_BUFFERING) }
                         }
                     }
                     mProgressTracker.removeAt(0)
                 }
-                mMainHandler!!.post {
+                mMainHandler?.post {
                     try {
-                        mProgressTracker.add(simpleExoPlayer!!.currentPosition.toInt())
+                        mProgressTracker.add(simpleExoPlayer?.currentPosition?.toInt() ?: 1)
                     } catch (ignored: Exception) {
                     }
                 }
@@ -776,7 +717,7 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     private fun stopVideoProgressTimer() {
         d(TAG, "stopVideoProgressTimer")
         if (mProgressTimer != null) {
-            mProgressTimer!!.cancel()
+            mProgressTimer?.cancel()
             mProgressTimer = null
         }
     }
@@ -786,36 +727,40 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     // Quartile timer
     //-------------------------------------------------------
     private fun startQuartileTimer() {
-        progressBar!!.visibility = VISIBLE
+        progressBar?.visibility = VISIBLE
         v(TAG, "startQuartileTimer")
-        mTrackingEventsTimer = object : CountDownTimer(simpleExoPlayer!!.duration, 250) {
+        val duration = simpleExoPlayer?.duration ?: 1
+        mTrackingEventsTimer = object : CountDownTimer(duration, 250) {
             override fun onTick(millisUntilFinished: Long) {
-                val percentage = (simpleExoPlayer!!.currentPosition * 100 / simpleExoPlayer!!.duration).toInt()
-                progressBar!!.progress = percentage
-                if (simpleExoPlayer!!.currentPosition == 0L) {
+                val currentPosition = simpleExoPlayer?.currentPosition ?: 0L
+                if (currentPosition == 0L) {
                     return
                 }
-                if (percentage < 25 && !quartileSet.contains(TRACKING_EVENTS_TYPE.start.toString())) {
+
+                val percentage = (currentPosition * 100 / duration).toInt()
+                progressBar?.progress = percentage
+
+                if (percentage < 25 && !quartileSet.contains(TrackingEventsType.start.toString())) {
                     i(TAG, "Video at start: ($percentage%)")
                     processImpressions()
-                    processEvent(TRACKING_EVENTS_TYPE.start)
-                    quartileSet.add(TRACKING_EVENTS_TYPE.start.toString())
+                    processEvent(TrackingEventsType.start)
+                    quartileSet.add(TrackingEventsType.start.toString())
                     invokeOnPlayerPlaybackStart()
-                } else if (percentage in 25..49 && !quartileSet.contains(TRACKING_EVENTS_TYPE.firstQuartile.toString())) {
+                } else if (percentage in 25..49 && !quartileSet.contains(TrackingEventsType.firstQuartile.toString())) {
                     i(TAG, "Video at first quartile: ($percentage%)")
-                    processEvent(TRACKING_EVENTS_TYPE.firstQuartile)
-                    quartileSet.add(TRACKING_EVENTS_TYPE.firstQuartile.toString())
-                    mListener!!.onVASTPlayerOnFirstQuartile()
-                } else if (percentage in 50..74 && !quartileSet.contains(TRACKING_EVENTS_TYPE.midpoint.toString())) {
+                    processEvent(TrackingEventsType.firstQuartile)
+                    quartileSet.add(TrackingEventsType.firstQuartile.toString())
+                    mListener?.onVASTPlayerOnFirstQuartile()
+                } else if (percentage in 50..74 && !quartileSet.contains(TrackingEventsType.midpoint.toString())) {
                     i(TAG, "Video at midpoint: ($percentage%)")
-                    processEvent(TRACKING_EVENTS_TYPE.midpoint)
-                    quartileSet.add(TRACKING_EVENTS_TYPE.midpoint.toString())
-                    mListener!!.onVASTPlayerOnMidpoint()
-                } else if (percentage in 75..99 && !quartileSet.contains(TRACKING_EVENTS_TYPE.thirdQuartile.toString())) {
+                    processEvent(TrackingEventsType.midpoint)
+                    quartileSet.add(TrackingEventsType.midpoint.toString())
+                    mListener?.onVASTPlayerOnMidpoint()
+                } else if (percentage in 75..99 && !quartileSet.contains(TrackingEventsType.thirdQuartile.toString())) {
                     i(TAG, "Video at third quartile: ($percentage%)")
-                    processEvent(TRACKING_EVENTS_TYPE.thirdQuartile)
-                    quartileSet.add(TRACKING_EVENTS_TYPE.thirdQuartile.toString())
-                    mListener!!.onVASTPlayerOnThirdQuartile()
+                    processEvent(TrackingEventsType.thirdQuartile)
+                    quartileSet.add(TrackingEventsType.thirdQuartile.toString())
+                    mListener?.onVASTPlayerOnThirdQuartile()
                 }
             }
 
@@ -828,7 +773,7 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     private fun stopQuartileTimer() {
         v(TAG, "stopQuartileTimer")
         if (mTrackingEventsTimer != null) {
-            mTrackingEventsTimer!!.cancel()
+            mTrackingEventsTimer?.cancel()
             mTrackingEventsTimer = null
         }
     }
@@ -847,29 +792,30 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
                     return
                 }
                 // Execute with handler to be sure we execute this on the UIThread
-                mMainHandler!!.post {
+                mMainHandler?.post {
                     try {
-                        if (simpleExoPlayer != null && simpleExoPlayer!!.isPlaying) {
-                            val currentPosition = simpleExoPlayer!!.currentPosition.toInt() / 1000
-                            if (type === AdvType.REWARDED && mVastModel!!.skipOffset != -1) {
-                                mCountDown!!.setProgress(currentPosition, mVastModel!!.skipOffset)
-                                mSkip!!.text = mSkipName
-                                mSkip!!.visibility = VISIBLE
+                        if (simpleExoPlayer?.isPlaying == true) {
+                            val currentPositionElvis = simpleExoPlayer?.currentPosition?.toInt() ?: 1
+                            val currentPosition = currentPositionElvis / 1000
+                            if (type === AdvertiseType.REWARDED && mVastModel?.skipOffset != -1) {
+                                mCountDown?.setProgress(currentPosition, mVastModel?.skipOffset ?: 0)
+                                mSkip?.text = mSkipName
+                                mSkip?.visibility = VISIBLE
                                 needShowDialogClose = currentPosition < mSkipDelay
-                            } else if (type === AdvType.REWARDED && mVastModel!!.skipOffset == -1) {
-                                mCountDown!!.setProgress(currentPosition, simpleExoPlayer!!.duration.toInt())
+                            } else if (type === AdvertiseType.REWARDED && mVastModel?.skipOffset == -1) {
+                                mCountDown?.setProgress(currentPosition, simpleExoPlayer?.duration?.toInt() ?: 1)
                                 needShowDialogClose = true
-                            } else if (type === AdvType.INTERSTITIAL && mVastModel!!.skipOffset != -1) {
-                                mCountDown!!.setProgress(currentPosition, mVastModel!!.skipOffset)
+                            } else if (type === AdvertiseType.INTERSTITIAL && mVastModel?.skipOffset != -1) {
+                                mCountDown?.setProgress(currentPosition, mVastModel?.skipOffset ?: 1)
                                 if (currentPosition > mSkipDelay) {
-                                    mSkip!!.text = mSkipName
-                                    mSkip!!.visibility = VISIBLE
+                                    mSkip?.text = mSkipName
+                                    mSkip?.visibility = VISIBLE
                                 }
                                 needShowDialogClose = false
-                            } else if (type === AdvType.INTERSTITIAL && mVastModel!!.skipOffset == -1) {
-                                mCountDown!!.setProgress(currentPosition, simpleExoPlayer!!.duration.toInt())
-                                mSkip!!.text = mSkipName
-                                mSkip!!.visibility = VISIBLE
+                            } else if (type === AdvertiseType.INTERSTITIAL && mVastModel?.skipOffset == -1) {
+                                mCountDown?.setProgress(currentPosition, simpleExoPlayer?.duration?.toInt() ?: 1)
+                                mSkip?.text = mSkipName
+                                mSkip?.visibility = VISIBLE
                                 needShowDialogClose = false
                             }
                         }
@@ -894,35 +840,35 @@ class VASTPlayer : RelativeLayout, View.OnClickListener {
     private fun invokeOnPlayerOpenOffer() {
         v(TAG, "invokeOnPlayerClick")
         if (mListener != null) {
-            mListener!!.onVASTPlayerOpenOffer()
+            mListener?.onVASTPlayerOpenOffer()
         }
     }
 
     private fun invokeOnPlayerLoadFinish() {
         v(TAG, "invokeOnPlayerLoadFinish")
         if (mListener != null) {
-            mListener!!.onVASTPlayerLoadFinish()
+            mListener?.onVASTPlayerLoadFinish()
         }
     }
 
     private fun invokeOnFail(exception: Exception) {
         v(TAG, "invokeOnFail")
         if (mListener != null) {
-            mListener!!.onVASTPlayerFail(exception)
+            mListener?.onVASTPlayerFail(exception)
         }
     }
 
     private fun invokeOnPlayerPlaybackStart() {
         v(TAG, "invokeOnPlayerPlaybackStart")
         if (mListener != null) {
-            mListener!!.onVASTPlayerPlaybackStart()
+            mListener?.onVASTPlayerPlaybackStart()
         }
     }
 
     private fun invokeOnPlayerPlaybackFinish() {
         v(TAG, "invokeOnPlayerPlaybackFinish")
         if (mListener != null) {
-            mListener!!.onVASTPlayerPlaybackFinish()
+            mListener?.onVASTPlayerPlaybackFinish()
         }
     }
 

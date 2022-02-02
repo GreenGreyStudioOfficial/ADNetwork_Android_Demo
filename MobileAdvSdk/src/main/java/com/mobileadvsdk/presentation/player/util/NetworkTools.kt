@@ -1,15 +1,7 @@
-//
-//  NetworkTools.java
-//
-//  Copyright (c) 2014 Nexage. All rights reserved.
-//
-package net.pubnative.player.util
+package com.mobileadvsdk.presentation.player.util
 
 import android.content.Context
-import net.pubnative.player.util.VASTLog
-import net.pubnative.player.util.NetworkTools
 import android.net.ConnectivityManager
-import android.net.NetworkInfo
 
 object NetworkTools {
     private val TAG = NetworkTools::class.java.name
