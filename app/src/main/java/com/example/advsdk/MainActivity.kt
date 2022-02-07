@@ -6,13 +6,13 @@ import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.mobileadvsdk.AdNetworkSDK
+import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
 import com.mobileadvsdk.datasource.domain.model.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowListener {
 
     private lateinit var recyclerView: RecyclerView
 
@@ -30,26 +30,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.btnInit).setOnClickListener {
-            AdNetworkSDK.initialize(
-                MY_GAME_ID,
-                AD_SERVER_HOST,
-                true,
-                object : IAdInitializationListener {
-                    override fun onInitializationComplete() {
-                        addLog("onInitializationComplete")
-                    }
-
-                    override fun onInitializationError(
-                        error: InitializationErrorType,
-                        errorMessage: String
-                    ) {
-                        Log.e("onInitializationError", errorMessage)
-                        addLog("onInitializationError = ${error.name}, $errorMessage")
-                    }
-                })
+            AdvSDK.initialize(MY_GAME_ID, AD_SERVER_HOST, true, this)
         }
+
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
-            AdNetworkSDK.load(AdvertiseType.REWARDED, object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.REWARDED, object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("REWARDED onLoadComplete, id = $id")
                 }
@@ -60,7 +45,7 @@ class MainActivity : AppCompatActivity() {
             })
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
-            AdNetworkSDK.load(AdvertiseType.INTERSTITIAL, object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.INTERSTITIAL, object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
@@ -70,27 +55,31 @@ class MainActivity : AppCompatActivity() {
                 }
             })
         }
-
         findViewById<View>(R.id.btnShow).setOnClickListener {
-            AdNetworkSDK.show("", object : IAdShowListener {
-                override fun onShowChangeState(
-                    id: String,
-                    showCompletionState: ShowCompletionState
-                ) {
-                    logsAdapter
-                        .addLog("onShowChangeState, id = $id showCompletionState = ${showCompletionState.name}")
-                }
-
-                override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
-                    addLog("onShowError, id = $id errorMessage = ${error.name}")
-                }
-            })
+            AdvSDK.show("", this)
         }
     }
 
-    private fun addLog(log:String) {
+    private fun addLog(log: String) {
         logsAdapter.addLog(log)
         recyclerView.smoothScrollToPosition(logsAdapter.itemCount - 1)
+    }
+
+    override fun onInitializationComplete() {
+        addLog("onInitializationComplete")
+    }
+
+    override fun onInitializationError(error: InitializationErrorType, errorMessage: String) {
+        Log.e("onInitializationError", errorMessage)
+        addLog("onInitializationError = ${error.name}, $errorMessage")
+    }
+
+    override fun onShowChangeState(id: String, showCompletionState: ShowCompletionState) {
+        addLog("onShowChangeState, id = $id showCompletionState = ${showCompletionState.name}")
+    }
+
+    override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
+        addLog("onShowError, id = $id errorMessage = ${error.name}")
     }
 }
 

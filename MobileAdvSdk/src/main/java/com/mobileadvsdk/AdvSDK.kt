@@ -6,7 +6,7 @@ import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
 import com.mobileadvsdk.presentation.AdvViewModel
 
-object AdNetworkSDK {
+object AdvSDK {
 
     var provider: AdvViewModel? = null
 
@@ -17,6 +17,14 @@ object AdNetworkSDK {
             listener: IAdInitializationListener
     ) {
         if (provider == null) {
+            if (gameId.isEmpty()){
+                listener.onInitializationError(InitializationErrorType.GAME_ID_IS_NULL_OR_EMPTY, "")
+                return
+            }
+            if (adServerHost.isEmpty()){
+                listener.onInitializationError(InitializationErrorType.AD_SERVER_HOST_IS_NULL_OR_EMPTY, "")
+                return
+            }
             provider = AdvViewModel(adServerHost)
             init(gameId, adServerHost, isTestMode, listener)
             listener.onInitializationComplete()
@@ -34,10 +42,6 @@ object AdNetworkSDK {
 
 
     fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
-        provider?.loadAvd(advertiseType, listener)
-    } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
-
-    fun lazyLoad(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
         provider?.loadAvd(advertiseType, listener)
     } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 

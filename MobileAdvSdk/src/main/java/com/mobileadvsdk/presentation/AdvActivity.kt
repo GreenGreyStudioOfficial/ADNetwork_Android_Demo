@@ -6,7 +6,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
-import com.mobileadvsdk.AdNetworkSDK
+import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
@@ -25,7 +25,7 @@ class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
-    private val advViewModel: AdvViewModel? = AdNetworkSDK.provider
+    private val advViewModel: AdvViewModel? = AdvSDK.provider
 
     private lateinit var advData: AdvData
 
