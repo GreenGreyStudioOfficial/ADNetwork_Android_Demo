@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class ExtAdv(
+internal data class ExtAdv(
     val cache_max: Long? = null,
     val cache_timeout: Long? = null,
     val req_timeout: Long? = null,

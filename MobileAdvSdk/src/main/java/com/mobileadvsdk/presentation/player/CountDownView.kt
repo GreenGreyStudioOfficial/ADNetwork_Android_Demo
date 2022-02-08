@@ -11,7 +11,7 @@ import android.widget.TextView
 import com.mobileadvsdk.R
 
 
-class CountDownView : FrameLayout {
+internal class CountDownView : FrameLayout {
     private var progressBarView: ProgressBar? = null
     private var progressTextView: TextView? = null
 

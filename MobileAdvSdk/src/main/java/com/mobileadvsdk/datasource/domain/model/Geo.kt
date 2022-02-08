@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class Geo(
+internal data class Geo(
     val lat: Double? = 0.0,
     val lon: Double? = 0.0,
     val country: String? = null,

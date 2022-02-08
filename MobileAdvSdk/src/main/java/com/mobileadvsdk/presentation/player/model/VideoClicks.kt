@@ -1,6 +1,6 @@
 package com.mobileadvsdk.presentation.player.model
 
-class VideoClicks {
+internal class VideoClicks {
 
     var clickThrough: String? = null
     var clickTracking: MutableList<String> = mutableListOf()

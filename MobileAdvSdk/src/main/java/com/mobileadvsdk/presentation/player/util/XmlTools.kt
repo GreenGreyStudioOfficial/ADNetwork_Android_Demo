@@ -16,7 +16,7 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-object XmlTools {
+internal object XmlTools {
     private val TAG = XmlTools::class.java.name
 
     fun logXmlDocument(doc: Document?) {

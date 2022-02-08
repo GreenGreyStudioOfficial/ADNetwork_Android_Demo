@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class Bid(
+internal data class Bid(
     val id: String? = null,
     val impid: String? = null,
     val nurl: String? = null,

@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class DeviceInfo(
+internal data class DeviceInfo(
     var id: String,
     var test: Int,
     val imp: List<Imp> = mutableListOf(),

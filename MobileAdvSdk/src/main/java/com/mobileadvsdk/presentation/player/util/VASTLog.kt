@@ -2,7 +2,7 @@ package com.mobileadvsdk.presentation.player.util
 
 import android.util.Log
 
-object VASTLog {
+internal object VASTLog {
     private val TAG = VASTLog::class.java.name
     private var LEVEL = LOG_LEVEL.verbose
 

@@ -1,6 +1,6 @@
 package com.mobileadvsdk
 
-interface LoadDataListener {
+internal interface LoadDataListener {
 
     fun dataLoadSuccess()
 

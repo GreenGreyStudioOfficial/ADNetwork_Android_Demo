@@ -5,7 +5,7 @@ import com.mobileadvsdk.presentation.player.model.VASTMediaFile
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.util.VASTLog
 
-object VASTModelPostValidator {
+internal object VASTModelPostValidator {
     private val TAG = VASTModelPostValidator::class.java.name
 
     // This method tries to make sure that there is at least 1 Media file to

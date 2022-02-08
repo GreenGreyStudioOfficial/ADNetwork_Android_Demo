@@ -38,7 +38,7 @@ import com.mobileadvsdk.presentation.player.util.VASTLog.w
 import java.util.*
 import kotlin.math.abs
 
-class VASTPlayer : RelativeLayout, View.OnClickListener {
+internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     private lateinit var cacheDataSourceFactory: CacheDataSource.Factory
     private var playerView: PlayerView? = null
     private var progressBar: ProgressBar? = null

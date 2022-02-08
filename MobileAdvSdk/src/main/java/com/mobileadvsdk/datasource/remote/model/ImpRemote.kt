@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class ImpRemote(
+internal data class ImpRemote(
 
     @SerializedName("id")
     val id: String,

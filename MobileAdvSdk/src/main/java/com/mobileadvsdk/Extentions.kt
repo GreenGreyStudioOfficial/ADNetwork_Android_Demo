@@ -12,12 +12,12 @@ import org.kodein.di.direct
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 
-inline fun <reified VM : ViewModel, T> T.viewModelInstance(): Lazy<VM> where T : KodeinAware, T : FragmentActivity =
+internal inline fun <reified VM : ViewModel, T> T.viewModelInstance(): Lazy<VM> where T : KodeinAware, T : FragmentActivity =
     lazy { ViewModelProvider(this, direct.instance())[VM::class.java] }
 
-inline fun <reified T : ViewModel> Builder.bindViewModel(overrides: Boolean? = null): Builder.TypeBinder<T> =
+internal inline fun <reified T : ViewModel> Builder.bindViewModel(overrides: Boolean? = null): Builder.TypeBinder<T> =
     bind<T>(T::class.java.simpleName, overrides)
 
-fun <T> LifecycleOwner.observe(liveData: LiveData<T>, action: (t: T) -> Unit) {
+internal fun <T> LifecycleOwner.observe(liveData: LiveData<T>, action: (t: T) -> Unit) {
     liveData.observe(this, Observer { it?.let { t -> action(t) } })
 }

@@ -33,7 +33,7 @@ import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import java.io.IOException
 
-class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
+internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null

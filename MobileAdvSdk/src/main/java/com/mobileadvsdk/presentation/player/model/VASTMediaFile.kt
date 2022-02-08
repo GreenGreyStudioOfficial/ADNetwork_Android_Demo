@@ -2,7 +2,7 @@ package com.mobileadvsdk.presentation.player.model
 
 import java.math.BigInteger
 
-class VASTMediaFile {
+internal class VASTMediaFile {
     var value: String? = null
     var id: String? = null
     var delivery: String? = null

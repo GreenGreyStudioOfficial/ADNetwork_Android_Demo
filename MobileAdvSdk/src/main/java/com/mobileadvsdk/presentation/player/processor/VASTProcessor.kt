@@ -5,7 +5,6 @@ import com.mobileadvsdk.presentation.player.*
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.model.VastDocElements
 import com.mobileadvsdk.presentation.player.processor.VASTModelPostValidator.validate
-import com.mobileadvsdk.presentation.player.util.DefaultMediaPicker
 import com.mobileadvsdk.presentation.player.util.VASTLog
 import com.mobileadvsdk.presentation.player.util.XmlTools
 import org.w3c.dom.Document
@@ -30,7 +29,7 @@ private val TAG = VASTProcessor::class.java.name
 // target file)
 private const val MAX_VAST_LEVELS = 5
 
-class VASTProcessor {
+internal class VASTProcessor {
 
     var model: VASTModel? = null
 

@@ -5,7 +5,7 @@ import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
 
-object HttpTools {
+internal object HttpTools {
     private val TAG = HttpTools::class.java.name
 
     fun httpGetURL(url: String) {

@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class ExtAdvRemote(
+internal data class ExtAdvRemote(
 
     @SerializedName("cache_max")
     val cache_max: Long? = null,

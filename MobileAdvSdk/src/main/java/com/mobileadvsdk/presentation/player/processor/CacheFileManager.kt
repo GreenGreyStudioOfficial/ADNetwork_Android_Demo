@@ -11,7 +11,7 @@ import java.io.IOException
 
 private const val CACHE_SIZE = 90 * 1024 * 1024L
 
-object CacheFileManager {
+internal object CacheFileManager {
 
     private var cacheWriter: CacheWriter? = null
     private lateinit var simpleCache: Cache

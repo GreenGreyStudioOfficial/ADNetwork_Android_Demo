@@ -5,7 +5,7 @@ import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 
-interface AdvProvider {
+internal interface AdvProvider {
 
     fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener)
 

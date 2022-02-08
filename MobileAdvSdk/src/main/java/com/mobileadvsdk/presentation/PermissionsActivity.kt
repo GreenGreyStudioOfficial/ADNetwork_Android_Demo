@@ -10,7 +10,7 @@ import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 
 
-class PermissionsActivity : AppCompatActivity() {
+internal class PermissionsActivity : AppCompatActivity() {
 
     private val viewModel: AdvViewModel? = AdvSDK.provider
 

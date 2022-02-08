@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class Device(
+internal data class Device(
     var geo: Geo,
     val ip: String? = null,
     val deviceType: Int? = null,

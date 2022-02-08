@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-class AdvDataRequestRemote(
+internal class AdvDataRequestRemote(
     @SerializedName("id")
     val id: String,
 

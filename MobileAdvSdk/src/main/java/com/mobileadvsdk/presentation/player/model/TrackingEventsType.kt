@@ -1,7 +1,7 @@
 
 package com.mobileadvsdk.presentation.player.model
 
-enum class TrackingEventsType {
+internal enum class TrackingEventsType {
     creativeView,
     start,
     midpoint,

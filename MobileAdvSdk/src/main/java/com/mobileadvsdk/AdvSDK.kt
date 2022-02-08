@@ -8,20 +8,20 @@ import com.mobileadvsdk.presentation.AdvViewModel
 
 object AdvSDK {
 
-    var provider: AdvViewModel? = null
+    internal var provider: AdvViewModel? = null
 
     fun initialize(
-            gameId: String,
-            adServerHost: String,
-            isTestMode: Boolean,
-            listener: IAdInitializationListener
+        gameId: String,
+        adServerHost: String,
+        isTestMode: Boolean,
+        listener: IAdInitializationListener
     ) {
         if (provider == null) {
-            if (gameId.isEmpty()){
+            if (gameId.isEmpty()) {
                 listener.onInitializationError(InitializationErrorType.GAME_ID_IS_NULL_OR_EMPTY, "")
                 return
             }
-            if (adServerHost.isEmpty()){
+            if (adServerHost.isEmpty()) {
                 listener.onInitializationError(InitializationErrorType.AD_SERVER_HOST_IS_NULL_OR_EMPTY, "")
                 return
             }
@@ -34,10 +34,10 @@ object AdvSDK {
     }
 
     private fun init(
-            gameId: String,
-            adServerHost: String,
-            isTestMode: Boolean,
-            listener: IAdInitializationListener
+        gameId: String,
+        adServerHost: String,
+        isTestMode: Boolean,
+        listener: IAdInitializationListener
     ) = provider?.initialize(gameId, adServerHost, isTestMode, listener)
 
 

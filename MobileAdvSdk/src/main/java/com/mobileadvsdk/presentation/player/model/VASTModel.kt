@@ -35,7 +35,7 @@ private const val XPATH_VIDEO_CLICKS = "//VideoClicks"
 private const val XPATH_IMPRESSION = "//Impression"
 private const val XPATH_ERROR = "//Error"
 
-class VASTModel(var vastsDocument: Document) : Serializable {
+internal class VASTModel(var vastsDocument: Document) : Serializable {
 
     var pickedMediaFileURL: String = ""
 

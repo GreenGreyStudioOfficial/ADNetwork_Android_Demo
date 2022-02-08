@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class ExtRemote(
+internal data class ExtRemote(
     @SerializedName("rewarded")
     val rewarded: Long,
 )

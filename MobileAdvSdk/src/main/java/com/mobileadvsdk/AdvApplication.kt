@@ -3,7 +3,7 @@ package com.mobileadvsdk
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 
-class AdvApplication : MultiDexApplication() {
+internal class AdvApplication : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()

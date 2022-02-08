@@ -2,6 +2,6 @@ package com.mobileadvsdk.di
 
 import org.kodein.di.Kodein
 
-object KodeinHolder {
+internal object KodeinHolder {
     lateinit var kodein: Kodein
 }

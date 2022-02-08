@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-data class AdvData(
+internal data class AdvData(
     val id: String? = null,
     var advertiseType: AdvertiseType? = null,
     val bidid: String? = null,

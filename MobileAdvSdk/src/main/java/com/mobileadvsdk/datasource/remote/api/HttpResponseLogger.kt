@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import okhttp3.logging.HttpLoggingInterceptor
 
-class HttpResponseLogger : HttpLoggingInterceptor.Logger {
+internal class HttpResponseLogger : HttpLoggingInterceptor.Logger {
     private val gson by lazy { GsonBuilder().setPrettyPrinting().create() }
 
     override fun log(message: String) {

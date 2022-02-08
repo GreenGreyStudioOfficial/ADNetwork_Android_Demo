@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class BidRemote(
+internal data class BidRemote(
     @SerializedName("id")
     val id: String? = null,
 

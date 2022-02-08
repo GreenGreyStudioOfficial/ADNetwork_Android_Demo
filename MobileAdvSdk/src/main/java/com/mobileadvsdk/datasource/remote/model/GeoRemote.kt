@@ -2,7 +2,7 @@ package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
 
-data class GeoRemote(
+internal data class GeoRemote(
 
     @SerializedName("lat")
     val lat: Double?=null,

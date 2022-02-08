@@ -21,7 +21,7 @@ const val ERROR_CACHE = 5
 
 private val TAG = VASTParser::class.java.name
 
-object VASTParser {
+internal object VASTParser {
 
     private var listener: Listener? = null
     private var resultError = ERROR_NONE

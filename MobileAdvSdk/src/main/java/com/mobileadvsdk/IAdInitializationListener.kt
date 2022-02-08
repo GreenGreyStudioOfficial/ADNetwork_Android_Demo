@@ -2,7 +2,7 @@ package com.mobileadvsdk
 
 import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
 
-interface IAdInitializationListener {
+ interface IAdInitializationListener {
 
     fun onInitializationComplete()
 

@@ -3,7 +3,7 @@ package com.mobileadvsdk.presentation.player.util
 import android.content.Context
 import android.net.ConnectivityManager
 
-object NetworkTools {
+internal object NetworkTools {
     private val TAG = NetworkTools::class.java.name
 
     // This method return true if it's connected to Internet

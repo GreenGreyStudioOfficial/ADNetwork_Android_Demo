@@ -21,7 +21,7 @@ import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.subKodein
 
-class AdvActivity : AppCompatActivity(), KodeinAware {
+internal class AdvActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 

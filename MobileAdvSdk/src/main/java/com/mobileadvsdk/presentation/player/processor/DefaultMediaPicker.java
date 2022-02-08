@@ -29,26 +29,24 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-package com.mobileadvsdk.presentation.player.util;
+package com.mobileadvsdk.presentation.player.processor;
 
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
 import com.mobileadvsdk.presentation.player.model.VASTMediaFile;
-import com.mobileadvsdk.presentation.player.processor.VASTMediaPicker;
+import com.mobileadvsdk.presentation.player.util.VASTLog;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-public class DefaultMediaPicker implements VASTMediaPicker {
+class DefaultMediaPicker implements VASTMediaPicker {
 
     private static final String TAG = DefaultMediaPicker.class.getName();
-    private static final int maxPixels = 5000;
 
-    // These are the Android supported MIME types, see http://developer.android.com/guide/appendix/media-formats.html#core (as of API 18)
     String SUPPORTED_VIDEO_TYPE_REGEX = "video/.*(?i)(mp4|3gpp|mp2t|webm|matroska)";
 
     private int deviceWidth;
@@ -62,7 +60,6 @@ public class DefaultMediaPicker implements VASTMediaPicker {
     }
 
     @Override
-    // given a list of MediaFiles, select the most appropriate one.
     public VASTMediaFile pickVideo(List<VASTMediaFile> mediaFiles) {
         //make sure that the list of media files contains the correct attributes
         if (mediaFiles == null || prefilterMediaFiles(mediaFiles) == 0) {
@@ -72,17 +69,6 @@ public class DefaultMediaPicker implements VASTMediaPicker {
         Collections.sort(mediaFiles, new AreaComparator());
         return getBestMatch(mediaFiles);
     }
-
-    /*
-     * This method filters the list of mediafiles and return the count.
-     * Validate that the media file objects contain the required attributes for the Default Media Picker processing.
-     *
-     * 		Required attributes:
-     * 			1. type
-     * 			2. height
-     * 			3. width
-     * 			4. url
-     */
 
     private int prefilterMediaFiles(List<VASTMediaFile> mediaFiles) {
 
@@ -110,18 +96,9 @@ public class DefaultMediaPicker implements VASTMediaPicker {
     }
 
     private void setDeviceWidthHeight() {
-
-        // get the device width and height of the device using the context
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         deviceWidth = metrics.widthPixels;
         deviceHeight = metrics.heightPixels;
-        deviceArea = deviceWidth * deviceHeight;
-    }
-
-    private void setDeviceWidthHeight(int width, int height) {
-
-        this.deviceWidth = width;
-        this.deviceHeight = height;
         deviceArea = deviceWidth * deviceHeight;
     }
 
