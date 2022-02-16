@@ -26,7 +26,7 @@ internal class DefaultMediaPicker(private val context: Context) : VASTMediaPicke
         if (list == null || prefilterMediaFiles(list) == 0) {
             return null
         }
-        Collections.sort(list, AreaComparator())
+        Collections.sort(list, AreaComparator() as Comparator<in VASTMediaFile?>)
         return getBestMatch(list)
     }
 
