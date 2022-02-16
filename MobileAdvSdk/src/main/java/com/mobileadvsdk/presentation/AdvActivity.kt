@@ -36,10 +36,6 @@ internal class AdvActivity : AppCompatActivity(), KodeinAware {
 
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
-
-        Log.e("SCREEN_SIZE", " " + displayMetrics.widthPixels)
-        Log.e("SCREEN_SIZE", " " + displayMetrics.heightPixels)
-
         advViewModel?.let {
             observe(it.advDataLive) { data ->
                 advData = data
@@ -70,7 +66,6 @@ internal class AdvActivity : AppCompatActivity(), KodeinAware {
             }
 
             override fun onVASTPlayerFail(exception: Exception?) {
-                Log.e("onVASTPlayerFail", exception?.localizedMessage, exception)
                 advViewModel?.iAdShowListener?.onShowError(
                     getAdvId(),
                     ShowErrorType.UNKNOWN,

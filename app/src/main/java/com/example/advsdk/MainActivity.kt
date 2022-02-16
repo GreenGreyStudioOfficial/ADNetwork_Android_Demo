@@ -70,7 +70,6 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
     }
 
     override fun onInitializationError(error: InitializationErrorType, errorMessage: String) {
-        Log.e("onInitializationError", errorMessage)
         addLog("onInitializationError = ${error.name}, $errorMessage")
     }
 
