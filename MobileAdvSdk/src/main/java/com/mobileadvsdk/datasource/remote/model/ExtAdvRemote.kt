@@ -5,14 +5,14 @@ import com.google.gson.annotations.SerializedName
 internal data class ExtAdvRemote(
 
     @SerializedName("cache_max")
-    val cache_max: Long? = null,
+    val cache_max: Long?,
 
     @SerializedName("cache_timeout")
-    val cache_timeout: Long? = null,
+    val cache_timeout: Long?,
 
     @SerializedName("req_timeout")
-    val req_timeout: Long? = null,
+    val req_timeout: Long?,
 
     @SerializedName("imp_timeout")
-    val imp_timeout: Long? = null,
+    val imp_timeout: Long?,
 )

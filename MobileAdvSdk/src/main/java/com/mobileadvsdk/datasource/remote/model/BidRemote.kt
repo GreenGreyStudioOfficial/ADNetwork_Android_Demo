@@ -4,26 +4,26 @@ import com.google.gson.annotations.SerializedName
 
 internal data class BidRemote(
     @SerializedName("id")
-    val id: String? = null,
+    val id: String?,
 
     @SerializedName("impid")
-    val impid: String? = null,
+    val impid: String?,
 
     @SerializedName("nurl")
-    val nurl: String? = null,
+    val nurl: String?,
 
     @SerializedName("lurl")
-    val lurl: String? = null,
+    val lurl: String?,
 
     @SerializedName("adm")
-    val adm: String? = null,
+    val adm: String?,
 
     @SerializedName("cid")
-    val cid: String? = null,
+    val cid: String?,
 
     @SerializedName("crid")
-    val crid: String? = null,
+    val crid: String?,
 
     @SerializedName("ext")
-    val extAdv: ExtAdvRemote?= null,
+    val extAdv: ExtAdvRemote?,
 )

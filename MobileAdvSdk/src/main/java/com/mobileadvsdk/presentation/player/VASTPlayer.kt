@@ -820,7 +820,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Layout timer error: $e")
+                        Log.e(TAG, "Layout timer error: ${e.localizedMessage}")
                         cancel()
                         return@post
                     }

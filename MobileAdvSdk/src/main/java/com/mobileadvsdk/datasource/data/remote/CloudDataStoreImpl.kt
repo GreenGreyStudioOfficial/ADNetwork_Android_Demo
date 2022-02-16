@@ -8,18 +8,12 @@ import io.reactivex.Completable
 import io.reactivex.Single
 
 internal class CloudDataStoreImpl(
-    private val dataServiceApi: DataApiService,
-    private val eventApiService: EventApiService
+    private val dataServiceApi: DataApiService
 ) : CloudDataStore {
 
     override fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote> =
         dataServiceApi.loadStartData(advDataRequestRemote)
 
-    override fun getNurl(url: String): Completable = dataServiceApi.getUrl(url)
-
-    override fun getLurl(string: String): Completable {
-        TODO("Not yet implemented")
-    }
-
+    override fun getUrl(url: String): Completable = dataServiceApi.getUrl(url)
 
 }

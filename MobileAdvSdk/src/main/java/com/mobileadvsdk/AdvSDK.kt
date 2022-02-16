@@ -41,11 +41,9 @@ object AdvSDK {
     ) = provider?.initialize(gameId, adServerHost, isTestMode, listener)
 
 
-    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) = provider?.let {
-        provider?.loadAvd(advertiseType, listener)
-    } ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
+    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) =
+        provider?.loadAvd(advertiseType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
-    fun show(id: String, iAdShowListener: IAdShowListener) = provider?.let {
-        provider?.showAvd(id, iAdShowListener)
-    } ?: iAdShowListener.onShowError("", ShowErrorType.NOT_INITIALIZED_ERROR)
+    fun show(id: String, iAdShowListener: IAdShowListener) =
+        provider?.showAvd(id, iAdShowListener) ?: iAdShowListener.onShowError("", ShowErrorType.NOT_INITIALIZED_ERROR)
 }

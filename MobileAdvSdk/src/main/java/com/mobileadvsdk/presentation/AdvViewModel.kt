@@ -91,14 +91,12 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
     private fun parseAdvData(lurl: String?, vast: String) {
         disposables += VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
-                Log.e("onVASTParserError", "error: $error")
                 iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
                 getUrl(lurl ?: "")
             }
 
             override fun onVASTCacheError(error: Int) {
                 iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND)
-                Log.e("onVASTCacheError", "error: $error")
             }
 
             override fun onVASTParserFinished(model: VASTModel?) {
@@ -124,11 +122,11 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
     }
 
     fun getUrl(url: String) {
-        disposables += dataRepository.getNurl(url)
+        disposables += dataRepository.getUrl(url)
             .observeOn(scheduler)
             .subscribeBy(
-                onComplete = {},
-                onError = {})
+                onComplete = { Log.v("AdvViewModel", "complete") },
+                onError = { Log.e("AdvViewModel", it.localizedMessage) })
     }
 
     override fun onCleared() {

@@ -21,7 +21,7 @@ internal class DataRepositoryImpl(
             .subscribeOn(ioScheduler)
 
 
-    override fun getNurl(url: String): Completable =
-        cloudDataStore.getNurl(url)
+    override fun getUrl(url: String): Completable =
+        cloudDataStore.getUrl(url)
             .subscribeOn(ioScheduler)
 }

@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 internal data class SeatbidRemote(
     @SerializedName("bid")
-    val bid: List<BidRemote> = mutableListOf()
+    val bid: List<BidRemote>?
 )

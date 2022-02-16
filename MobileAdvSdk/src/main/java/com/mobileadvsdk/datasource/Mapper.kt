@@ -39,9 +39,9 @@ internal fun Geo.toRemote(): GeoRemote = GeoRemote(lat, lon, country, region, ci
 internal fun User.toRemote(): UserRemote = UserRemote(id)
 
 internal fun AdvDataRemote.toDomain(): AdvData =
-    AdvData(id, AdvertiseType.REWARDED, bidid, seatbid.map { it.toDomain() })
+    AdvData(id, AdvertiseType.REWARDED, bidid, seatbid?.map { it.toDomain() } ?: mutableListOf())
 
-internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid.map { it.toDomain() })
+internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid?.map { it.toDomain() } ?: mutableListOf())
 
 internal fun BidRemote.toDomain(): Bid =
     Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv?.toDomain())
