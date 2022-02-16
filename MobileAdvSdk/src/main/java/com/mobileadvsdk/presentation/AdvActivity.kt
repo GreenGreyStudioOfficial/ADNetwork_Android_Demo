@@ -34,12 +34,6 @@ internal class AdvActivity : AppCompatActivity(), KodeinAware {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
 
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-
-        Log.e("SCREEN_SIZE", " " + displayMetrics.widthPixels)
-        Log.e("SCREEN_SIZE", " " + displayMetrics.heightPixels)
-
         advViewModel?.let {
             observe(it.advDataLive) { data ->
                 advData = data

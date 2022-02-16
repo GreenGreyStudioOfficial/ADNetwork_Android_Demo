@@ -80,13 +80,6 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
         listener: IAdInitializationListener
     ) {
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
-
-        AdvApplication.instance.startActivity(
-            Intent(
-                AdvApplication.instance,
-                PermissionsActivity::class.java
-            ).addFlags(FLAG_ACTIVITY_NEW_TASK)
-        )
     }
 
     override fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {

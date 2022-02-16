@@ -5,19 +5,16 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.mobileadvsdk.BuildConfig
 import com.mobileadvsdk.datasource.data.DataRepositoryImpl
 import com.mobileadvsdk.datasource.data.remote.CloudDataStore
 import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.remote.api.DataApiService
 import com.mobileadvsdk.datasource.remote.api.EventApiService
-import com.mobileadvsdk.datasource.remote.api.HttpResponseLogger
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import org.kodein.di.Kodein
 import org.kodein.di.direct
 import org.kodein.di.generic.bind
@@ -57,13 +54,7 @@ internal fun mainModule(host: String) = Kodein.Module("main") {
         OkHttpClient.Builder()
             .connectTimeout(OKHTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(OKHTTP_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .addInterceptor(
-                HttpLoggingInterceptor(HttpResponseLogger())
-                    .setLevel(
-                        if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                        else HttpLoggingInterceptor.Level.NONE
-                    )
-            ).build()
+            .build()
     }
 
     bind<GsonConverterFactory>() with singleton {

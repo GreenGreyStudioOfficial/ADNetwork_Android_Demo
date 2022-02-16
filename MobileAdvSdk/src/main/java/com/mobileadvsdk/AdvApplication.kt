@@ -1,13 +1,12 @@
 package com.mobileadvsdk
 
-import androidx.multidex.MultiDex
-import androidx.multidex.MultiDexApplication
+import android.app.Application
 
-internal class AdvApplication : MultiDexApplication() {
+
+internal class AdvApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        MultiDex.install(this)
         instance = this
     }
 
