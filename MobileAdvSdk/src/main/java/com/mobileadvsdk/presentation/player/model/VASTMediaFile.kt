@@ -13,6 +13,7 @@ internal class VASTMediaFile {
     var isScalable: Boolean? = null
     var isMaintainAspectRatio: Boolean? = null
     var apiFramework: String? = null
+
     override fun toString(): String {
         return "MediaFile [value=$value, id=$id, delivery=$delivery, type=$type, bitrate=$bitrate, width=$width, height=$height, scalable=$isScalable, maintainAspectRatio=$isMaintainAspectRatio, apiFramework=$apiFramework]"
     }
