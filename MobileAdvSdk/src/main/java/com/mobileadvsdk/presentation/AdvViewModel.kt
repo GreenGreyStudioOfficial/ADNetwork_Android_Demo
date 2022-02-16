@@ -131,11 +131,11 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
     }
 
     fun getUrl(url: String) {
-        disposables += dataRepository.getNurl(url)
+        disposables += dataRepository.getUrl(url)
             .observeOn(scheduler)
             .subscribeBy(
-                onComplete = {},
-                onError = {})
+                onComplete = { Log.v("AdvViewModel", "complete") },
+                onError = { Log.e("AdvViewModel", it.localizedMessage) })
     }
 
     override fun onCleared() {

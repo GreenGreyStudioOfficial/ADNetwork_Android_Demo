@@ -10,7 +10,7 @@ internal class AdvDataRequestRemote(
     val test: Int,
 
     @SerializedName("imp")
-    val imp: List<ImpRemote> = mutableListOf(),
+    val imp: List<ImpRemote>?,
 
     @SerializedName("app")
     val app: AppInfoRemote,

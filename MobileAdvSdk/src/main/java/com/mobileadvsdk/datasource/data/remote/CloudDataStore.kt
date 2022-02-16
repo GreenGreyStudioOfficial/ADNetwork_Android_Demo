@@ -9,7 +9,5 @@ internal interface CloudDataStore {
 
     fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote>
 
-    fun getNurl(url: String): Completable
-
-    fun getLurl(string: String): Completable
+    fun getUrl(url: String): Completable
 }

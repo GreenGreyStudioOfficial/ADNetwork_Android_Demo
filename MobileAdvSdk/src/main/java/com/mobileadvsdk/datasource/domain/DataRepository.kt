@@ -9,5 +9,5 @@ internal interface DataRepository {
 
     fun loadStartData(deviceInfo: DeviceInfo): Single<AdvData>
 
-    fun getNurl(url: String): Completable
+    fun getUrl(url: String): Completable
 }

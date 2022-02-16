@@ -1,6 +1,6 @@
 package com.mobileadvsdk.datasource.domain.model
 
-enum class LoadErrorType ( val desc:String){
+enum class LoadErrorType(val desc: String) {
     UNKNOWN("Неизвестная ошибка"),
     CONNECTION_ERROR("Ошибка соединения"),
     DATA_PROCESSING_ERROR("Ошибка обработки данных"),

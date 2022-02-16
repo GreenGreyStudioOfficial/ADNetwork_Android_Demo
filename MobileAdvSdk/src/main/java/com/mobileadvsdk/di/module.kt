@@ -38,7 +38,7 @@ internal fun mainModule(host: String) = Kodein.Module("main") {
         instance<Retrofit>("eventService").create(EventApiService::class.java)
     }
 
-    bind<CloudDataStore>() with singleton { CloudDataStoreImpl(instance(), instance()) }
+    bind<CloudDataStore>() with singleton { CloudDataStoreImpl(instance()) }
 
     bind<DataRepository>() with singleton {
         DataRepositoryImpl(

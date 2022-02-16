@@ -5,18 +5,17 @@ import com.google.gson.annotations.SerializedName
 internal data class GeoRemote(
 
     @SerializedName("lat")
-    val lat: Double?=null,
+    val lat: Double?,
 
     @SerializedName("lon")
-    val lon: Double?=null,
+    val lon: Double?,
 
     @SerializedName("country")
-    val country: String?=null,
+    val country: String?,
 
     @SerializedName("region")
-    val region: String?=null,
+    val region: String?,
 
     @SerializedName("city")
-    val city: String?=null,
-
+    val city: String?,
 )

@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 internal data class VideoRemote(
 
     @SerializedName("mimes")
-    val mimes: List<String> = mutableListOf(),
+    val mimes: List<String> ?,
 
     @SerializedName("w")
     val w: Int,
