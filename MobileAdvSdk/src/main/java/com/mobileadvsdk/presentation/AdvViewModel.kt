@@ -1,5 +1,6 @@
 package com.mobileadvsdk.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
@@ -13,7 +14,6 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.mobileadvsdk.AdvApplication
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
@@ -37,6 +37,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null
+    private lateinit var context: Context
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
@@ -74,11 +75,13 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun initialize(
+        context: Context,
         gameId: String,
         adServerHost: String,
         isTestMode: Boolean,
         listener: IAdInitializationListener
     ) {
+        this.context = context
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
     }
 
@@ -101,14 +104,14 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
             override fun onVASTParserFinished(model: VASTModel?) {
                 vastModel = model
-                AdvApplication.instance.startActivity(
+                context.startActivity(
                     Intent(
-                        AdvApplication.instance,
+                        context,
                         AdvActivity::class.java
                     ).addFlags(FLAG_ACTIVITY_NEW_TASK)
                 )
             }
-        }).parseVast(vast)
+        }).parseVast(context, vast)
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
@@ -116,7 +119,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             this.iAdShowListener = iAdShowListener
             parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
         } ?: run {
-            CacheFileManager.clearCache()
+            CacheFileManager.clearCache(context)
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
@@ -133,15 +136,17 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
         disposables.clear()
     }
 
+    @SuppressLint("MissingPermission")
     private fun getLastLocation() {
-        val manager =
-            AdvApplication.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if (ContextCompat.checkSelfPermission(
-                AdvApplication.instance,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-            == PackageManager.PERMISSION_GRANTED
+                context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            &&
+            ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             var utilLocation: Location? = null
             val providers = manager.getProviders(true)

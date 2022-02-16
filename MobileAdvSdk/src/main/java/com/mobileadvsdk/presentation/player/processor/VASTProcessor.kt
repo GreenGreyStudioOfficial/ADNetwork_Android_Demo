@@ -1,6 +1,6 @@
 package com.mobileadvsdk.presentation.player.processor
 
-import com.mobileadvsdk.AdvApplication
+import android.content.Context
 import com.mobileadvsdk.presentation.player.*
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.model.VastDocElements
@@ -35,7 +35,7 @@ internal class VASTProcessor {
 
     private val mergedVastDocs = StringBuilder(500)
 
-    fun process(xmlData: String): Int {
+    fun process(context: Context, xmlData: String): Int {
         VASTLog.d(TAG, "process")
         model = null
         val inputStream: InputStream? = try {
@@ -60,7 +60,7 @@ internal class VASTProcessor {
             return ERROR_XML_PARSE
         }
 
-        return if (!validate(model, DefaultMediaPicker(AdvApplication.instance))) {
+        return if (!validate(model, DefaultMediaPicker(context))) {
             ERROR_POST_VALIDATION
         } else ERROR_NONE
     }

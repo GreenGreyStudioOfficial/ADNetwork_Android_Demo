@@ -1,5 +1,6 @@
 package com.mobileadvsdk.presentation
 
+import android.content.Context
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
@@ -10,6 +11,7 @@ internal interface AdvProvider {
     fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener)
 
     fun initialize(
+        context: Context,
         gameId: String,
         adServerHost: String,
         isTestMode: Boolean,

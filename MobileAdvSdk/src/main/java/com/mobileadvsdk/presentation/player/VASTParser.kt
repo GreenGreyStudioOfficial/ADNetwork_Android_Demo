@@ -1,7 +1,7 @@
 package com.mobileadvsdk.presentation.player
 
+import android.content.Context
 import android.net.Uri
-import android.os.AsyncTask
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import com.mobileadvsdk.presentation.player.processor.VASTProcessor
@@ -10,7 +10,6 @@ import com.mobileadvsdk.presentation.player.util.VASTLog.v
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.io.IOException
 
 const val ERROR_NONE = 0
 const val ERROR_XML_OPEN_OR_READ = 1
@@ -38,9 +37,9 @@ internal object VASTParser {
         return this
     }
 
-    private fun cacheVideoFile(url: String): Int {
+    private fun cacheVideoFile(context: Context,url: String): Int {
         try {
-            CacheFileManager.cache(Uri.parse(url))
+            CacheFileManager.cache(context, Uri.parse(url))
             return ERROR_NONE
         } catch (e: Throwable) {
             e(TAG, "cacheVideoFile", e)
@@ -48,7 +47,7 @@ internal object VASTParser {
         return ERROR_CACHE
     }
 
-    fun parseVast(vastText: String) =
+    fun parseVast(context: Context, vastText: String) =
         Single.just(vastText)
             .subscribeOn(Schedulers.computation())
             .map {
@@ -57,10 +56,10 @@ internal object VASTParser {
                 resultError = ERROR_NONE
                 if (it.isNotEmpty()) {
                     val processor = VASTProcessor()
-                    resultError = processor.process(it)
+                    resultError = processor.process(context, it)
                     if (resultError == ERROR_NONE) {
                         processor.model?.let { model ->
-                            resultError = cacheVideoFile(model.pickedMediaFileURL)
+                            resultError = cacheVideoFile(context, model.pickedMediaFileURL)
                             if (resultError == ERROR_NONE) {
                                 result = model
                             }

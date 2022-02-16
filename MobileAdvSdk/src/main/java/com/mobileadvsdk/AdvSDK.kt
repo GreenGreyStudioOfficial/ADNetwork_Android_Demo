@@ -1,5 +1,6 @@
 package com.mobileadvsdk
 
+import android.content.Context
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
 import com.mobileadvsdk.datasource.domain.model.LoadErrorType
@@ -11,6 +12,7 @@ object AdvSDK {
     internal var provider: AdvViewModel? = null
 
     fun initialize(
+        context: Context,
         gameId: String,
         adServerHost: String,
         isTestMode: Boolean,
@@ -26,7 +28,7 @@ object AdvSDK {
                 return
             }
             provider = AdvViewModel(adServerHost)
-            init(gameId, adServerHost, isTestMode, listener)
+            init(context, gameId, adServerHost, isTestMode, listener)
             listener.onInitializationComplete()
         } else {
             listener.onInitializationError(InitializationErrorType.SDK_ALREADY_INITIALIZED, "")
@@ -34,11 +36,12 @@ object AdvSDK {
     }
 
     private fun init(
+        context:Context,
         gameId: String,
         adServerHost: String,
         isTestMode: Boolean,
         listener: IAdInitializationListener
-    ) = provider?.initialize(gameId, adServerHost, isTestMode, listener)
+    ) = provider?.initialize(context, gameId, adServerHost, isTestMode, listener)
 
 
     fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) =

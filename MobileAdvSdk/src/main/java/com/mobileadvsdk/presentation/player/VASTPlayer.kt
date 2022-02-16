@@ -493,7 +493,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         v(TAG, "createMediaPlayer")
         if (simpleExoPlayer == null) {
             cacheDataSourceFactory = CacheDataSource.Factory()
-                .setCache(CacheFileManager.getSimpleCache())
+                .setCache(CacheFileManager.getSimpleCache(context))
                 .setUpstreamDataSourceFactory(
                     DefaultHttpDataSource.Factory()
                         .setAllowCrossProtocolRedirects(true)
