@@ -19,24 +19,6 @@ import javax.xml.transform.stream.StreamResult
 internal object XmlTools {
     private val TAG = XmlTools::class.java.name
 
-    fun logXmlDocument(doc: Document?) {
-        d(TAG, "logXmlDocument")
-        try {
-            val tf = TransformerFactory.newInstance()
-            val transformer = tf.newTransformer()
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml")
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8")
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4")
-            val sw = StringWriter()
-            transformer.transform(DOMSource(doc), StreamResult(sw))
-            d(TAG, sw.toString())
-        } catch (e: Exception) {
-            e(TAG, e.message, e)
-        }
-    }
-
     fun xmlDocumentToString(doc: Document?): String? {
         var xml: String? = null
         d(TAG, "xmlDocumentToString")
@@ -91,19 +73,6 @@ internal object XmlTools {
         }
         return document
     }
-
-//    @Throws(IOException::class)
-//    fun stringFromStream(inputStream: InputStream): String {
-//        d(TAG, "stringFromStream")
-//        val baos = ByteArrayOutputStream()
-//        val buffer = ByteArray(1024)
-//        var length = 0
-//        while (inputStream.read(buffer).also { length = it } != -1) {
-//            baos.write(buffer, 0, length)
-//        }
-//        val bytes = baos.toByteArray()
-//        return String(bytes, "UTF-8")
-//    }
 
     fun getElementValue(node: Node): String? {
         val childNodes = node.childNodes

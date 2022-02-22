@@ -10,6 +10,7 @@ import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
+import com.mobileadvsdk.observe
 import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
 import kotlinx.android.synthetic.main.dialog_close_advert.view.*
@@ -25,8 +26,10 @@ internal class AdvActivity : FragmentActivity() {
         setContentView(R.layout.activity_adv)
 
         advViewModel?.let {
-            it.advDataLive.observe(this) { data ->
-                advData = data
+            observe(it.advDataLive) { data ->
+                data?.let { advNewData ->
+                    advData = advNewData
+                }
             }
         }
 

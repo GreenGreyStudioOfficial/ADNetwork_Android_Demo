@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">AdvSDK</string>
     <string name="VAST">AdvSDK</string>
+    <string name="dialog_continue_watch">Продолжить просмотр</string>
+    <string name="dialog_close">Закрыть</string>
+    <string name="dialog_subtitle">Вознаграждение не будет получено.</string>
+    <string name="dialog_title">Закрыть ролик?</string>
 </resources>
