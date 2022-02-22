@@ -1,5 +1,6 @@
 package com.mobileadvsdk
 
+import android.app.Application
 import android.content.Context
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
@@ -12,7 +13,7 @@ object AdvSDK {
     internal var provider: AdvViewModel? = null
 
     fun initialize(
-        context: Context,
+        context: Application,
         gameId: String,
         adServerHost: String,
         isTestMode: Boolean,
@@ -27,7 +28,7 @@ object AdvSDK {
                 listener.onInitializationError(InitializationErrorType.AD_SERVER_HOST_IS_NULL_OR_EMPTY, "")
                 return
             }
-            provider = AdvViewModel(adServerHost)
+            provider = AdvViewModel(context, adServerHost)
             init(context, gameId, adServerHost, isTestMode, listener)
             listener.onInitializationComplete()
         } else {

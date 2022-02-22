@@ -1,6 +1,7 @@
 package com.mobileadvsdk.presentation
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
@@ -12,34 +13,55 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import com.google.gson.GsonBuilder
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
+import com.mobileadvsdk.datasource.data.DataRepositoryImpl
+import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.*
-import com.mobileadvsdk.di.KodeinHolder
-import com.mobileadvsdk.di.mainModule
+import com.mobileadvsdk.datasource.remote.api.DataApiService
 import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
-import org.kodein.di.Kodein
-import org.kodein.di.KodeinAware
-import org.kodein.di.generic.instance
+import io.reactivex.schedulers.Schedulers
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
-internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
+internal class AdvViewModel(context: Application, adServerHost: String) : AndroidViewModel(context), AdvProvider {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null
-    private lateinit var context: Context
-    private val dataRepository: DataRepository by instance()
-    private val scheduler: Scheduler by instance("uiScheduler")
+
+    private val dataRepository: DataRepository = DataRepositoryImpl(
+        Schedulers.io(), CloudDataStoreImpl(
+            Retrofit.Builder()
+                .client(
+                    OkHttpClient.Builder()
+                        .connectTimeout(OKHTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .readTimeout(OKHTTP_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .build()
+                )
+                .baseUrl(adServerHost)
+                .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build().create(DataApiService::class.java)
+        )
+    )
+
+    private val scheduler: Scheduler = AndroidSchedulers.mainThread()
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
     private val disposables: CompositeDisposable = CompositeDisposable()
     private var deviceInfo = DeviceInfo(
@@ -70,9 +92,6 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
         User("0aa5c2f9-cf04-42f5-b6dc-d71a5d05e258")
     )
 
-    override val kodein: Kodein =
-        Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
-
     @RequiresApi(Build.VERSION_CODES.M)
     override fun initialize(
         context: Context,
@@ -81,7 +100,6 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
         isTestMode: Boolean,
         listener: IAdInitializationListener
     ) {
-        this.context = context
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
     }
 
@@ -90,6 +108,8 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
     }
 
     lateinit var iAdShowListener: IAdShowListener
+
+    private fun context(): Context = getApplication<Application>().applicationContext
 
     private fun parseAdvData(lurl: String?, vast: String) {
         disposables += VASTParser.setListener(object : VASTParser.Listener {
@@ -104,14 +124,14 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
             override fun onVASTParserFinished(model: VASTModel?) {
                 vastModel = model
-                context.startActivity(
+                context().startActivity(
                     Intent(
-                        context,
+                        context(),
                         AdvActivity::class.java
                     ).addFlags(FLAG_ACTIVITY_NEW_TASK)
                 )
             }
-        }).parseVast(context, vast)
+        }).parseVast(context(), vast)
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
@@ -119,7 +139,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             this.iAdShowListener = iAdShowListener
             parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
         } ?: run {
-            CacheFileManager.clearCache(context)
+            CacheFileManager.clearCache(context())
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
@@ -129,7 +149,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             .observeOn(scheduler)
             .subscribeBy(
                 onComplete = { Log.v("AdvViewModel", "complete") },
-                onError = { Log.e("AdvViewModel", it.localizedMessage) })
+                onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })
     }
 
     override fun onCleared() {
@@ -138,14 +158,14 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
     @SuppressLint("MissingPermission")
     private fun getLastLocation() {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val manager = context().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if (ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+                context(), android.Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
             &&
             ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.ACCESS_FINE_LOCATION
+                context(), android.Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             var utilLocation: Location? = null
@@ -186,3 +206,6 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             )
     }
 }
+
+const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000L
+const val OKHTTP_READ_TIMEOUT_MS = 20_000L

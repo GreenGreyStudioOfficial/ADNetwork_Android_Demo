@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
         }
 
         findViewById<View>(R.id.btnInit).setOnClickListener {
-            AdvSDK.initialize(this, MY_GAME_ID, AD_SERVER_HOST, true, this)
+            AdvSDK.initialize(this.application, MY_GAME_ID, AD_SERVER_HOST, true, this)
         }
 
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
