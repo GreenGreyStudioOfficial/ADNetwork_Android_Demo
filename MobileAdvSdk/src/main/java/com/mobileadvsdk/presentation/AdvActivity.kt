@@ -1,11 +1,9 @@
 package com.mobileadvsdk.presentation
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Window
-import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
@@ -21,7 +19,7 @@ import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.subKodein
 
-internal class AdvActivity : AppCompatActivity(), KodeinAware {
+internal class AdvActivity : Activity(), KodeinAware {
 
     override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
 
@@ -35,7 +33,7 @@ internal class AdvActivity : AppCompatActivity(), KodeinAware {
         setContentView(R.layout.activity_adv)
 
         advViewModel?.let {
-            observe(it.advDataLive) { data ->
+            it.advDataLive.observe(this) { data ->
                 advData = data
             }
         }

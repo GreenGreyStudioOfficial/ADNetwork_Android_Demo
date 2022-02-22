@@ -4,10 +4,14 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/project_lib/mobadvsdk/MobileAdvSdk/src/main/res/layout/activity_transparent.xml" value="0.16354166666666667" />
+        <entry key="MobileAdvSdk/src/main/res/drawable/ic_baseline_open_in_new_24.xml" value="0.3345" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_adv.xml" value="0.14817629179331307" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="MobileAdvSdk/src/main/res/layout/activity_transparent.xml" value="0.18297101449275363" />
-        <entry key="MobileAdvSdk/src/main/res/layout/dialog_close_advert.xml" value="0.18297101449275363" />
+        <entry key="MobileAdvSdk/src/main/res/layout/dialog_close_advert.xml" value="0.375" />
+        <entry key="MobileAdvSdk/src/main/res/layout/pubnative_player.xml" value="0.44974874371859297" />
+        <entry key="MobileAdvSdk/src/main/res/layout/pubnative_player_count_down.xml" value="0.2128623188405797" />
+        <entry key="MobileAdvSdk/src/main/res/layout/pubnative_player_temp.xml" value="0.24954710144927536" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.45" />
         <entry key="app/src/main/res/layout/item_logs.xml" value="0.5" />
         <entry key="player/src/main/res/drawable/ic_baseline_volume_off_24.xml" value="0.24114583333333334" />

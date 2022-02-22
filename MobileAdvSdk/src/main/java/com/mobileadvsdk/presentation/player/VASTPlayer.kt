@@ -10,10 +10,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatImageView
+
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -102,7 +103,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     // Player
     private var mSkip: TextView? = null
-    private var mMute: AppCompatImageView? = null
+    private var mMute: ImageView? = null
     private var mCountDown: CountDownView? = null
 
     // OTHERS
@@ -448,7 +449,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
             mRoot = LayoutInflater.from(context).inflate(R.layout.pubnative_player, null)
             playerView = mRoot?.findViewById<View>(R.id.playerView) as PlayerView
             progressBar = mRoot?.findViewById<View>(R.id.progress) as ProgressBar
-            mMute = mRoot?.findViewById<View>(R.id.mute) as AppCompatImageView
+            mMute = mRoot?.findViewById<View>(R.id.mute) as ImageView
             mMute?.visibility = INVISIBLE
             mMute?.setOnClickListener(this)
             mCountDown = mRoot?.findViewById<View>(R.id.count_down) as CountDownView
