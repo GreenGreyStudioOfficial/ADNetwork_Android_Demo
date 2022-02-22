@@ -1,21 +1,20 @@
 package com.mobileadvsdk.presentation
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.Window
+import androidx.fragment.app.FragmentActivity
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
-import com.mobileadvsdk.observe
 import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
 import kotlinx.android.synthetic.main.dialog_close_advert.view.*
 
-internal class AdvActivity : Activity() {
+internal class AdvActivity : FragmentActivity() {
     private val advViewModel: AdvViewModel? = AdvSDK.provider
 
     private lateinit var advData: AdvData
