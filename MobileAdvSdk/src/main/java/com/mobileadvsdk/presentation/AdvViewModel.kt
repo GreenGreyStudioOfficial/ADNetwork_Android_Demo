@@ -1,6 +1,7 @@
 package com.mobileadvsdk.presentation
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
@@ -12,8 +13,8 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
@@ -33,11 +34,11 @@ import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import java.io.IOException
 
-internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, KodeinAware {
+internal class AdvViewModel(context: Application, adServerHost: String)
+    : AndroidViewModel(context), AdvProvider,    KodeinAware {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null
-    private lateinit var context: Context
     private val dataRepository: DataRepository by instance()
     private val scheduler: Scheduler by instance("uiScheduler")
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
@@ -81,7 +82,6 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
         isTestMode: Boolean,
         listener: IAdInitializationListener
     ) {
-        this.context = context
         initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
     }
 
@@ -90,6 +90,8 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
     }
 
     lateinit var iAdShowListener: IAdShowListener
+
+    private fun context(): Context = getApplication<Application>().applicationContext
 
     private fun parseAdvData(lurl: String?, vast: String) {
         disposables += VASTParser.setListener(object : VASTParser.Listener {
@@ -104,14 +106,14 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
             override fun onVASTParserFinished(model: VASTModel?) {
                 vastModel = model
-                context.startActivity(
+                context().startActivity(
                     Intent(
-                        context,
+                        context(),
                         AdvActivity::class.java
                     ).addFlags(FLAG_ACTIVITY_NEW_TASK)
                 )
             }
-        }).parseVast(context, vast)
+        }).parseVast(context(), vast)
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
@@ -119,7 +121,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             this.iAdShowListener = iAdShowListener
             parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
         } ?: run {
-            CacheFileManager.clearCache(context)
+            CacheFileManager.clearCache(context())
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
@@ -129,7 +131,7 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
             .observeOn(scheduler)
             .subscribeBy(
                 onComplete = { Log.v("AdvViewModel", "complete") },
-                onError = { Log.e("AdvViewModel", it.localizedMessage) })
+                onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })
     }
 
     override fun onCleared() {
@@ -138,14 +140,14 @@ internal class AdvViewModel(adServerHost: String) : ViewModel(), AdvProvider, Ko
 
     @SuppressLint("MissingPermission")
     private fun getLastLocation() {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val manager = context().getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if (ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+                context(), android.Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
             &&
             ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.ACCESS_FINE_LOCATION
+                context(), android.Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             var utilLocation: Location? = null
