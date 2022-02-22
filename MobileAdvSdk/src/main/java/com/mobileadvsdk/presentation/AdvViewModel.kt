@@ -15,32 +15,53 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.GsonBuilder
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
+import com.mobileadvsdk.datasource.data.DataRepositoryImpl
+import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.*
-import com.mobileadvsdk.di.KodeinHolder
-import com.mobileadvsdk.di.mainModule
+import com.mobileadvsdk.datasource.remote.api.DataApiService
 import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.subscribeBy
-import org.kodein.di.Kodein
-import org.kodein.di.KodeinAware
-import org.kodein.di.generic.instance
+import io.reactivex.schedulers.Schedulers
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
-internal class AdvViewModel(context: Application, adServerHost: String)
-    : AndroidViewModel(context), AdvProvider,    KodeinAware {
+internal class AdvViewModel(context: Application, adServerHost: String) : AndroidViewModel(context), AdvProvider {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null
-    private val dataRepository: DataRepository by instance()
-    private val scheduler: Scheduler by instance("uiScheduler")
+
+    private val dataRepository: DataRepository = DataRepositoryImpl(
+        Schedulers.io(), CloudDataStoreImpl(
+            Retrofit.Builder()
+                .client(
+                    OkHttpClient.Builder()
+                        .connectTimeout(OKHTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .readTimeout(OKHTTP_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                        .build()
+                )
+                .baseUrl(adServerHost)
+                .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build().create(DataApiService::class.java)
+        )
+    )
+
+    private val scheduler: Scheduler = AndroidSchedulers.mainThread()
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
     private val disposables: CompositeDisposable = CompositeDisposable()
     private var deviceInfo = DeviceInfo(
@@ -70,9 +91,6 @@ internal class AdvViewModel(context: Application, adServerHost: String)
         ),
         User("0aa5c2f9-cf04-42f5-b6dc-d71a5d05e258")
     )
-
-    override val kodein: Kodein =
-        Kodein { import(mainModule(adServerHost)) }.apply { KodeinHolder.kodein = this }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun initialize(
@@ -188,3 +206,6 @@ internal class AdvViewModel(context: Application, adServerHost: String)
             )
     }
 }
+
+const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000L
+const val OKHTTP_READ_TIMEOUT_MS = 20_000L

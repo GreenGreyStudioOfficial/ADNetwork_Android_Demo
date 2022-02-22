@@ -2,8 +2,6 @@ package com.mobileadvsdk.presentation
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import com.mobileadvsdk.AdvSDK
@@ -12,19 +10,12 @@ import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
-import com.mobileadvsdk.di.KodeinHolder
 import com.mobileadvsdk.observe
 import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
 import kotlinx.android.synthetic.main.dialog_close_advert.view.*
-import org.kodein.di.Kodein
-import org.kodein.di.KodeinAware
-import org.kodein.di.subKodein
 
-internal class AdvActivity : AppCompatActivity(), KodeinAware {
-
-    override val kodein: Kodein = subKodein(KodeinHolder.kodein) {}
-
+internal class AdvActivity : AppCompatActivity() {
     private val advViewModel: AdvViewModel? = AdvSDK.provider
 
     private lateinit var advData: AdvData
