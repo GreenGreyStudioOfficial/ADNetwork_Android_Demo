@@ -46,7 +46,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     var vastModel: VASTModel? = null
 
     private val dataRepository: DataRepository = DataRepositoryImpl(
-        Schedulers.io(), CloudDataStoreImpl(
+        CloudDataStoreImpl(
             Retrofit.Builder()
                 .client(
                     OkHttpClient.Builder()
@@ -112,7 +112,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     private fun context(): Context = getApplication<Application>().applicationContext
 
     private fun parseAdvData(lurl: String?, vast: String) {
-        disposables += VASTParser.setListener(object : VASTParser.Listener {
+       VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
                 iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
                 getUrl(lurl ?: "")

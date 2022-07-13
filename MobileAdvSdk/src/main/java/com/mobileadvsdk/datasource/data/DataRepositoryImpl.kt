@@ -6,22 +6,22 @@ import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.DeviceInfo
 import com.mobileadvsdk.datasource.toDomain
 import com.mobileadvsdk.datasource.toRemote
-import io.reactivex.Completable
-import io.reactivex.Scheduler
-import io.reactivex.Single
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
 
 internal class DataRepositoryImpl(
-    private val ioScheduler: Scheduler,
     private val cloudDataStore: CloudDataStore
 ) : DataRepository {
 
-    override fun loadStartData(deviceInfo: DeviceInfo): Single<AdvData> =
+    override fun loadStartData(deviceInfo: DeviceInfo): Flow<AdvData> =
         cloudDataStore.loadStartData(deviceInfo.toRemote())
             .map { it.toDomain() }
-            .subscribeOn(ioScheduler)
+            .flowOn(Dispatchers.IO)
 
-
-    override fun getUrl(url: String): Completable =
+    override fun getUrl(url: String): Flow<Unit> =
         cloudDataStore.getUrl(url)
-            .subscribeOn(ioScheduler)
+            .flowOn(Dispatchers.IO)
 }

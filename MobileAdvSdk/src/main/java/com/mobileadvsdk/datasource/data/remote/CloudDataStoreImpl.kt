@@ -1,19 +1,17 @@
 package com.mobileadvsdk.datasource.data.remote
 
 import com.mobileadvsdk.datasource.remote.api.DataApiService
-import com.mobileadvsdk.datasource.remote.api.EventApiService
 import com.mobileadvsdk.datasource.remote.model.AdvDataRemote
 import com.mobileadvsdk.datasource.remote.model.AdvDataRequestRemote
-import io.reactivex.Completable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 internal class CloudDataStoreImpl(
     private val dataServiceApi: DataApiService
 ) : CloudDataStore {
 
-    override fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Single<AdvDataRemote> =
+    override fun loadStartData(advDataRequestRemote: AdvDataRequestRemote): Flow<AdvDataRemote> =
         dataServiceApi.loadStartData(advDataRequestRemote)
 
-    override fun getUrl(url: String): Completable = dataServiceApi.getUrl(url)
+    override fun getUrl(url: String): Flow<Unit> = dataServiceApi.getUrl(url)
 
 }

@@ -2,12 +2,11 @@ package com.mobileadvsdk.datasource.domain
 
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.DeviceInfo
-import io.reactivex.Completable
-import io.reactivex.Single
+import kotlinx.coroutines.flow.Flow
 
 internal interface DataRepository {
 
-    fun loadStartData(deviceInfo: DeviceInfo): Single<AdvData>
+    fun loadStartData(deviceInfo: DeviceInfo): Flow<AdvData>
 
-    fun getUrl(url: String): Completable
+    fun getUrl(url: String): Flow<Unit>
 }
