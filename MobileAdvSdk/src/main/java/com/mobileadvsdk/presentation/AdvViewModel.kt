@@ -9,11 +9,9 @@ import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
 import android.location.LocationManager
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
@@ -24,19 +22,21 @@ import com.mobileadvsdk.datasource.domain.model.*
 import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 internal class AdvViewModel(context: Application, adServerHost: String) : AndroidViewModel(context), AdvProvider {
 
-    val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
+    val advDataLive: MutableStateFlow<AdvData?> = MutableStateFlow(null)
     var vastModel: VASTModel? = null
 
     private val dataRepository: DataRepository = DataRepositoryImpl()
 
-    private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
+    private val initDataLive: MutableStateFlow<InitData?> = MutableStateFlow(null)
     private var deviceInfo = DeviceInfo(
         "1",
         1,
@@ -52,7 +52,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
                 1
             )
         ),
-        AppInfo("secret", "GGAD_NETWORK_SDK", "com.DefaultCompany.GGAD_NETWORK_SD"),
+        AppInfo("secret", "GGAD_NETWORK_SDK", context.packageName),
         Device(
             geo = Geo(null, null),
             model = "OMEN Laptop 15-ek1xxx (HP)",
@@ -72,7 +72,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
         isTestMode: Boolean,
         listener: IAdInitializationListener
     ) {
-        initDataLive.postValue(InitData(gameId, adServerHost, isTestMode))
+        initDataLive.value = InitData(gameId, adServerHost, isTestMode)
     }
 
     override fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
@@ -120,11 +120,12 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     }
 
     fun getUrl(url: String) {
-//        disposables += dataRepository.getUrl(url)
-        /*.observeOn(scheduler)
-        .subscribeBy(
-            onComplete = { Log.v("AdvViewModel", "complete") },
-            onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })*/
+        viewModelScope.launch {
+            dataRepository.getUrl(url)
+                .catch { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") }
+                .onCompletion { Log.v("AdvViewModel", "complete") }
+                .collect()
+        }
     }
 
     @SuppressLint("MissingPermission")

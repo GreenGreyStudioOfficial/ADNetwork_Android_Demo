@@ -1,5 +1,6 @@
 package com.mobileadvsdk.datasource.remote.api
 
+import android.util.Log
 import com.mobileadvsdk.datasource.remote.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -9,13 +10,15 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.coroutines.resumeWithException
+
 private const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000
 private const val OKHTTP_READ_TIMEOUT_MS = 20_000
 
 object DataApiServiceImpl {
     fun getUrl(url: String): Flow<Unit> {
         return flow {
-            TODO("implement me")
+            loadUrl(url)
+            emit(Unit)
         }
     }
 
@@ -58,6 +61,28 @@ object DataApiServiceImpl {
                 urlConnection.disconnect()
             }
         }
+
+    private suspend fun loadUrl(host: String) : Unit {
+        suspendCancellableCoroutine<Unit> {
+            val url = URL(host)
+
+            val urlConnection = (url.openConnection() as HttpURLConnection).apply {
+                readTimeout = OKHTTP_READ_TIMEOUT_MS
+                connectTimeout = OKHTTP_CONNECT_TIMEOUT_MS
+            }
+
+            try {
+                urlConnection.inputStream.bufferedReader().readText()
+                it.resume(Unit) {
+                    urlConnection.disconnect()
+                }
+            } catch (t: Throwable) {
+                it.resumeWithException(t)
+            } finally {
+                urlConnection.disconnect()
+            }
+        }
+    }
 
 }
 

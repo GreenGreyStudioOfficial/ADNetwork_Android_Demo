@@ -1,37 +1,26 @@
 package com.mobileadvsdk.presentation
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.Window
-import androidx.fragment.app.FragmentActivity
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
-import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
-import com.mobileadvsdk.observe
 import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
-import kotlinx.android.synthetic.main.dialog_close_advert.view.*
 
-internal class AdvActivity : FragmentActivity() {
+internal class AdvActivity : Activity() {
     private val advViewModel: AdvViewModel? = AdvSDK.provider
-
-    private lateinit var advData: AdvData
+    private val advData
+        get() = advViewModel?.advDataLive?.value
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
-
-        advViewModel?.let {
-            observe(it.advDataLive) { data ->
-                data?.let { advNewData ->
-                    advData = advNewData
-                }
-            }
-        }
 
         advViewModel?.vastModel?.let {
             vastPlayer.load(it)
@@ -39,11 +28,11 @@ internal class AdvActivity : FragmentActivity() {
         initPlayerListener()
     }
 
-    private fun getAdvData() = advData.seatbid[0].bid[0]
+    private fun getBid() = advData?.seatbid?.firstOrNull()?.bid?.firstOrNull()
     private fun getAdvertiseType() =
-        if (advData.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
+        if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
 
-    private fun getAdvId(): String = getAdvData().id ?: ""
+    private fun getAdvId(): String = getBid()?.id ?: ""
 
     private fun handleShowChangeState(state: ShowCompletionState) =
         advViewModel?.iAdShowListener?.onShowChangeState(getAdvId(), state)
@@ -51,7 +40,7 @@ internal class AdvActivity : FragmentActivity() {
     private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewModel?.getUrl(getAdvData().nurl ?: "")
+                advViewModel?.getUrl(getBid()?.nurl ?: "")
                 vastPlayer.setType(getAdvertiseType())
                 vastPlayer.play()
             }
@@ -74,7 +63,7 @@ internal class AdvActivity : FragmentActivity() {
 
             override fun onVASTPlayerPlaybackFinish() {
                 handleShowChangeState(ShowCompletionState.COMPLETE)
-                advViewModel?.advDataLive?.postValue(null)
+                advViewModel?.advDataLive?.value = null
                 vastPlayer.destroy()
                 finish()
             }
@@ -101,7 +90,7 @@ internal class AdvActivity : FragmentActivity() {
                 } else {
                     handleShowChangeState(ShowCompletionState.CLOSE)
                     vastPlayer.onSkipConfirm()
-                    advViewModel?.advDataLive?.postValue(null)
+                    advViewModel?.advDataLive?.value = null
                     finish()
                 }
             }
@@ -129,20 +118,22 @@ internal class AdvActivity : FragmentActivity() {
 
     private fun showCloseDialog() {
         val builder = AlertDialog.Builder(this)
-        val view = layoutInflater.inflate(R.layout.dialog_close_advert, null)
-        builder.setView(view)
-        builder.setCancelable(true)
+        with(builder) {
+            setTitle(R.string.dialog_title)
+            setMessage(R.string.dialog_subtitle)
+            setCancelable(false)
+            setPositiveButton(R.string.dialog_continue_watch) { p0, _ ->
+                vastPlayer.play()
+                p0.dismiss()
+            }
+            setNegativeButton(R.string.dialog_close) { p0, _ ->
+                handleShowChangeState(ShowCompletionState.CLOSE)
+                vastPlayer.onSkipConfirm()
+                p0.dismiss()
+                finish()
+            }
+        }
         val dialog = builder.create()
-        view.btnClose.setOnClickListener {
-            handleShowChangeState(ShowCompletionState.CLOSE)
-            vastPlayer.onSkipConfirm()
-            dialog.dismiss()
-            finish()
-        }
-        view.btnContinue.setOnClickListener {
-            vastPlayer.play()
-            dialog.dismiss()
-        }
         dialog.show()
     }
 }
