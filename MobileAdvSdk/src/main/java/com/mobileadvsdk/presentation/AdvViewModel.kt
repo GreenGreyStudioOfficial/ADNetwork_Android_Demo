@@ -10,60 +10,33 @@ import android.content.res.Resources
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import com.google.gson.GsonBuilder
+import androidx.lifecycle.viewModelScope
 import com.mobileadvsdk.IAdInitializationListener
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
 import com.mobileadvsdk.datasource.data.DataRepositoryImpl
-import com.mobileadvsdk.datasource.data.remote.CloudDataStoreImpl
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.*
-import com.mobileadvsdk.datasource.remote.api.DataApiService
 import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
-import io.reactivex.Scheduler
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.rxkotlin.plusAssign
-import io.reactivex.rxkotlin.subscribeBy
-import io.reactivex.schedulers.Schedulers
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 internal class AdvViewModel(context: Application, adServerHost: String) : AndroidViewModel(context), AdvProvider {
 
     val advDataLive: MutableLiveData<AdvData> = MutableLiveData()
     var vastModel: VASTModel? = null
 
-    private val dataRepository: DataRepository = DataRepositoryImpl(
-        CloudDataStoreImpl(
-            Retrofit.Builder()
-                .client(
-                    OkHttpClient.Builder()
-                        .connectTimeout(OKHTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                        .readTimeout(OKHTTP_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-                        .build()
-                )
-                .baseUrl(adServerHost)
-                .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .build().create(DataApiService::class.java)
-        )
-    )
+    private val dataRepository: DataRepository = DataRepositoryImpl()
 
-    private val scheduler: Scheduler = AndroidSchedulers.mainThread()
     private val initDataLive: MutableLiveData<InitData> by lazy { MutableLiveData() }
-    private val disposables: CompositeDisposable = CompositeDisposable()
     private var deviceInfo = DeviceInfo(
         "1",
         1,
@@ -92,7 +65,6 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
         User("0aa5c2f9-cf04-42f5-b6dc-d71a5d05e258")
     )
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun initialize(
         context: Context,
         gameId: String,
@@ -112,7 +84,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     private fun context(): Context = getApplication<Application>().applicationContext
 
     private fun parseAdvData(lurl: String?, vast: String) {
-       VASTParser.setListener(object : VASTParser.Listener {
+        VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
                 iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
                 getUrl(lurl ?: "")
@@ -131,13 +103,16 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
                     ).addFlags(FLAG_ACTIVITY_NEW_TASK)
                 )
             }
-        }).parseVast(context(), vast)
+        })
+        viewModelScope.launch {
+            VASTParser.parseVast(context(), vast)
+        }
     }
 
     override fun showAvd(id: String, iAdShowListener: IAdShowListener) {
         advDataLive.value?.let {
             this.iAdShowListener = iAdShowListener
-            parseAdvData(it.seatbid[0].bid[0].lurl, it.seatbid[0].bid[0].adm ?: "")
+            parseAdvData(it.seatbid.first().bid.first().lurl, it.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm ?: "")
         } ?: run {
             CacheFileManager.clearCache(context())
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
@@ -146,14 +121,10 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
 
     fun getUrl(url: String) {
 //        disposables += dataRepository.getUrl(url)
-            /*.observeOn(scheduler)
-            .subscribeBy(
-                onComplete = { Log.v("AdvViewModel", "complete") },
-                onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })*/
-    }
-
-    override fun onCleared() {
-        disposables.clear()
+        /*.observeOn(scheduler)
+        .subscribeBy(
+            onComplete = { Log.v("AdvViewModel", "complete") },
+            onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })*/
     }
 
     @SuppressLint("MissingPermission")
@@ -183,16 +154,9 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
 
     private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener) {
         getLastLocation()
-       /* disposables += dataRepository.loadStartData(deviceInfo)
-            .observeOn(scheduler)
-            .subscribeBy(
-                onSuccess = {
-                    it?.let {
-                        advDataLive.value = it.apply { this.advertiseType = advertiseType }
-                        listener.onLoadComplete(it.seatbid[0].bid[0].id ?: "")
-                    }
-                },
-                onError = {
+        viewModelScope.launch {
+            dataRepository.loadStartData(deviceInfo)
+                .catch {
                     when (it) {
                         is IOException -> {
                             listener.onLoadError(
@@ -203,9 +167,12 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
 
                     }
                 }
-            )*/
+                .collect {
+                    advDataLive.value = it.apply { this.advertiseType = advertiseType }
+                    listener.onLoadComplete(it.seatbid.firstOrNull()?.bid?.firstOrNull()?.id ?: "")
+                }
+        }
+
     }
 }
 
-const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000L
-const val OKHTTP_READ_TIMEOUT_MS = 20_000L

@@ -7,9 +7,8 @@ import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import com.mobileadvsdk.presentation.player.processor.VASTProcessor
 import com.mobileadvsdk.presentation.player.util.VASTLog.e
 import com.mobileadvsdk.presentation.player.util.VASTLog.v
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 
 const val ERROR_NONE = 0
 const val ERROR_XML_OPEN_OR_READ = 1
@@ -37,7 +36,7 @@ internal object VASTParser {
         return this
     }
 
-    private fun cacheVideoFile(context: Context,url: String): Int {
+    private fun cacheVideoFile(context: Context, url: String): Int {
         try {
             CacheFileManager.cache(context, Uri.parse(url))
             return ERROR_NONE
@@ -47,9 +46,9 @@ internal object VASTParser {
         return ERROR_CACHE
     }
 
-    fun parseVast(context: Context, vastText: String) =
-        Single.just(vastText)
-            .subscribeOn(Schedulers.computation())
+    suspend fun parseVast(context: Context, vastText: String) {
+        flowOf(vastText)
+            .flowOn(Dispatchers.Default)
             .map {
                 v(TAG, "doInBackground")
                 var result: VASTModel? = null
@@ -72,20 +71,19 @@ internal object VASTParser {
                     throw Throwable(resultError.toString())
                 }
             }
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    listener?.onVASTParserFinished(result)
-                },
-                { error ->
-                    when (error.message?.toInt()) {
-                        ERROR_CACHE -> {
-                            listener?.onVASTCacheError(resultError)
-                        }
-                        else -> {
-                            listener?.onVASTParserError(resultError)
-                        }
+            .flowOn(Dispatchers.Main)
+            .catch { error ->
+                when (error.message?.toInt()) {
+                    ERROR_CACHE -> {
+                        listener?.onVASTCacheError(resultError)
+                    }
+                    else -> {
+                        listener?.onVASTParserError(resultError)
                     }
                 }
-            )
+            }
+            .collect { result ->
+                listener?.onVASTParserFinished(result)
+            }
+    }
 }
