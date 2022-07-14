@@ -145,11 +145,11 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     }
 
     fun getUrl(url: String) {
-        disposables += dataRepository.getUrl(url)
-            .observeOn(scheduler)
+//        disposables += dataRepository.getUrl(url)
+            /*.observeOn(scheduler)
             .subscribeBy(
                 onComplete = { Log.v("AdvViewModel", "complete") },
-                onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })
+                onError = { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") })*/
     }
 
     override fun onCleared() {
@@ -183,7 +183,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
 
     private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener) {
         getLastLocation()
-        disposables += dataRepository.loadStartData(deviceInfo)
+       /* disposables += dataRepository.loadStartData(deviceInfo)
             .observeOn(scheduler)
             .subscribeBy(
                 onSuccess = {
@@ -203,7 +203,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
 
                     }
                 }
-            )
+            )*/
     }
 }
 

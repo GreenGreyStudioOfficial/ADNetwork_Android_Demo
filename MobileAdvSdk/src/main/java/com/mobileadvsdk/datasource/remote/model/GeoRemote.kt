@@ -1,6 +1,7 @@
 package com.mobileadvsdk.datasource.remote.model
 
 import com.google.gson.annotations.SerializedName
+import org.json.JSONObject
 
 internal data class GeoRemote(
 
@@ -18,4 +19,12 @@ internal data class GeoRemote(
 
     @SerializedName("city")
     val city: String?,
-)
+) {
+    fun toJson(): JSONObject =JSONObject().apply {
+        lat?.let { put("lat",it) }
+        lon?.let { put("lon",it) }
+        country?.let { put("country",it) }
+        region?.let { put("region",it) }
+        city?.let { put("city",it) }
+    }
+}
