@@ -120,12 +120,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
     }
 
     fun getUrl(url: String) {
-        viewModelScope.launch {
             dataRepository.getUrl(url)
-                .catch { Log.e("AdvViewModel", "Error: ${it.localizedMessage}") }
-                .onCompletion { Log.v("AdvViewModel", "complete") }
-                .collect()
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -169,7 +164,7 @@ internal class AdvViewModel(context: Application, adServerHost: String) : Androi
                     }
                 }
                 .collect {
-                    advDataLive.value = it.apply { this.advertiseType = advertiseType }
+                    advDataLive.value = it.copy(advertiseType = advertiseType)
                     listener.onLoadComplete(it.seatbid.firstOrNull()?.bid?.firstOrNull()?.id ?: "")
                 }
         }

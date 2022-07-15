@@ -27,6 +27,7 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
+import com.mobileadvsdk.datasource.remote.api.DataApiServiceImpl
 import com.mobileadvsdk.presentation.player.model.TrackingEventsType
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
@@ -652,7 +653,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         if (urls != null) {
             for (url in urls) {
                 v(TAG, "\tfiring url:$url")
-                httpGetURL(url)
+                DataApiServiceImpl.getUrl(url)
             }
         } else {
             d(TAG, "\turl list is null")

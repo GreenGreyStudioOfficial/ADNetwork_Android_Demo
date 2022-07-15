@@ -3,16 +3,14 @@
     package="com.mobileadvsdk">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:allowBackup="true"
-        android:label="@string/app_name"
-        android:supportsRtl="true">
+        android:label="@string/app_name">
 
         <activity
             android:name=".presentation.AdvActivity"
             android:exported="false"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.AdvSDK" />
+            android:screenOrientation="landscape"/>
     </application>
 </manifest>

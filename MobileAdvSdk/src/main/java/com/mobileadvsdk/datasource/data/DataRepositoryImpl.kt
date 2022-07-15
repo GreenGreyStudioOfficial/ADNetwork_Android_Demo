@@ -20,7 +20,5 @@ internal class DataRepositoryImpl(
             .map { it.toDomain() }
             .flowOn(Dispatchers.IO)
 
-    override fun getUrl(url: String): Flow<Unit> =
-        cloudDataStore.getUrl(url)
-            .flowOn(Dispatchers.IO)
+    override fun getUrl(url: String) = cloudDataStore.getUrl(url)
 }

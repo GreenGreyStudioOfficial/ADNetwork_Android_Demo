@@ -13,16 +13,16 @@ import com.mobileadvsdk.presentation.player.VASTPlayer
 import kotlinx.android.synthetic.main.activity_adv.*
 
 internal class AdvActivity : Activity() {
-    private val advViewModel: AdvViewModel? = AdvSDK.provider
+    private val provider: AdvProviderImpl = AdvSDK.provider!!
     private val advData
-        get() = advViewModel?.advDataLive?.value
+        get() = provider.advData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
 
-        advViewModel?.vastModel?.let {
+        provider?.vastModel?.let {
             vastPlayer.load(it)
         }
         initPlayerListener()
@@ -35,26 +35,22 @@ internal class AdvActivity : Activity() {
     private fun getAdvId(): String = getBid()?.id ?: ""
 
     private fun handleShowChangeState(state: ShowCompletionState) =
-        advViewModel?.iAdShowListener?.onShowChangeState(getAdvId(), state)
+        provider.iAdShowListener.onShowChangeState(getAdvId(), state)
 
     private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
-                advViewModel?.getUrl(getBid()?.nurl ?: "")
+                provider.playerLoadFinish()
                 vastPlayer.setType(getAdvertiseType())
                 vastPlayer.play()
             }
 
             override fun onVASTPlayerFail(exception: Exception?) {
-                advViewModel?.iAdShowListener?.onShowError(
-                    getAdvId(),
-                    ShowErrorType.UNKNOWN,
-                    exception?.message ?: ""
-                )
+                provider.showError(ShowErrorType.UNKNOWN, exception?.message ?: "")
             }
 
             override fun onVASTPlayerCacheNotFound() {
-                advViewModel?.iAdShowListener?.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+                provider.showError(ShowErrorType.VIDEO_CACHE_NOT_FOUND)
             }
 
             override fun onVASTPlayerPlaybackStart() {
@@ -63,7 +59,7 @@ internal class AdvActivity : Activity() {
 
             override fun onVASTPlayerPlaybackFinish() {
                 handleShowChangeState(ShowCompletionState.COMPLETE)
-                advViewModel?.advDataLive?.value = null
+                provider.playerPlaybackFinish()
                 vastPlayer.destroy()
                 finish()
             }
@@ -90,7 +86,7 @@ internal class AdvActivity : Activity() {
                 } else {
                     handleShowChangeState(ShowCompletionState.CLOSE)
                     vastPlayer.onSkipConfirm()
-                    advViewModel?.advDataLive?.value = null
+                    provider.playerPlaybackFinish()
                     finish()
                 }
             }

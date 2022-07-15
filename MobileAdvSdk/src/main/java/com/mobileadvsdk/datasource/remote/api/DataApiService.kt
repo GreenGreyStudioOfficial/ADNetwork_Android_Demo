@@ -1,9 +1,13 @@
 package com.mobileadvsdk.datasource.remote.api
 
 import android.util.Log
+import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.datasource.remote.model.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONArray
 import org.json.JSONObject
@@ -15,10 +19,14 @@ private const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000
 private const val OKHTTP_READ_TIMEOUT_MS = 20_000
 
 object DataApiServiceImpl {
-    fun getUrl(url: String): Flow<Unit> {
-        return flow {
-            loadUrl(url)
-            emit(Unit)
+    fun getUrl(url: String) {
+        AdvSDK.scope.launch {
+            try {
+                loadUrl(url)
+                Log.v("AdvViewModel", "complete")
+            } catch (e: Exception) {
+                Log.e("AdvViewModel", "Error: ${e.localizedMessage}")
+            }
         }
     }
 
@@ -28,7 +36,7 @@ object DataApiServiceImpl {
     }
 
     private suspend fun loadAvdData(key: String, data: AdvDataRequestRemote): AdvDataRemote =
-        suspendCancellableCoroutine {
+        suspendCancellableCoroutine { continuation ->
             val url = URL("https://sp.mobidriven.com/rtb?key=$key")
 
             val urlConnection = (url.openConnection() as HttpURLConnection).apply {
@@ -46,24 +54,26 @@ object DataApiServiceImpl {
                     os.write(input, 0, input.size)
                 }
             } catch (t: Throwable) {
-                it.resumeWithException(t)
+                continuation.resumeWithException(t)
                 urlConnection.disconnect()
             }
 
             try {
-                val json = urlConnection.inputStream.bufferedReader().readText()
-                it.resume(json.toAdvDataRemote()) {
-                    urlConnection.disconnect()
+                urlConnection.inputStream.use { ins ->
+                    val json = ins.bufferedReader().readText()
+                    continuation.resume(json.toAdvDataRemote()) {
+                        urlConnection.disconnect()
+                    }
                 }
             } catch (t: Throwable) {
-                it.resumeWithException(t)
+                continuation.resumeWithException(t)
             } finally {
                 urlConnection.disconnect()
             }
         }
 
-    private suspend fun loadUrl(host: String) : Unit {
-        suspendCancellableCoroutine<Unit> {
+    private suspend fun loadUrl(host: String) {
+        suspendCancellableCoroutine<Unit> { continuation ->
             val url = URL(host)
 
             val urlConnection = (url.openConnection() as HttpURLConnection).apply {
@@ -72,12 +82,14 @@ object DataApiServiceImpl {
             }
 
             try {
-                urlConnection.inputStream.bufferedReader().readText()
-                it.resume(Unit) {
-                    urlConnection.disconnect()
+                urlConnection.inputStream.use { ins ->
+                    ins.bufferedReader().readText()
+                    continuation.resume(Unit) {
+                        urlConnection.disconnect()
+                    }
                 }
             } catch (t: Throwable) {
-                it.resumeWithException(t)
+                continuation.resumeWithException(t)
             } finally {
                 urlConnection.disconnect()
             }

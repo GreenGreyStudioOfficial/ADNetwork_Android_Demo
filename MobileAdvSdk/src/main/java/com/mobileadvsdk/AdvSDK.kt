@@ -6,11 +6,16 @@ import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
 import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
-import com.mobileadvsdk.presentation.AdvViewModel
+import com.mobileadvsdk.presentation.AdvProviderImpl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 object AdvSDK {
 
-    internal var provider: AdvViewModel? = null
+    internal var provider: AdvProviderImpl? = null
+    internal lateinit var context: Application
+    internal val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     fun initialize(
         context: Application,
@@ -28,22 +33,13 @@ object AdvSDK {
                 listener.onInitializationError(InitializationErrorType.AD_SERVER_HOST_IS_NULL_OR_EMPTY, "")
                 return
             }
-            provider = AdvViewModel(context, adServerHost)
-            init(context, gameId, adServerHost, isTestMode, listener)
+            this.context = context
+            provider = AdvProviderImpl(gameId = gameId, isTestMode = isTestMode, scope = scope)
             listener.onInitializationComplete()
         } else {
             listener.onInitializationError(InitializationErrorType.SDK_ALREADY_INITIALIZED, "")
         }
     }
-
-    private fun init(
-        context:Context,
-        gameId: String,
-        adServerHost: String,
-        isTestMode: Boolean,
-        listener: IAdInitializationListener
-    ) = provider?.initialize(context, gameId, adServerHost, isTestMode, listener)
-
 
     fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) =
         provider?.loadAvd(advertiseType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)

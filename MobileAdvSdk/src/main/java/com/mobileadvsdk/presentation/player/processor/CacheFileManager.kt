@@ -7,6 +7,7 @@ import com.google.android.exoplayer2.database.ExoDatabaseProvider
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.cache.*
+import com.mobileadvsdk.AdvSDK
 
 private const val CACHE_SIZE = 90 * 1024 * 1024L
 
@@ -47,7 +48,7 @@ internal object CacheFileManager {
         return simpleCache
     }
 
-    fun clearCache(context: Context) {
+    fun clearCache(context: Context = AdvSDK.context) {
         getSimpleCache(context).release()
         simpleCache = SimpleCache(
             context.cacheDir,

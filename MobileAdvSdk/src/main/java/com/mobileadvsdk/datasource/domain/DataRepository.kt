@@ -8,5 +8,5 @@ internal interface DataRepository {
 
     fun loadStartData(deviceInfo: DeviceInfo): Flow<AdvData>
 
-    fun getUrl(url: String): Flow<Unit>
+    fun getUrl(url: String)
 }
