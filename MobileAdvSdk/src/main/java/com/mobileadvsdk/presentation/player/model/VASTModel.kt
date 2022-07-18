@@ -80,7 +80,6 @@ internal class VASTModel(var vastsDocument: Document) : Serializable {
 
     val skipOffset: Int
         get() {
-           // VASTLog.d(TAG, "getSkipOffset")
             var result = -1
             val xpath = XPathFactory.newInstance().newXPath()
             try {
