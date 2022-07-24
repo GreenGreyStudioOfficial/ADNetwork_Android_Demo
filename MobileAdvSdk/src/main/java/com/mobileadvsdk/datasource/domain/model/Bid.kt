@@ -8,5 +8,6 @@ internal data class Bid(
     val adm: String? = null,
     val cid: String? = null,
     val crid: String? = null,
+    val api: Int? = null,
     val extAdv: ExtAdv? = null,
 )

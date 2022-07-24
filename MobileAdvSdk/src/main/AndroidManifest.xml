@@ -12,5 +12,9 @@
             android:name=".presentation.AdvActivity"
             android:exported="false"
             android:screenOrientation="landscape"/>
+        <activity
+            android:name=".presentation.WebviewActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"/>
     </application>
 </manifest>

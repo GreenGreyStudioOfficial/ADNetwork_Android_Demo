@@ -13,7 +13,6 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mobileadvsdk.AdvSDK
@@ -35,37 +34,62 @@ import java.io.IOException
 import java.util.*
 
 
-internal class AdvProviderImpl(val gameId: String, isTestMode: Boolean = false, val scope: CoroutineScope) {
+internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = false, val scope: CoroutineScope) {
 
     private val _advDataFlow: MutableStateFlow<AdvData?> = MutableStateFlow(null)
-    internal val advData: AdvData?
+    private val advData: AdvData?
         get() = _advDataFlow.asStateFlow().value
     private val dataRepository: DataRepository = DataRepositoryImpl()
-    private val _deviceInfoFlow: MutableStateFlow<DeviceInfo> = MutableStateFlow(defaultDeviceInfo(isTestMode, gameId))
-    private val deviceInfo: DeviceInfo
-        get() = _deviceInfoFlow.asStateFlow().value
+
+    var vastModel: VASTModel? = null
+
     private val bid
         get() = advData?.seatbid?.firstOrNull()?.bid?.firstOrNull()
-    var vastModel: VASTModel? = null
+    private val advId: String
+        get() = bid?.id ?: ""
+    internal val advType: AdvertiseType
+        get() = if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
+    internal val adm: String?
+        get() = bid?.adm
 
     lateinit var iAdShowListener: IAdShowListener
 
     fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
-        makeRequest(advertiseType, listener)
+        makeRequest(advertiseType, listener = listener)
     }
 
     fun showAvd(id: String, adShowListener: IAdShowListener) {
         iAdShowListener = adShowListener
         advData?.let {
-            parseAdvData(it.seatbid.first().bid.first().lurl, it.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm ?: "")
+            val bid = it.seatbid.first().bid.first()
+            if (listOf(5, 6).contains(bid.api)) {
+                showMraid(bid.lurl, bid.adm ?: "")
+            } else {
+                parseAdvData(bid.lurl, bid.adm ?: "")
+            }
+
         } ?: run {
             CacheFileManager.clearCache()
             iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
 
-    private fun makeRequest(advertiseType: AdvertiseType, listener: IAdLoadListener) {
-        getLastLocation()
+    private fun showMraid(lurl: String?, s: String) {
+        AdvSDK.context.startActivity(
+            Intent(
+                AdvSDK.context,
+                WebviewActivity::class.java
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    private fun makeRequest(
+        advertiseType: AdvertiseType,
+        listener: IAdLoadListener
+    ) {
+        val advReqType: AdvReqType = AdvReqType.BANNER
+        val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
+
         scope.launch {
             dataRepository.loadStartData(deviceInfo)
                 .catch {
@@ -112,17 +136,14 @@ internal class AdvProviderImpl(val gameId: String, isTestMode: Boolean = false, 
     }
 
     private fun getUrl(url: String) {
-        scope.launch {
-            dataRepository.getUrl(url)
-
-        }
+        dataRepository.getUrl(url)
     }
 
     @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
+    private fun getLastLocation(): Geo? {
         val manager = AdvSDK.context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        if (ContextCompat.checkSelfPermission(
+        return if (ContextCompat.checkSelfPermission(
                 AdvSDK.context, Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
             &&
@@ -139,9 +160,9 @@ internal class AdvProviderImpl(val gameId: String, isTestMode: Boolean = false, 
                     }
                 }
             }
-            val device = deviceInfo.device
-            _deviceInfoFlow.value =
-                deviceInfo.copy(device = device.copy(geo = Geo(utilLocation?.latitude, utilLocation?.longitude)))
+            Geo(utilLocation?.latitude, utilLocation?.longitude)
+        } else {
+            null
         }
     }
 
@@ -160,84 +181,111 @@ internal class AdvProviderImpl(val gameId: String, isTestMode: Boolean = false, 
     fun playerPlaybackFinish() {
         _advDataFlow.value = null
     }
-}
 
-@SuppressLint("MissingPermission")
-private fun getConnectionType(): Int {
-    val context = AdvSDK.context
-    val cm: ConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val networkCapabilities = cm.activeNetwork
-    val actNw = cm.getNetworkCapabilities(networkCapabilities) ?: return 0
-    return when {
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 2
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_PHONE_STATE
-                ) == PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-            ) {
-                when (tm.dataNetworkType) {
-                    TelephonyManager.NETWORK_TYPE_GPRS,
-                    TelephonyManager.NETWORK_TYPE_EDGE,
-                    TelephonyManager.NETWORK_TYPE_CDMA,
-                    TelephonyManager.NETWORK_TYPE_1xRTT,
-                    TelephonyManager.NETWORK_TYPE_IDEN,
-                    TelephonyManager.NETWORK_TYPE_GSM -> 4
-                    TelephonyManager.NETWORK_TYPE_UMTS,
-                    TelephonyManager.NETWORK_TYPE_EVDO_0,
-                    TelephonyManager.NETWORK_TYPE_EVDO_A,
-                    TelephonyManager.NETWORK_TYPE_HSDPA,
-                    TelephonyManager.NETWORK_TYPE_HSUPA,
-                    TelephonyManager.NETWORK_TYPE_HSPA,
-                    TelephonyManager.NETWORK_TYPE_EVDO_B,
-                    TelephonyManager.NETWORK_TYPE_EHRPD,
-                    TelephonyManager.NETWORK_TYPE_HSPAP,
-                    TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
-                    TelephonyManager.NETWORK_TYPE_LTE,
-                    TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
-                    TelephonyManager.NETWORK_TYPE_NR -> 6
-                    else -> 3
-                }
-            } else 3
-        }
-        else -> 0
+    fun handleShowChangeState(state: ShowCompletionState) {
+        iAdShowListener.onShowChangeState(advId, state)
     }
+
+    @SuppressLint("HardwareIds")
+    private fun makeDeviceInfo(
+        isTestMode: Boolean,
+        gameId: String,
+        advReqType: AdvReqType = AdvReqType.VIDEO,
+        advertiseType: AdvertiseType
+    ): DeviceInfo {
+        val geo = getLastLocation()
+        return DeviceInfo(
+            id = UUID.randomUUID().toString(),
+            test = if (isTestMode) 1 else 0,
+            listOf(
+                when (advReqType) {
+                    AdvReqType.VIDEO -> Imp(
+                        id = "1",
+                        video = Video(
+                            w = Resources.getSystem().displayMetrics.widthPixels,
+                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
+                        ),
+                        instl = 1
+                    )
+                    AdvReqType.BANNER -> Imp(
+                        id = "1",
+                        banner = Banner(
+                            w = Resources.getSystem().displayMetrics.widthPixels,
+                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
+                        ),
+                        instl = 1
+                    )
+                }
+            ),
+            AppInfo(
+                gameId,
+                AdvSDK.context.applicationInfo.loadLabel(AdvSDK.context.packageManager).toString(),
+                AdvSDK.context.packageName
+            ),
+            Device(
+                geo = geo ?: Geo(),
+                deviceType = 0,
+                make = Build.MANUFACTURER,
+                model = Build.MODEL,
+                os = "Android ${Build.VERSION.SDK_INT}",
+                osv = "${Build.VERSION.SDK_INT}",
+                w = Resources.getSystem().displayMetrics.widthPixels,
+                h = Resources.getSystem().displayMetrics.heightPixels,
+                ifa = Settings.Secure.getString(AdvSDK.context.contentResolver, Settings.Secure.ANDROID_ID),
+                connectionType = getConnectionType()
+            ),
+            User(Prefs.userId)
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getConnectionType(): Int {
+        val context = AdvSDK.context
+        val cm: ConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = cm.activeNetwork
+        val actNw = cm.getNetworkCapabilities(networkCapabilities) ?: return 0
+        return when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 2
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.READ_PHONE_STATE
+                    ) == PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                ) {
+                    when (tm.dataNetworkType) {
+                        TelephonyManager.NETWORK_TYPE_GPRS,
+                        TelephonyManager.NETWORK_TYPE_EDGE,
+                        TelephonyManager.NETWORK_TYPE_CDMA,
+                        TelephonyManager.NETWORK_TYPE_1xRTT,
+                        TelephonyManager.NETWORK_TYPE_IDEN,
+                        TelephonyManager.NETWORK_TYPE_GSM -> 4
+                        TelephonyManager.NETWORK_TYPE_UMTS,
+                        TelephonyManager.NETWORK_TYPE_EVDO_0,
+                        TelephonyManager.NETWORK_TYPE_EVDO_A,
+                        TelephonyManager.NETWORK_TYPE_HSDPA,
+                        TelephonyManager.NETWORK_TYPE_HSUPA,
+                        TelephonyManager.NETWORK_TYPE_HSPA,
+                        TelephonyManager.NETWORK_TYPE_EVDO_B,
+                        TelephonyManager.NETWORK_TYPE_EHRPD,
+                        TelephonyManager.NETWORK_TYPE_HSPAP,
+                        TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
+                        TelephonyManager.NETWORK_TYPE_LTE,
+                        TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
+                        TelephonyManager.NETWORK_TYPE_NR -> 6
+                        else -> 3
+                    }
+                } else 3
+            }
+            else -> 0
+        }
+    }
+
+
 }
 
-@SuppressLint("HardwareIds")
-private fun defaultDeviceInfo(isTestMode: Boolean, gameId: String) = DeviceInfo(
-    id = UUID.randomUUID().toString(),
-    test = if (isTestMode) 1 else 0,
-    listOf(
-        Imp(
-            "1",
-            Video(
-                listOf("video/mp4"),
-                Resources.getSystem().displayMetrics.widthPixels,
-                Resources.getSystem().displayMetrics.heightPixels,
-                Ext(0)
-            ),
-            instl = 1
-        )
-    ),
-    AppInfo(
-        gameId,
-        AdvSDK.context.applicationInfo.loadLabel(AdvSDK.context.packageManager).toString(),
-        AdvSDK.context.packageName
-    ),
-    Device(
-        geo = Geo(),
-        deviceType = 0,//TODO,
-        make = Build.MANUFACTURER,
-        model = Build.MODEL,
-        os = "Android ${Build.VERSION.SDK_INT}",
-        osv = "${Build.VERSION.SDK_INT}",
-        w = Resources.getSystem().displayMetrics.widthPixels,
-        h = Resources.getSystem().displayMetrics.heightPixels,
-        ifa = Settings.Secure.getString(AdvSDK.context.contentResolver, Settings.Secure.ANDROID_ID),
-        connectionType = getConnectionType()
-    ),
-    User(Prefs.userId)
-)
+
+

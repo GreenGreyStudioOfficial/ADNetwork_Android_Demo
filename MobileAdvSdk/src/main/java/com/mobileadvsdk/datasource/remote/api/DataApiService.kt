@@ -103,6 +103,7 @@ private fun JSONObject.getStringOrNull(key: String): String? =
     if (isNull(key)) null else getString(key)
 
 private fun JSONObject.getLongOrNull(key: String): Long? = if (isNull(key)) null else getLong(key)
+private fun JSONObject.getIntOrNull(key: String): Int? = if (isNull(key)) null else getInt(key)
 private fun JSONObject.getJsonObjectOrNull(key: String): JSONObject? = if (isNull(key)) null else getJSONObject(key)
 private fun JSONObject.getJsonArrayOrNull(key: String): JSONArray? = if (isNull(key)) null else getJSONArray(key)
 
@@ -146,8 +147,9 @@ private fun String.toBidRemote(): BidRemote = JSONObject(this)
         val adm = getStringOrNull("adm")
         val cid = getStringOrNull("cid")
         val crid = getStringOrNull("crid")
+        val api = getIntOrNull("api")
         val extAdv = getJsonObjectOrNull("ext")?.toString()?.toExtAdvRemote()
-        BidRemote(id, impid, nurl, lurl, adm, cid, crid, extAdv)
+        BidRemote(id, impid, nurl, lurl, adm, cid, crid, api, extAdv)
     }
 
 private fun String.toExtAdvRemote(): ExtAdvRemote = JSONObject(this)

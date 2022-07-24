@@ -14,34 +14,23 @@ import kotlinx.android.synthetic.main.activity_adv.*
 
 internal class AdvActivity : Activity() {
     private val provider: AdvProviderImpl = AdvSDK.provider!!
-    private val advData
-        get() = provider.advData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
 
-        provider?.vastModel?.let {
+        provider.vastModel?.let {
             vastPlayer.load(it)
         }
         initPlayerListener()
     }
 
-    private fun getBid() = advData?.seatbid?.firstOrNull()?.bid?.firstOrNull()
-    private fun getAdvertiseType() =
-        if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
-
-    private fun getAdvId(): String = getBid()?.id ?: ""
-
-    private fun handleShowChangeState(state: ShowCompletionState) =
-        provider.iAdShowListener.onShowChangeState(getAdvId(), state)
-
     private fun initPlayerListener() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
                 provider.playerLoadFinish()
-                vastPlayer.setType(getAdvertiseType())
+                vastPlayer.setType(provider.advType)
                 vastPlayer.play()
             }
 
@@ -54,37 +43,37 @@ internal class AdvActivity : Activity() {
             }
 
             override fun onVASTPlayerPlaybackStart() {
-                handleShowChangeState(ShowCompletionState.START)
+                provider.handleShowChangeState(ShowCompletionState.START)
             }
 
             override fun onVASTPlayerPlaybackFinish() {
-                handleShowChangeState(ShowCompletionState.COMPLETE)
+                provider.handleShowChangeState(ShowCompletionState.COMPLETE)
                 provider.playerPlaybackFinish()
                 vastPlayer.destroy()
                 finish()
             }
 
             override fun onVASTPlayerOpenOffer() {
-                handleShowChangeState(ShowCompletionState.OFFER)
+                provider.handleShowChangeState(ShowCompletionState.OFFER)
             }
 
             override fun onVASTPlayerOnFirstQuartile() {
-                handleShowChangeState(ShowCompletionState.FIRST_QUARTILE)
+                provider.handleShowChangeState(ShowCompletionState.FIRST_QUARTILE)
             }
 
             override fun onVASTPlayerOnMidpoint() {
-                handleShowChangeState(ShowCompletionState.MIDPOINT)
+                provider.handleShowChangeState(ShowCompletionState.MIDPOINT)
             }
 
             override fun onVASTPlayerOnThirdQuartile() {
-                handleShowChangeState(ShowCompletionState.THIRD_QUARTILE)
+                provider.handleShowChangeState(ShowCompletionState.THIRD_QUARTILE)
             }
 
             override fun onVASTPlayerClose(needToConfirm: Boolean) {
                 if (needToConfirm) {
                     showCloseDialog()
                 } else {
-                    handleShowChangeState(ShowCompletionState.CLOSE)
+                    provider.handleShowChangeState(ShowCompletionState.CLOSE)
                     vastPlayer.onSkipConfirm()
                     provider.playerPlaybackFinish()
                     finish()
@@ -123,7 +112,7 @@ internal class AdvActivity : Activity() {
                 p0.dismiss()
             }
             setNegativeButton(R.string.dialog_close) { p0, _ ->
-                handleShowChangeState(ShowCompletionState.CLOSE)
+                provider.handleShowChangeState(ShowCompletionState.CLOSE)
                 vastPlayer.onSkipConfirm()
                 p0.dismiss()
                 finish()

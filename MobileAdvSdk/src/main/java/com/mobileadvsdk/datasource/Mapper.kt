@@ -12,9 +12,10 @@ internal fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     user.toRemote()
 )
 
-internal fun Imp.toRemote(): ImpRemote = ImpRemote(id, video.toRemote(), instl)
+internal fun Imp.toRemote(): ImpRemote = ImpRemote(id, video?.toRemote(), banner?.toRemote(), instl)
 
 internal fun Video.toRemote(): VideoRemote = VideoRemote(mimes, w, h, ext.toRemote())
+internal fun Banner.toRemote(): BannerRemote = BannerRemote(mimes, w, h, ext.toRemote(), api)
 
 internal fun Ext.toRemote(): ExtRemote = ExtRemote(rewarded)
 
@@ -44,7 +45,7 @@ internal fun AdvDataRemote.toDomain(): AdvData =
 internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid?.map { it.toDomain() } ?: mutableListOf())
 
 internal fun BidRemote.toDomain(): Bid =
-    Bid(id, impid, nurl, lurl, adm, cid, crid, extAdv?.toDomain())
+    Bid(id, impid, nurl, lurl, adm, cid, crid, api, extAdv?.toDomain())
 
 internal fun ExtAdvRemote.toDomain(): ExtAdv =
     ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
