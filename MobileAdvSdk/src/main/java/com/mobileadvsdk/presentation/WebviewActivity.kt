@@ -8,6 +8,8 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.Window
@@ -16,6 +18,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.ProgressBar
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
@@ -26,9 +29,9 @@ import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 internal class WebviewActivity : Activity() {
     private val provider: AdvProviderImpl = AdvSDK.provider!!
     private lateinit var webView: WebView
+    private lateinit var progress: ProgressBar
     private var isRewardReceived: Boolean = false
     private var isLoaded: Boolean = false
-    private var state = MraidStates.LOADING
 
     private val displayMetrics by lazy { resources.displayMetrics }
     private val displayWidth by lazy { displayMetrics.widthPixels }
@@ -42,13 +45,13 @@ internal class WebviewActivity : Activity() {
                 finish()
             }
             is JsSdkEvent.ContentLoaded -> {
-                Log.e("WebviewActivity", "loaded ${it.value}")
                 if (it.value) {
                     isLoaded = true
-                    webView.visibility = View.VISIBLE
-                    fireVisibilityChangeEvent(true)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        webView.visibility = View.VISIBLE
+                        fireVisibilityChangeEvent(true)
+                    }, 1000)
                     provider.loadSuccess()
-                    Log.e("WebviewActivity", "alpha ${webView.alpha}")
                 } else provider.loadError(
                     LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED,
                     LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED.desc
@@ -105,9 +108,9 @@ internal class WebviewActivity : Activity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState)
-        webView = WebView(this)
-        webView.visibility = View.INVISIBLE
-        setContentView(webView)
+        setContentView(R.layout.activity_web_adv)
+        webView = findViewById(R.id.webView)
+        progress = findViewById(R.id.progressBar)
         webView.settings.javaScriptEnabled = true
         webView.webViewClient = MraidJsInjectingWebViewClient(::loadFinished)
         webView.addJavascriptInterface(mraidController, "MraidController")
@@ -116,7 +119,7 @@ internal class WebviewActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if(isLoaded) fireVisibilityChangeEvent(true)
+        if (isLoaded) fireVisibilityChangeEvent(true)
     }
 
     override fun onPause() {
@@ -129,13 +132,24 @@ internal class WebviewActivity : Activity() {
         changeState(MraidStates.DEFAULT)
         firePlacementTypeChangeEvent()
         fireSupportsChangeEvent()
-        fireCurrentAppOrientationChangeEvent()
+        val orientations = currentOrientation()
+        lockOrientation(orientations)
+        fireCurrentAppOrientationChangeEvent(orientations)
         fireCurrentPositionChangeEvent(0, 0, displayWidth, displayHeight)
         fireDefaultPositionChangeEvent();
         fireMaxSizeChangeEvent()
         fireScreenSizeChangeEvent()
         fireVisibilityChangeEvent()
         fireRewardedChangeEvent()
+    }
+
+    private fun lockOrientation(orientations: MraidOrientations) {
+        if (orientations == MraidOrientations.PORTRAIT ) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        if (orientations == MraidOrientations.LANDSCAPE ) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
     }
 
     private fun fireRewardedChangeEvent() {
@@ -242,6 +256,11 @@ internal class WebviewActivity : Activity() {
             loadFinished()
         }
     }
+
+    private fun currentOrientation(): MraidOrientations =
+        if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) MraidOrientations.PORTRAIT
+        else MraidOrientations.LANDSCAPE
+
 }
 
 internal enum class MraidStates(val event: String) {

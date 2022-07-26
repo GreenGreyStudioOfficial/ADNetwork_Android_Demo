@@ -12,7 +12,7 @@ internal class MraidController(val onJsSdkEvent: (JsSdkEvent) -> Unit) {
 
     @JavascriptInterface
     fun sendMessageToSDK(json: String) {
-        Log.e("MraidController sendMessageToSDK", json)
+//        Log.e("MraidController sendMessageToSDK", json)
         toSdkEvent(json)?.let {
             Handler(Looper.getMainLooper()).post {
                 onJsSdkEvent(it)

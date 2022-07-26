@@ -3,7 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/drawable/circle_shape.xml" value="0.1" />
+        <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/drawable/circular_progress_bar.xml" value="0.1" />
+        <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/drawable/pubnative_circular_progress.xml" value="0.1" />
         <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/layout/activity_adv.xml" value="0.1082427536231884" />
+        <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/layout/activity_web_adv.xml" value="0.1082427536231884" />
         <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/layout/dialog_close_advert.xml" value="0.10597826086956522" />
         <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/layout/pubnative_player.xml" value="0.10643115942028986" />
         <entry key="..\:/AndroidStudioProject/AdvSDK/MobileAdvSdk/src/main/res/layout/pubnative_player_count_down.xml" value="0.1082427536231884" />

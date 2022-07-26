@@ -23,9 +23,8 @@ object DataApiServiceImpl {
         AdvSDK.scope.launch {
             try {
                 loadUrl(url)
-                Log.v("AdvViewModel", "complete")
             } catch (e: Exception) {
-                Log.e("AdvViewModel", "Error: ${e.localizedMessage}")
+//                Log.e("AdvViewModel", "Error: ${e.localizedMessage}")
             }
         }
     }
