@@ -3,10 +3,15 @@ package com.mobileadvsdk.presentation
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
+import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -14,31 +19,183 @@ import android.webkit.WebViewClient
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
+import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
-import com.mobileadvsdk.datasource.domain.model.ShowErrorType
-import com.mobileadvsdk.presentation.player.VASTPlayer
-import kotlinx.android.synthetic.main.activity_adv.*
+
 
 internal class WebviewActivity : Activity() {
     private val provider: AdvProviderImpl = AdvSDK.provider!!
-    internal lateinit var webView: WebView
+    private lateinit var webView: WebView
+    private var isRewardReceived: Boolean = false
+    private var isLoaded: Boolean = false
+    private var state = MraidStates.LOADING
 
-    @SuppressLint("SetJavaScriptEnabled")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-        super.onCreate(savedInstanceState)
-        webView = WebView(this)
-        setContentView(webView)
-        webView.settings.javaScriptEnabled = true
-        webView.webViewClient = MraidJsInjectingWebViewClient()
-        webView.addJavascriptInterface(MraidController(this), "MraidController")
-        webView.loadDataWithBaseURL("http://www.example.com/", provider.adm?:"", "text/html", "UTF-8", null)
+    private val displayMetrics by lazy { resources.displayMetrics }
+    private val displayWidth by lazy { displayMetrics.widthPixels }
+    private val displayHeight by lazy { displayMetrics.heightPixels }
 
-
+    val mraidController = MraidController {
+        when (it) {
+            JsSdkEvent.Close, JsSdkEvent.Unload -> {
+                provider.handleShowChangeState(ShowCompletionState.CLOSE)
+                provider.playerPlaybackFinish()
+                finish()
+            }
+            is JsSdkEvent.ContentLoaded -> {
+                Log.e("WebviewActivity", "loaded ${it.value}")
+                if (it.value) {
+                    isLoaded = true
+                    webView.visibility = View.VISIBLE
+                    fireVisibilityChangeEvent(true)
+                    provider.loadSuccess()
+                    Log.e("WebviewActivity", "alpha ${webView.alpha}")
+                } else provider.loadError(
+                    LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED,
+                    LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED.desc
+                )
+            }
+            JsSdkEvent.CreateCalendarEvent -> {
+                //TODO()
+            }
+            is JsSdkEvent.Expand -> {
+                //TODO()
+            }
+            is JsSdkEvent.Open -> {
+                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(it.uri))
+                startActivity(browserIntent)
+            }
+            is JsSdkEvent.PlayVideo -> {
+                //TODO()
+            }
+            is JsSdkEvent.Resize -> {
+                fireCurrentPositionChangeEvent(it.offsetX, it.offsetY, it.width, it.height)
+            }
+            is JsSdkEvent.RewardReceived -> {
+                isRewardReceived = it.value
+            }
+            is JsSdkEvent.SetExpandProperties -> {
+                //TODO()
+            }
+            is JsSdkEvent.SetOrientationProperties -> {
+                if (!it.allowOrientationChange) return@MraidController
+                val currentOrientation = resources.configuration.orientation
+                if (it.forceOrientation == "portrait" && currentOrientation != Configuration.ORIENTATION_PORTRAIT) {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+                if (it.forceOrientation == "landscape" && currentOrientation != Configuration.ORIENTATION_LANDSCAPE) {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+            }
+            is JsSdkEvent.StorePicture -> {
+                //TODO()
+            }
+        }
     }
 
-    override fun onBackPressed() {
+    private val SMS = false
+    private val TEL = true
+    private val CALENDAR = false
+    private val STORE_PICTURE = true
+    private val INLINE_VIDEO = false
+    private val SDK = true
 
+
+    @SuppressLint("SetJavaScriptEnabled", "SourceLockedOrientationActivity")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        super.onCreate(savedInstanceState)
+        webView = WebView(this)
+        webView.visibility = View.INVISIBLE
+        setContentView(webView)
+        webView.settings.javaScriptEnabled = true
+        webView.webViewClient = MraidJsInjectingWebViewClient(::loadFinished)
+        webView.addJavascriptInterface(mraidController, "MraidController")
+        webView.loadDataWithBaseURL("http://www.example.com/", provider.adm ?: "", "text/html", "UTF-8", null)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if(isLoaded) fireVisibilityChangeEvent(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        fireVisibilityChangeEvent(false)
+    }
+
+    private fun loadFinished() {
+        sendEventToJs("bridge.notifyReadyEvent()")
+        changeState(MraidStates.DEFAULT)
+        firePlacementTypeChangeEvent()
+        fireSupportsChangeEvent()
+        fireCurrentAppOrientationChangeEvent()
+        fireCurrentPositionChangeEvent(0, 0, displayWidth, displayHeight)
+        fireDefaultPositionChangeEvent();
+        fireMaxSizeChangeEvent()
+        fireScreenSizeChangeEvent()
+        fireVisibilityChangeEvent()
+        fireRewardedChangeEvent()
+    }
+
+    private fun fireRewardedChangeEvent() {
+        val msg =
+            "bridge.fireChangeEvent({rewarded:${provider.advType == AdvertiseType.REWARDED}})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireVisibilityChangeEvent(visible: Boolean = true) {
+        val msg =
+            "bridge.fireChangeEvent({viewable:$visible})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireScreenSizeChangeEvent() {
+        val msg =
+            "bridge.fireChangeEvent({screenSize:{width:$displayWidth,height:$displayHeight}})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireMaxSizeChangeEvent() {
+        val msg =
+            "bridge.fireChangeEvent({maxSize:{width:$displayWidth,height:$displayHeight}})"
+        sendEventToJs(msg)
+    }
+
+    private fun sendEventToJs(event: String) {
+        webView.evaluateJavascript(event, null)
+    }
+
+    private fun changeState(state: MraidStates) {
+        sendEventToJs("bridge.fireChangeEvent({state:${state.event}})")
+    }
+
+    private fun fireSupportsChangeEvent() {
+        val msg =
+            "bridge.fireChangeEvent({supports:{sms:$SMS,tel:$TEL,calendar:$CALENDAR,storePicture:$STORE_PICTURE,inlineVideo:$INLINE_VIDEO,sdk:$SDK}})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireCurrentAppOrientationChangeEvent(mraidOrientation: MraidOrientations = MraidOrientations.PORTRAIT) {
+        val msg =
+            "bridge.fireChangeEvent({currentAppOrientation:{orientation:${mraidOrientation.event}, locked:true}})"
+        sendEventToJs(msg)
+    }
+
+    private fun firePlacementTypeChangeEvent(type: MraidPlacementTypes = MraidPlacementTypes.INTERSTITIAL) {
+        val msg = "bridge.fireChangeEvent({placementType: ${type.event}})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireCurrentPositionChangeEvent(x: Int, y: Int, width: Int, height: Int) {
+        val msg = "bridge.fireChangeEvent({currentPosition: { x: $x, y: $y, width: $width, height: $height}})"
+        sendEventToJs(msg)
+    }
+
+    private fun fireDefaultPositionChangeEvent() {
+        val msg =
+            "bridge.fireChangeEvent({defaultPosition: { x: 0, y: 0, width: $displayWidth, height: $displayHeight}})"
+        sendEventToJs(msg)
     }
 
     private fun showCloseDialog() {
@@ -48,12 +205,10 @@ internal class WebviewActivity : Activity() {
             setMessage(R.string.dialog_subtitle)
             setCancelable(false)
             setPositiveButton(R.string.dialog_continue_watch) { p0, _ ->
-                vastPlayer.play()
                 p0.dismiss()
             }
             setNegativeButton(R.string.dialog_close) { p0, _ ->
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
-                vastPlayer.onSkipConfirm()
                 p0.dismiss()
                 finish()
             }
@@ -62,7 +217,17 @@ internal class WebviewActivity : Activity() {
         dialog.show()
     }
 
-    private class MraidJsInjectingWebViewClient : WebViewClient() {
+    override fun onBackPressed() {
+        if (provider.advType == AdvertiseType.REWARDED && !isRewardReceived) {
+            showCloseDialog()
+        } else {
+            provider.handleShowChangeState(ShowCompletionState.CLOSE)
+            provider.playerPlaybackFinish()
+            finish()
+        }
+    }
+
+    private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClient() {
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
             val mraidJsFileName = "mraid.js"
             return if (request.url.toString().endsWith(mraidJsFileName)) {
@@ -74,8 +239,28 @@ internal class WebviewActivity : Activity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            view?.evaluateJavascript("bridge.notifyReadyEvent()",null)
+            loadFinished()
         }
     }
+}
+
+internal enum class MraidStates(val event: String) {
+    LOADING("mraid.STATES.LOADING"),
+    DEFAULT("mraid.STATES.DEFAULT"),
+    EXPANDED("mraid.STATES.EXPANDED"),
+    HIDDEN("mraid.STATES.HIDDEN"),
+    RESIZED("mraid.STATES.RESIZED")
+}
+
+internal enum class MraidPlacementTypes(val event: String) {
+    UNKNOWN("mraid.PLACEMENT_TYPES.UNKNOWN"),
+    INLINE("mraid.PLACEMENT_TYPES.INLINE"),
+    INTERSTITIAL("mraid.PLACEMENT_TYPES.INTERSTITIAL"),
+}
+
+internal enum class MraidOrientations(val event: String) {
+    LANDSCAPE("landscape"),
+    PORTRAIT("portrait"),
+    NONE("none"),
 }
 

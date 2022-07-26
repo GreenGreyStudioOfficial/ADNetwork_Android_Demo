@@ -52,17 +52,19 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     internal val adm: String?
         get() = bid?.adm
 
-    lateinit var iAdShowListener: IAdShowListener
+    lateinit var showListener: IAdShowListener
+    lateinit var loadListener: IAdLoadListener
 
     fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
+        loadListener = listener
         makeRequest(advertiseType, listener = listener)
     }
 
     fun showAvd(id: String, adShowListener: IAdShowListener) {
-        iAdShowListener = adShowListener
+        showListener = adShowListener
         advData?.let {
             val bid = it.seatbid.first().bid.first()
-            if (listOf(5, 6).contains(bid.api)) {
+            if (listOf(5, 6).contains(bid.api) || bid.adm?.startsWith("<!DOCTYPE html>") == true) {
                 showMraid(bid.lurl, bid.adm ?: "")
             } else {
                 parseAdvData(bid.lurl, bid.adm ?: "")
@@ -70,7 +72,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
         } ?: run {
             CacheFileManager.clearCache()
-            iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+            showListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
 
@@ -112,12 +114,12 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     private fun parseAdvData(lurl: String?, vast: String) {
         VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
-                iAdShowListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
+                showListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
                 getUrl(lurl ?: "")
             }
 
             override fun onVASTCacheError(error: Int) {
-                iAdShowListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND)
+                showListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND)
             }
 
             override fun onVASTParserFinished(model: VASTModel?) {
@@ -171,11 +173,22 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun showError(type: ShowErrorType, message: String = "") {
-        iAdShowListener.onShowError(
-            bid?.id ?: "",
+        showListener.onShowError(
+            advId,
             type,
             message
         )
+    }
+
+    fun loadError(type: LoadErrorType, message: String = "") {
+        loadListener.onLoadError(
+            type,
+            message
+        )
+    }
+
+    fun loadSuccess() {
+        loadListener.onLoadComplete(advId)
     }
 
     fun playerPlaybackFinish() {
@@ -183,7 +196,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun handleShowChangeState(state: ShowCompletionState) {
-        iAdShowListener.onShowChangeState(advId, state)
+        showListener.onShowChangeState(advId, state)
     }
 
     @SuppressLint("HardwareIds")

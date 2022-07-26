@@ -112,7 +112,7 @@ bridge.sendMessageToSDK = function (value) {
     }
     catch (e) {
     }
-    console.log('send message to sdk',JSON.stringify(value));
+    console.log('send message to sdk '+ JSON.stringify(value));
 }
 
 var VERSION = mraid.VERSION = '3.0';
@@ -557,7 +557,7 @@ var broadcastEvent = function () {
     for (var i = 0; i < l; i++) args[i] = arguments[i];
     var event = args.shift();
     if (listeners[event]) listeners[event].broadcast(args);
-    MraidController.broadcastEvent(event, args)
+//    MraidController.broadcastEvent(event, args)
 };
 
 // FUNCTIONS
