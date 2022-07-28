@@ -1,22 +1,19 @@
 package com.mobileadvsdk.datasource.remote.api
 
-import android.util.Log
 import com.mobileadvsdk.AdvSDK
-import com.mobileadvsdk.datasource.remote.model.*
+import com.mobileadvsdk.datasource.remote.model.AdvDataRemote
+import com.mobileadvsdk.datasource.remote.model.AdvDataRequestRemote
+import com.mobileadvsdk.toAdvDataRemote
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.json.JSONArray
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.coroutines.resumeWithException
 
-private const val OKHTTP_CONNECT_TIMEOUT_MS = 20_000
-private const val OKHTTP_READ_TIMEOUT_MS = 20_000
+internal const val OKHTTP_CONNECT_TIMEOUT_MS = 30_000
+internal const val OKHTTP_READ_TIMEOUT_MS = 30_000
 
 object DataApiServiceImpl {
     fun getUrl(url: String) {
@@ -96,66 +93,3 @@ object DataApiServiceImpl {
     }
 
 }
-
-
-private fun JSONObject.getStringOrNull(key: String): String? =
-    if (isNull(key)) null else getString(key)
-
-private fun JSONObject.getLongOrNull(key: String): Long? = if (isNull(key)) null else getLong(key)
-private fun JSONObject.getIntOrNull(key: String): Int? = if (isNull(key)) null else getInt(key)
-private fun JSONObject.getJsonObjectOrNull(key: String): JSONObject? = if (isNull(key)) null else getJSONObject(key)
-private fun JSONObject.getJsonArrayOrNull(key: String): JSONArray? = if (isNull(key)) null else getJSONArray(key)
-
-
-private fun String.toAdvDataRemote(): AdvDataRemote {
-    val json = JSONObject(this)
-    val id = json.getStringOrNull("id")
-    val bidid = json.getStringOrNull("bidid")
-    val arr = json.getJsonArrayOrNull("seatbid")
-    val list = mutableListOf<SeatbidRemote>()
-    arr?.let {
-        for (i in 0 until it.length()) {
-            val str = it[i]
-            list.add(str.toString().toSeatbidRemote())
-        }
-    }
-
-    return AdvDataRemote(id, bidid, list)
-}
-
-
-private fun String.toSeatbidRemote(): SeatbidRemote = JSONObject(this)
-    .run {
-        val arr = getJsonArrayOrNull("bid")
-        val list = mutableListOf<BidRemote>()
-        arr?.let {
-            for (i in 0 until it.length()) {
-                val str = it[i].toString()
-                list.add(str.toBidRemote())
-            }
-        }
-        SeatbidRemote(list)
-    }
-
-private fun String.toBidRemote(): BidRemote = JSONObject(this)
-    .run {
-        val id = getStringOrNull("id")
-        val impid = getStringOrNull("impid")
-        val nurl = getStringOrNull("nurl")
-        val lurl = getStringOrNull("lurl")
-        val adm = getStringOrNull("adm")
-        val cid = getStringOrNull("cid")
-        val crid = getStringOrNull("crid")
-        val api = getIntOrNull("api")
-        val extAdv = getJsonObjectOrNull("ext")?.toString()?.toExtAdvRemote()
-        BidRemote(id, impid, nurl, lurl, adm, cid, crid, api, extAdv)
-    }
-
-private fun String.toExtAdvRemote(): ExtAdvRemote = JSONObject(this)
-    .run {
-        val cache_max = getLongOrNull("cache_max")
-        val cache_timeout = getLongOrNull("cache_timeout")
-        val req_timeout = getLongOrNull("req_timeout")
-        val imp_timeout = getLongOrNull("imp_timeout")
-        ExtAdvRemote(cache_max, cache_timeout, req_timeout, imp_timeout)
-    }

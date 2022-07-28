@@ -45,5 +45,5 @@ object AdvSDK {
         provider?.loadAvd(advertiseType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
     fun show(id: String, iAdShowListener: IAdShowListener) =
-        provider?.showAvd(id, iAdShowListener) ?: iAdShowListener.onShowError("", ShowErrorType.NOT_INITIALIZED_ERROR)
+        provider?.showAvd(id, iAdShowListener) ?: iAdShowListener.onShowError(id, ShowErrorType.NOT_INITIALIZED_ERROR)
 }

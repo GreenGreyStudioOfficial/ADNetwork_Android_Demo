@@ -4,8 +4,8 @@ import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.DeviceInfo
 import com.mobileadvsdk.datasource.remote.api.DataApiServiceImpl
-import com.mobileadvsdk.datasource.toDomain
-import com.mobileadvsdk.datasource.toRemote
+import com.mobileadvsdk.toDomain
+import com.mobileadvsdk.toRemote
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -20,5 +20,5 @@ internal class DataRepositoryImpl(
             .map { it.toDomain() }
             .flowOn(Dispatchers.IO)
 
-    override fun getUrl(url: String) = cloudDataStore.getUrl(url)
+    override fun callPixel(url: String) = cloudDataStore.getUrl(url)
 }

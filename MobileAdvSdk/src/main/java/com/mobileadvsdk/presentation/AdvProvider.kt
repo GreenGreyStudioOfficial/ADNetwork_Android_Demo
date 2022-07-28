@@ -26,9 +26,7 @@ import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
@@ -37,16 +35,18 @@ import java.util.*
 internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = false, val scope: CoroutineScope) {
 
     private val _advDataFlow: MutableStateFlow<AdvData?> = MutableStateFlow(null)
-    private val advData: AdvData?
-        get() = _advDataFlow.asStateFlow().value
+
     private val dataRepository: DataRepository = DataRepositoryImpl()
 
     var vastModel: VASTModel? = null
 
+    private val advData: AdvData?
+        get() = _advDataFlow.asStateFlow().value ?: CacheFileManager.loadAdv(advId)
+
     private val bid
-        get() = advData?.seatbid?.firstOrNull()?.bid?.firstOrNull()
-    private val advId: String
-        get() = bid?.id ?: ""
+        get() = advData?.seatbid?.first()?.bid?.first()
+    private var advId: String? = null
+
     internal val advType: AdvertiseType
         get() = if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
     internal val adm: String?
@@ -61,22 +61,22 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun showAvd(id: String, adShowListener: IAdShowListener) {
+        advId = id
         showListener = adShowListener
         advData?.let {
             val bid = it.seatbid.first().bid.first()
-            if (listOf(5, 6).contains(bid.api) || bid.adm?.startsWith("<!DOCTYPE html>") == true) {
-                showMraid(bid.lurl, bid.adm ?: "")
+            if (listOf(5, 6).contains(bid.api) || bid.adm.startsWith("<!DOCTYPE html>")) {
+                showMraid(bid.id)
             } else {
-                parseAdvData(bid.lurl, bid.adm ?: "")
+                parseAdvData(bid.lurl, bid.adm )
             }
-
         } ?: run {
             CacheFileManager.clearCache()
-            showListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+            showListener.onShowError(id, ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
         }
     }
 
-    private fun showMraid(lurl: String?, s: String) {
+    private fun showMraid(id: String?) {
         AdvSDK.context.startActivity(
             Intent(
                 AdvSDK.context,
@@ -94,6 +94,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
         scope.launch {
             dataRepository.loadStartData(deviceInfo)
+                .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
                     when (it) {
                         is IOException -> {
@@ -104,9 +105,11 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                         }
                     }
                 }
-                .collect {
-                    _advDataFlow.value = it.copy(advertiseType = advertiseType)
-                    listener.onLoadComplete(it.seatbid.firstOrNull()?.bid?.firstOrNull()?.id ?: "")
+                .collect { data ->
+                    _advDataFlow.value = data.copy(advertiseType = advertiseType)
+                    advId = bid?.id
+                    advId?.let { listener.onLoadComplete(it) }
+
                 }
         }
     }
@@ -115,7 +118,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
                 showListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
-                getUrl(lurl ?: "")
+                callPixel(lurl ?: "")
             }
 
             override fun onVASTCacheError(error: Int) {
@@ -137,8 +140,8 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         }
     }
 
-    private fun getUrl(url: String) {
-        dataRepository.getUrl(url)
+    private fun callPixel(url: String) {
+        dataRepository.callPixel(url)
     }
 
     @SuppressLint("MissingPermission")
@@ -169,15 +172,18 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun playerLoadFinish() {
-        getUrl(bid?.nurl ?: "")
+        callPixel(bid?.nurl ?: "")
     }
 
     fun showError(type: ShowErrorType, message: String = "") {
-        showListener.onShowError(
-            advId,
-            type,
-            message
-        )
+        advId?.let {
+            showListener.onShowError(
+                it,
+                type,
+                message
+            )
+        }
+
     }
 
     fun loadError(type: LoadErrorType, message: String = "") {
@@ -188,7 +194,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun loadSuccess() {
-        loadListener.onLoadComplete(advId)
+        advId?.let { loadListener.onLoadComplete(it) }
     }
 
     fun playerPlaybackFinish() {
@@ -196,7 +202,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun handleShowChangeState(state: ShowCompletionState) {
-        showListener.onShowChangeState(advId, state)
+        advId?.let { showListener.onShowChangeState(it, state) }
     }
 
     @SuppressLint("HardwareIds")

@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -24,6 +23,7 @@ import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
+import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 
 
 internal class WebviewActivity : Activity() {
@@ -37,7 +37,7 @@ internal class WebviewActivity : Activity() {
     private val displayWidth by lazy { displayMetrics.widthPixels }
     private val displayHeight by lazy { displayMetrics.heightPixels }
 
-    val mraidController = MraidController {
+    private val mraidController = MraidController {
         when (it) {
             JsSdkEvent.Close, JsSdkEvent.Unload -> {
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
@@ -244,11 +244,15 @@ internal class WebviewActivity : Activity() {
     private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClient() {
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
             val mraidJsFileName = "mraid.js"
-            return if (request.url.toString().endsWith(mraidJsFileName)) {
-                view?.context?.assets?.open(mraidJsFileName)?.let { stream ->
+            return when{
+                request.url.toString().endsWith(mraidJsFileName) -> view?.context?.assets?.open(mraidJsFileName)?.let { stream ->
                     WebResourceResponse("text/javascript", "UTF-8", stream)
                 }
-            } else null
+                request.url.toString().endsWith(".mp4") -> {
+                    WebResourceResponse("video/mp4", "UTF-8", CacheFileManager.getVideo(request.url.toString()))
+                }
+                else -> super.shouldInterceptRequest(view, request)
+            }
         }
 
         override fun onPageFinished(view: WebView?, url: String?) {
