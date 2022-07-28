@@ -11,6 +11,7 @@ import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.remote.api.OKHTTP_CONNECT_TIMEOUT_MS
 import com.mobileadvsdk.datasource.remote.api.OKHTTP_READ_TIMEOUT_MS
+import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.toAdvData
 import kotlinx.coroutines.*
 import java.io.*
@@ -112,6 +113,21 @@ internal object CacheFileManager {
                     launch { downloadVideoAndCache(it) }
                 }.joinAll()
             }
+        }
+        if (adm?.startsWith("<VAST") == true) {
+            runBlocking(Dispatchers.IO) {
+                try {
+                    val processor = VASTProcessor()
+                    processor.process(context, adm)
+                    processor.model?.pickedMediaFileURL?.let {
+                        cache(context, Uri.parse(it))
+                    }
+                }catch (e:Throwable){
+                    Log.e("CacheFileManager", "${e.message}")
+                }
+
+            }
+
         }
     }
 

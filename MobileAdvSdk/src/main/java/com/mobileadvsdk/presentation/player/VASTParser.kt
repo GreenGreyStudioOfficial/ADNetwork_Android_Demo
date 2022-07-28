@@ -58,10 +58,11 @@ internal object VASTParser {
                     resultError = processor.process(context, it)
                     if (resultError == ERROR_NONE) {
                         processor.model?.let { model ->
-                            resultError = cacheVideoFile(context, model.pickedMediaFileURL)
+                            result = model
+                           /* resultError = cacheVideoFile(context, model.pickedMediaFileURL)
                             if (resultError == ERROR_NONE) {
                                 result = model
-                            }
+                            }*/
                         }
                     }
                 }

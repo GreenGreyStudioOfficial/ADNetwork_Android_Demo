@@ -89,7 +89,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         advertiseType: AdvertiseType,
         listener: IAdLoadListener
     ) {
-        val advReqType: AdvReqType = AdvReqType.BANNER
+        val advReqType: AdvReqType = AdvReqType.VIDEO
         val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
 
         scope.launch {

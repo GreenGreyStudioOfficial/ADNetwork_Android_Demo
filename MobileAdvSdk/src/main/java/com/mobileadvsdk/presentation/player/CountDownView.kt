@@ -2,6 +2,7 @@ package com.mobileadvsdk.presentation.player
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
@@ -37,10 +38,11 @@ internal class CountDownView : FrameLayout {
     }
 
     fun setProgress(currentMs: Int, totalMs: Int) {
-        progressBarView.max = totalMs
-        progressBarView.secondaryProgress = totalMs
+        val total = totalMs/1000
+        progressBarView.max = total
+        progressBarView.secondaryProgress = total
         progressBarView.progress = currentMs
-        val remainSec = totalMs - currentMs
+        val remainSec = total - currentMs
         if (remainSec <= 0) {
             this.visibility = INVISIBLE
         }
