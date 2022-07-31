@@ -61,7 +61,7 @@
         android:padding="16dp"
         android:layout_gravity="start|top"
         android:visibility="gone"
-        app:srcCompat="@drawable/ic_baseline_open_in_new_24"
+        android:src="@drawable/ic_baseline_open_in_new_24"
         tools:visibility="visible" />
 
     <!-- LOADER -->

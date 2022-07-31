@@ -15,7 +15,7 @@ import kotlin.coroutines.resumeWithException
 internal const val OKHTTP_CONNECT_TIMEOUT_MS = 30_000
 internal const val OKHTTP_READ_TIMEOUT_MS = 30_000
 
-object DataApiServiceImpl {
+internal object DataApiServiceImpl {
     fun getUrl(url: String) {
         AdvSDK.scope.launch {
             try {

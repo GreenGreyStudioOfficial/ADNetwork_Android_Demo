@@ -1,6 +1,5 @@
 package com.mobileadvsdk.datasource.domain.model
 
-import com.mobileadvsdk.toJson
 import org.json.JSONObject
 
 internal data class Bid(

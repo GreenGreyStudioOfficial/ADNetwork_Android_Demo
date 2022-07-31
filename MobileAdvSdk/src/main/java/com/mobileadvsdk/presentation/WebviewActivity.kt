@@ -8,15 +8,11 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.ProgressBar
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
@@ -45,12 +41,10 @@ internal class WebviewActivity : Activity() {
                 finish()
             }
             is JsSdkEvent.ContentLoaded -> {
+                Log.e("WebviewActivity", "ContentLoaded")
                 if (it.value) {
                     isLoaded = true
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        webView.visibility = View.VISIBLE
-                        fireVisibilityChangeEvent(true)
-                    }, 1000)
+                    webView.visibility = View.VISIBLE
                     provider.loadSuccess()
                 } else provider.loadError(
                     LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED,
@@ -90,6 +84,7 @@ internal class WebviewActivity : Activity() {
                 }
             }
             is JsSdkEvent.StorePicture -> {
+                Log.e("WebviewActivity", "StorePicture ${it.uri}")
                 //TODO()
             }
         }
@@ -112,7 +107,11 @@ internal class WebviewActivity : Activity() {
         webView = findViewById(R.id.webView)
         progress = findViewById(R.id.progressBar)
         webView.settings.javaScriptEnabled = true
+        webView.settings.mediaPlaybackRequiresUserGesture = false;
+        webView.settings.userAgentString = "0"
+//        webView.settings.setAppCacheEnabled(true)
         webView.webViewClient = MraidJsInjectingWebViewClient(::loadFinished)
+        webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(mraidController, "MraidController")
         webView.loadDataWithBaseURL("http://www.example.com/", provider.adm ?: "", "text/html", "UTF-8", null)
     }

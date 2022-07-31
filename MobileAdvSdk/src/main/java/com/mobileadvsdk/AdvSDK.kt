@@ -1,11 +1,8 @@
 package com.mobileadvsdk
 
 import android.app.Application
-import android.content.Context
-import com.mobileadvsdk.datasource.domain.model.AdvertiseType
-import com.mobileadvsdk.datasource.domain.model.InitializationErrorType
-import com.mobileadvsdk.datasource.domain.model.LoadErrorType
-import com.mobileadvsdk.datasource.domain.model.ShowErrorType
+import com.mobileadvsdk.datasource.domain.model.*
+import com.mobileadvsdk.datasource.domain.model.AdvReqType
 import com.mobileadvsdk.presentation.AdvProviderImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,8 +38,8 @@ object AdvSDK {
         }
     }
 
-    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) =
-        provider?.loadAvd(advertiseType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
+    fun load(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.VIDEO, listener: IAdLoadListener) =
+        provider?.loadAvd(advertiseType, advReqType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
     fun show(id: String, iAdShowListener: IAdShowListener) =
         provider?.showAvd(id, iAdShowListener) ?: iAdShowListener.onShowError(id, ShowErrorType.NOT_INITIALIZED_ERROR)

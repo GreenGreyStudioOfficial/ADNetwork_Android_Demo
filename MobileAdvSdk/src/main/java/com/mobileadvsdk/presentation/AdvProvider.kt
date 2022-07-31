@@ -55,9 +55,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
 
-    fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
+    fun loadAvd(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.VIDEO, listener: IAdLoadListener) {
         loadListener = listener
-        makeRequest(advertiseType, listener = listener)
+        makeRequest(advertiseType, advReqType, listener = listener)
     }
 
     fun showAvd(id: String, adShowListener: IAdShowListener) {
@@ -87,9 +87,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     private fun makeRequest(
         advertiseType: AdvertiseType,
+        advReqType: AdvReqType,
         listener: IAdLoadListener
     ) {
-        val advReqType: AdvReqType = AdvReqType.VIDEO
         val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
 
         scope.launch {

@@ -7,20 +7,20 @@ import android.view.Window
 import android.view.WindowManager
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
-import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.datasource.domain.model.ShowErrorType
 import com.mobileadvsdk.presentation.player.VASTPlayer
-import kotlinx.android.synthetic.main.activity_adv.*
 
 internal class AdvActivity : Activity() {
     private val provider: AdvProviderImpl = AdvSDK.provider!!
+    private lateinit var vastPlayer : VASTPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
+        vastPlayer = findViewById(R.id.vastPlayer)
 
         provider.vastModel?.let {
             vastPlayer.load(it)

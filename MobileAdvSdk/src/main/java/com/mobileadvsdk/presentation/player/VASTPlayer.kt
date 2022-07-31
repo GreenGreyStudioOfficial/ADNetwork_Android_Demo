@@ -14,7 +14,6 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
-
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -31,7 +30,6 @@ import com.mobileadvsdk.datasource.remote.api.DataApiServiceImpl
 import com.mobileadvsdk.presentation.player.model.TrackingEventsType
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
-import com.mobileadvsdk.presentation.player.util.HttpTools.httpGetURL
 import com.mobileadvsdk.presentation.player.util.VASTLog.d
 import com.mobileadvsdk.presentation.player.util.VASTLog.e
 import com.mobileadvsdk.presentation.player.util.VASTLog.i

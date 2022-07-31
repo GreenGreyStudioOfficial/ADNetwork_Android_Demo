@@ -106,7 +106,6 @@ internal object CacheFileManager {
         val adm = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm
         if (adm?.startsWith("<!DOCTYPE html>") == true) {
             val links = "https[^ \"]+\\.mp4".toRegex().findAll(adm).map { it.value }.toList()
-            Log.e("CacheFileManager", "links $links")
 
             runBlocking(Dispatchers.IO) {
                 links.map {
