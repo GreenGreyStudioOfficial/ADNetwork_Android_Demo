@@ -17,17 +17,12 @@ object AdvSDK {
     fun initialize(
         context: Application,
         gameId: String,
-        adServerHost: String,
         isTestMode: Boolean,
         listener: IAdInitializationListener
     ) {
         if (provider == null) {
             if (gameId.isEmpty()) {
                 listener.onInitializationError(InitializationErrorType.GAME_ID_IS_NULL_OR_EMPTY, "")
-                return
-            }
-            if (adServerHost.isEmpty()) {
-                listener.onInitializationError(InitializationErrorType.AD_SERVER_HOST_IS_NULL_OR_EMPTY, "")
                 return
             }
             this.context = context

@@ -164,7 +164,9 @@ internal object CacheFileManager {
 
     fun getVideo(url: String, context: Context = AdvSDK.context): InputStream? {
         return try {
-            return File(context.cacheDir, url.split("/").last()).inputStream()
+            val ist =  File(context.cacheDir, url.split("/").last()).inputStream()
+            Log.e("CacheFileManager", "ist $ist $url ${url.split("/").last()}")
+            return ist
         } catch (e: Throwable) {
             Log.e("CacheFileManager", "${e.message}")
             null

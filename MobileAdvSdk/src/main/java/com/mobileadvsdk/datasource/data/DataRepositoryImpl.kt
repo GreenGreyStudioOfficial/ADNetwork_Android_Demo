@@ -17,8 +17,9 @@ internal class DataRepositoryImpl(
 
     override fun loadStartData(deviceInfo: DeviceInfo): Flow<AdvData> =
         cloudDataStore.loadStartData(deviceInfo.toRemote())
-            .map { it.toDomain() }
             .flowOn(Dispatchers.IO)
+            .map { it.toDomain() }
+
 
     override fun callPixel(url: String) = cloudDataStore.getUrl(url)
 }

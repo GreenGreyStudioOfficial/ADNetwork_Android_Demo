@@ -114,6 +114,7 @@ internal class AdvActivity : Activity() {
                 p0.dismiss()
             }
             setNegativeButton(R.string.dialog_close) { p0, _ ->
+                provider.handleShowChangeState(ShowCompletionState.SKIP)
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
                 vastPlayer.onSkipConfirm()
                 p0.dismiss()

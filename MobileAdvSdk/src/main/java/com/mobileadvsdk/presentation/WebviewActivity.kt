@@ -108,12 +108,9 @@ internal class WebviewActivity : Activity() {
         progress = findViewById(R.id.progressBar)
         webView.settings.javaScriptEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false;
-        webView.settings.userAgentString = "0"
-//        webView.settings.setAppCacheEnabled(true)
         webView.webViewClient = MraidJsInjectingWebViewClient(::loadFinished)
-        webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(mraidController, "MraidController")
-        webView.loadDataWithBaseURL("http://www.example.com/", provider.adm ?: "", "text/html", "UTF-8", null)
+        webView.loadDataWithBaseURL("https://mobidriven.com", provider.adm ?: "", "text/html", "UTF-8", null)
     }
 
     override fun onResume() {
@@ -221,6 +218,7 @@ internal class WebviewActivity : Activity() {
                 p0.dismiss()
             }
             setNegativeButton(R.string.dialog_close) { p0, _ ->
+                provider.handleShowChangeState(ShowCompletionState.SKIP)
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
                 p0.dismiss()
                 finish()

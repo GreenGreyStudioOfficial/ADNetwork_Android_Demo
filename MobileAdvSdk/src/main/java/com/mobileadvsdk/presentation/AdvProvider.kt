@@ -225,7 +225,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             h = Resources.getSystem().displayMetrics.heightPixels,
                             ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
                         ),
-                        instl = 1
+                        instl = 1,
                     )
                     AdvReqType.BANNER -> Imp(
                         id = "1",
@@ -234,7 +234,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             h = Resources.getSystem().displayMetrics.heightPixels,
                             ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
                         ),
-                        instl = 1
+                        instl = 1,
                     )
                 }
             ),

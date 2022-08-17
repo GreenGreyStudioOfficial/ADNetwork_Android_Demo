@@ -4,6 +4,12 @@ plugins {
     id 'maven-publish'
 }
 
+ext {
+    PUBLISH_GROUP_ID = 'com.greengray'
+    PUBLISH_VERSION = '1.1.1'
+    PUBLISH_ARTIFACT_ID = 'advsdk'
+}
+
 android {
     compileSdk 31
 
@@ -18,8 +24,11 @@ android {
     }
 
     buildTypes {
+        buildTypes.each {
+            it.buildConfigField "String", "PUBLISH_VERSION", "\"${PUBLISH_VERSION}\""
+        }
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -34,14 +43,10 @@ android {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
-    implementation 'com.google.android.exoplayer:exoplayer:2.13.3'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.13.3'
+    implementation("com.google.android.exoplayer:exoplayer:2.13.3")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.13.3")
 }
 
-ext {
-    PUBLISH_GROUP_ID = 'com.greengray'
-    PUBLISH_VERSION = '0.0.2'
-    PUBLISH_ARTIFACT_ID = 'advsdk'
-}
+
 
 apply from: "../publish-module.gradle"

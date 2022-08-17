@@ -415,12 +415,12 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     }
 
     fun onSkipConfirm() {
+        processEvent(TrackingEventsType.skip)
         processEvent(TrackingEventsType.close)
         destroy()
     }
 
-    fun onOpenClick() {
-        v(TAG, "onOpenClick")
+    private fun onOpenClick() {
         openOffer()
         pause()
     }

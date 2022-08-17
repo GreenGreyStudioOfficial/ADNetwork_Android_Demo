@@ -14,7 +14,8 @@ internal fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     user.toRemote()
 )
 
-internal fun Imp.toRemote(): ImpRemote = ImpRemote(id, video?.toRemote(), banner?.toRemote(), instl)
+internal fun Imp.toRemote(): ImpRemote =
+    ImpRemote(id, video?.toRemote(), banner?.toRemote(), instl, displaymanager, displaymanagerver)
 
 internal fun Video.toRemote(): VideoRemote = VideoRemote(mimes, w, h, ext.toRemote())
 internal fun Banner.toRemote(): BannerRemote = BannerRemote(mimes, w, h, ext.toRemote(), api)
@@ -164,7 +165,7 @@ internal fun String.toExtAdv() = JSONObject(this)
         ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
     }
 
-internal fun AdvertiseType.toJson()= when(this){
+internal fun AdvertiseType.toJson() = when (this) {
     AdvertiseType.INTERSTITIAL -> "INTERSTITIAL"
     AdvertiseType.REWARDED -> "REWARDED"
 }

@@ -1,11 +1,14 @@
 package com.mobileadvsdk.datasource.remote.api
 
+import android.util.Log
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.datasource.remote.model.AdvDataRemote
 import com.mobileadvsdk.datasource.remote.model.AdvDataRequestRemote
 import com.mobileadvsdk.toAdvDataRemote
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.net.HttpURLConnection
@@ -17,7 +20,7 @@ internal const val OKHTTP_READ_TIMEOUT_MS = 30_000
 
 internal object DataApiServiceImpl {
     fun getUrl(url: String) {
-        AdvSDK.scope.launch {
+        AdvSDK.scope.launch(Dispatchers.IO) {
             try {
                 loadUrl(url)
             } catch (e: Exception) {
@@ -29,7 +32,8 @@ internal object DataApiServiceImpl {
     internal fun loadStartData(data: AdvDataRequestRemote, key: String = "secret"): Flow<AdvDataRemote> = flow {
         val res = loadAvdData(key, data)
         emit(res)
-    }
+        Log.e("DataApiService", "loadStartData thread ${Thread.currentThread().name}")
+    }.flowOn(Dispatchers.IO)
 
     private suspend fun loadAvdData(key: String, data: AdvDataRequestRemote): AdvDataRemote =
         suspendCancellableCoroutine { continuation ->
