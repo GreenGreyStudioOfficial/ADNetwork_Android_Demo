@@ -1,5 +1,6 @@
 package com.mobileadvsdk.datasource.data
 
+import android.util.Log
 import com.mobileadvsdk.datasource.domain.DataRepository
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.domain.model.DeviceInfo
@@ -15,10 +16,13 @@ internal class DataRepositoryImpl(
     private val cloudDataStore: DataApiServiceImpl = DataApiServiceImpl
 ) : DataRepository {
 
-    override fun loadStartData(deviceInfo: DeviceInfo): Flow<AdvData> =
-        cloudDataStore.loadStartData(deviceInfo.toRemote())
+    override fun loadStartData(deviceInfo: DeviceInfo, key: String): Flow<AdvData> =
+        cloudDataStore.loadStartData(deviceInfo.toRemote(), key)
             .flowOn(Dispatchers.IO)
-            .map { it.toDomain() }
+            .map {
+//                Log.e("DataRepositoryImpl", "data $it")
+                it.toDomain()
+            }
 
 
     override fun callPixel(url: String) = cloudDataStore.getUrl(url)

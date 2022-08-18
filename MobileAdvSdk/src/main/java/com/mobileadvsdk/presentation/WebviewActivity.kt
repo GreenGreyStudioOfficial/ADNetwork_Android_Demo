@@ -12,8 +12,13 @@ import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.webkit.*
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebView
 import android.widget.ProgressBar
+import androidx.webkit.WebResourceErrorCompat
+import androidx.webkit.WebViewClientCompat
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
@@ -41,11 +46,9 @@ internal class WebviewActivity : Activity() {
                 finish()
             }
             is JsSdkEvent.ContentLoaded -> {
-                Log.e("WebviewActivity", "ContentLoaded")
                 if (it.value) {
                     isLoaded = true
                     webView.visibility = View.VISIBLE
-                    provider.loadSuccess()
                 } else provider.loadError(
                     LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED,
                     LoadErrorType.WEBVIEW_CONTENT_NOT_LOADED.desc
@@ -85,7 +88,7 @@ internal class WebviewActivity : Activity() {
             }
             is JsSdkEvent.StorePicture -> {
                 Log.e("WebviewActivity", "StorePicture ${it.uri}")
-                //TODO()
+//                TODO()
             }
         }
     }
@@ -108,7 +111,9 @@ internal class WebviewActivity : Activity() {
         progress = findViewById(R.id.progressBar)
         webView.settings.javaScriptEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false;
+//        webView.settings.userAgentString = "0"
         webView.webViewClient = MraidJsInjectingWebViewClient(::loadFinished)
+        webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(mraidController, "MraidController")
         webView.loadDataWithBaseURL("https://mobidriven.com", provider.adm ?: "", "text/html", "UTF-8", null)
     }
@@ -124,6 +129,7 @@ internal class WebviewActivity : Activity() {
     }
 
     private fun loadFinished() {
+//        Log.e("WebviewActivity", "load finished")
         sendEventToJs("bridge.notifyReadyEvent()")
         changeState(MraidStates.DEFAULT)
         firePlacementTypeChangeEvent()
@@ -220,6 +226,7 @@ internal class WebviewActivity : Activity() {
             setNegativeButton(R.string.dialog_close) { p0, _ ->
                 provider.handleShowChangeState(ShowCompletionState.SKIP)
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
+                provider.playerPlaybackFinish()
                 p0.dismiss()
                 finish()
             }
@@ -238,7 +245,7 @@ internal class WebviewActivity : Activity() {
         }
     }
 
-    private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClient() {
+    private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClientCompat() {
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
             val mraidJsFileName = "mraid.js"
             return when{

@@ -36,16 +36,6 @@ internal object VASTParser {
         return this
     }
 
-    private fun cacheVideoFile(context: Context, url: String): Int {
-        try {
-            CacheFileManager.cache(context, Uri.parse(url))
-            return ERROR_NONE
-        } catch (e: Throwable) {
-            e(TAG, "cacheVideoFile", e)
-        }
-        return ERROR_CACHE
-    }
-
     suspend fun parseVast(context: Context, vastText: String) {
         flowOf(vastText)
             .flowOn(Dispatchers.Default)
@@ -59,10 +49,6 @@ internal object VASTParser {
                     if (resultError == ERROR_NONE) {
                         processor.model?.let { model ->
                             result = model
-                           /* resultError = cacheVideoFile(context, model.pickedMediaFileURL)
-                            if (resultError == ERROR_NONE) {
-                                result = model
-                            }*/
                         }
                     }
                 }

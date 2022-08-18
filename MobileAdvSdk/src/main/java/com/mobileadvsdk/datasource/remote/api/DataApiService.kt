@@ -29,11 +29,10 @@ internal object DataApiServiceImpl {
         }
     }
 
-    internal fun loadStartData(data: AdvDataRequestRemote, key: String = "secret"): Flow<AdvDataRemote> = flow {
+    internal fun loadStartData(data: AdvDataRequestRemote, key: String): Flow<AdvDataRemote> = flow {
         val res = loadAvdData(key, data)
         emit(res)
-        Log.e("DataApiService", "loadStartData thread ${Thread.currentThread().name}")
-    }.flowOn(Dispatchers.IO)
+    }
 
     private suspend fun loadAvdData(key: String, data: AdvDataRequestRemote): AdvDataRemote =
         suspendCancellableCoroutine { continuation ->

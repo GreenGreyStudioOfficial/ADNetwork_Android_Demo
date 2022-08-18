@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
             })
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
-            AdvSDK.load(AdvertiseType.INTERSTITIAL, listener = object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.INTERSTITIAL, AdvReqType.BANNER, listener = object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }

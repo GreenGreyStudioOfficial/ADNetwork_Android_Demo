@@ -13,6 +13,7 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mobileadvsdk.AdvSDK
@@ -26,8 +27,10 @@ import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
 
@@ -68,7 +71,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             if (listOf(5, 6).contains(bid.api) || bid.adm.startsWith("<!DOCTYPE html>")) {
                 showMraid(bid.id)
             } else {
-                parseAdvData(bid.lurl, bid.adm )
+                parseAdvData(bid.lurl, bid.adm)
             }
         } ?: run {
             CacheFileManager.clearCache()
@@ -92,24 +95,30 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     ) {
         val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
 
-        scope.launch {
-            dataRepository.loadStartData(deviceInfo)
+        scope.launch(Dispatchers.IO) {
+            dataRepository.loadStartData(deviceInfo, "secret")
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
                     when (it) {
                         is IOException -> {
-                            listener.onLoadError(
-                                LoadErrorType.CONNECTION_ERROR,
-                                LoadErrorType.CONNECTION_ERROR.desc
-                            )
+//                            Log.e("AdvProvider", "err $it")
+                            it.printStackTrace()
+                            withContext(Dispatchers.Main) {
+                                listener.onLoadError(
+                                    LoadErrorType.CONNECTION_ERROR,
+                                    LoadErrorType.CONNECTION_ERROR.desc
+                                )
+                            }
+
                         }
                     }
                 }
                 .collect { data ->
                     _advDataFlow.value = data.copy(advertiseType = advertiseType)
                     advId = bid?.id
-                    advId?.let { listener.onLoadComplete(it) }
-
+                    withContext(Dispatchers.Main) {
+                        advId?.let { listener.onLoadComplete(it) }
+                    }
                 }
         }
     }
@@ -193,12 +202,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         )
     }
 
-    fun loadSuccess() {
-        advId?.let { loadListener.onLoadComplete(it) }
-    }
-
     fun playerPlaybackFinish() {
         _advDataFlow.value = null
+        CacheFileManager.clearCache()
     }
 
     fun handleShowChangeState(state: ShowCompletionState) {
@@ -263,47 +269,62 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     private fun getConnectionType(): Int {
         val context = AdvSDK.context
         val cm: ConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities = cm.activeNetwork
-        val actNw = cm.getNetworkCapabilities(networkCapabilities) ?: return 0
-        return when {
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 2
-            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
-                val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                if (ActivityCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.READ_PHONE_STATE
-                    ) == PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                ) {
-                    when (tm.dataNetworkType) {
-                        TelephonyManager.NETWORK_TYPE_GPRS,
-                        TelephonyManager.NETWORK_TYPE_EDGE,
-                        TelephonyManager.NETWORK_TYPE_CDMA,
-                        TelephonyManager.NETWORK_TYPE_1xRTT,
-                        TelephonyManager.NETWORK_TYPE_IDEN,
-                        TelephonyManager.NETWORK_TYPE_GSM -> 4
-                        TelephonyManager.NETWORK_TYPE_UMTS,
-                        TelephonyManager.NETWORK_TYPE_EVDO_0,
-                        TelephonyManager.NETWORK_TYPE_EVDO_A,
-                        TelephonyManager.NETWORK_TYPE_HSDPA,
-                        TelephonyManager.NETWORK_TYPE_HSUPA,
-                        TelephonyManager.NETWORK_TYPE_HSPA,
-                        TelephonyManager.NETWORK_TYPE_EVDO_B,
-                        TelephonyManager.NETWORK_TYPE_EHRPD,
-                        TelephonyManager.NETWORK_TYPE_HSPAP,
-                        TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
-                        TelephonyManager.NETWORK_TYPE_LTE,
-                        TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
-                        TelephonyManager.NETWORK_TYPE_NR -> 6
-                        else -> 3
-                    }
-                } else 3
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val networkCapabilities = cm.activeNetwork
+            val actNw = cm.getNetworkCapabilities(networkCapabilities) ?: return 0
+            return when {
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 2
+                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
+                    val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_PHONE_STATE
+                        ) == PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                    ) {
+                        when (tm.dataNetworkType) {
+                            TelephonyManager.NETWORK_TYPE_GPRS,
+                            TelephonyManager.NETWORK_TYPE_EDGE,
+                            TelephonyManager.NETWORK_TYPE_CDMA,
+                            TelephonyManager.NETWORK_TYPE_1xRTT,
+                            TelephonyManager.NETWORK_TYPE_IDEN,
+                            TelephonyManager.NETWORK_TYPE_GSM -> 4
+                            TelephonyManager.NETWORK_TYPE_UMTS,
+                            TelephonyManager.NETWORK_TYPE_EVDO_0,
+                            TelephonyManager.NETWORK_TYPE_EVDO_A,
+                            TelephonyManager.NETWORK_TYPE_HSDPA,
+                            TelephonyManager.NETWORK_TYPE_HSUPA,
+                            TelephonyManager.NETWORK_TYPE_HSPA,
+                            TelephonyManager.NETWORK_TYPE_EVDO_B,
+                            TelephonyManager.NETWORK_TYPE_EHRPD,
+                            TelephonyManager.NETWORK_TYPE_HSPAP,
+                            TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
+                            TelephonyManager.NETWORK_TYPE_LTE,
+                            TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
+                            TelephonyManager.NETWORK_TYPE_NR -> 6
+                            else -> 3
+                        }
+                    } else 3
+                }
+                else -> 0
             }
-            else -> 0
+        } else {
+            val mInfo = cm.activeNetworkInfo
+            if (mInfo == null || !mInfo.isConnected) return 0
+            if (mInfo.type == ConnectivityManager.TYPE_ETHERNET) return 1
+            if (mInfo.type == ConnectivityManager.TYPE_WIFI) return 2
+            if (mInfo.type == ConnectivityManager.TYPE_MOBILE) {
+                return when (mInfo.subtype) {
+                    TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN, TelephonyManager.NETWORK_TYPE_GSM -> 4
+                    TelephonyManager.NETWORK_TYPE_UMTS, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
+                    TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
+                    TelephonyManager.NETWORK_TYPE_NR -> 6
+                    else -> 3
+                }
+            }
+            return 0
         }
     }
-
-
 }
 
 

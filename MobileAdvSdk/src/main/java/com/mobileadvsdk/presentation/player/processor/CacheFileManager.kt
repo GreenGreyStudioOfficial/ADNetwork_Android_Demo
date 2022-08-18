@@ -11,13 +11,11 @@ import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.datasource.domain.model.AdvData
 import com.mobileadvsdk.datasource.remote.api.OKHTTP_CONNECT_TIMEOUT_MS
 import com.mobileadvsdk.datasource.remote.api.OKHTTP_READ_TIMEOUT_MS
-import com.mobileadvsdk.presentation.player.VASTParser
 import com.mobileadvsdk.toAdvData
 import kotlinx.coroutines.*
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.coroutines.resumeWithException
 
 private const val CACHE_SIZE = 90 * 1024 * 1024L
 
@@ -59,14 +57,16 @@ internal object CacheFileManager {
     }
 
     fun clearCache(context: Context = AdvSDK.context) {
-        getSimpleCache(context).release()
-        simpleCache = SimpleCache(
-            context.cacheDir,
-            LeastRecentlyUsedCacheEvictor(CACHE_SIZE),
-            ExoDatabaseProvider(context)
-        )
-        cacheWriter = null
-        deleteCache(context)
+        GlobalScope.launch(Dispatchers.IO) {
+            getSimpleCache(context).release()
+            simpleCache = SimpleCache(
+                context.cacheDir,
+                LeastRecentlyUsedCacheEvictor(CACHE_SIZE),
+                ExoDatabaseProvider(context)
+            )
+            cacheWriter = null
+            deleteCache(context)
+        }
     }
 
     private fun deleteCache(context: Context) {
@@ -132,8 +132,7 @@ internal object CacheFileManager {
 
     private fun downloadVideoAndCache(url: String, context: Context = AdvSDK.context) {
         val link = URL(url)
-        val cache = File(context.cacheDir, url.split("/").last())
-//        Log.e("CacheFileManager", "start download $url")
+
         val urlConnection = (link.openConnection() as HttpURLConnection).apply {
             readTimeout = OKHTTP_READ_TIMEOUT_MS
             connectTimeout = OKHTTP_CONNECT_TIMEOUT_MS
@@ -141,12 +140,11 @@ internal object CacheFileManager {
 
         try {
             urlConnection.inputStream.use { input ->
-                cache.outputStream().use { output ->
+                FileOutputStream(File(context.cacheDir, url.split("/").last())).use { output ->
                     input.copyTo(output)
                 }
             }
         } finally {
-//            Log.e("CacheFileManager", "download complete")
             urlConnection.disconnect()
         }
     }
@@ -164,9 +162,7 @@ internal object CacheFileManager {
 
     fun getVideo(url: String, context: Context = AdvSDK.context): InputStream? {
         return try {
-            val ist =  File(context.cacheDir, url.split("/").last()).inputStream()
-            Log.e("CacheFileManager", "ist $ist $url ${url.split("/").last()}")
-            return ist
+            return File(context.cacheDir, url.split("/").last()).inputStream()
         } catch (e: Throwable) {
             Log.e("CacheFileManager", "${e.message}")
             null
