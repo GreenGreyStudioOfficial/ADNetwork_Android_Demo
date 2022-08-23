@@ -74,7 +74,7 @@ internal object CacheFileManager {
             val dir = context.cacheDir
             deleteDir(dir)
         } catch (e: Exception) {
-            Log.e("CacheFileManager", "${e.message}")
+//            Log.w("CacheFileManager", "${e.message}")
         }
     }
 
@@ -104,15 +104,16 @@ internal object CacheFileManager {
         stream.use { it.write(data.toJson().toString().toByteArray()) }
 
         val adm = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm
-        if (adm?.startsWith("<!DOCTYPE html>") == true) {
-            val links = "https[^ \"]+\\.mp4".toRegex().findAll(adm).map { it.value }.toList()
+        val files = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.extAdv?.files ?: emptyList()
 
+        if(files.isNotEmpty()){
             runBlocking(Dispatchers.IO) {
-                links.map {
-                    launch { downloadVideoAndCache(it) }
+                files.map {
+                    launch { downloadResourceFileAndCache(it) }
                 }.joinAll()
             }
         }
+
         if (adm?.startsWith("<VAST") == true) {
             runBlocking(Dispatchers.IO) {
                 try {
@@ -121,8 +122,8 @@ internal object CacheFileManager {
                     processor.model?.pickedMediaFileURL?.let {
                         cache(context, Uri.parse(it))
                     }
-                }catch (e:Throwable){
-                    Log.e("CacheFileManager", "${e.message}")
+                } catch (e: Throwable) {
+                    Log.w("CacheFileManager", "${e.message}")
                 }
 
             }
@@ -130,7 +131,7 @@ internal object CacheFileManager {
         }
     }
 
-    private fun downloadVideoAndCache(url: String, context: Context = AdvSDK.context) {
+    private fun downloadResourceFileAndCache(url: String, context: Context = AdvSDK.context) {
         val link = URL(url)
 
         val urlConnection = (link.openConnection() as HttpURLConnection).apply {
@@ -146,6 +147,7 @@ internal object CacheFileManager {
             }
         } finally {
             urlConnection.disconnect()
+//            Log.e("CacheFileManager", "download complete $url")
         }
     }
 
@@ -160,12 +162,13 @@ internal object CacheFileManager {
         }
     }
 
-    fun getVideo(url: String, context: Context = AdvSDK.context): InputStream? {
+    fun getCacheResourceFile(url: String, context: Context = AdvSDK.context): InputStream? {
         return try {
             return File(context.cacheDir, url.split("/").last()).inputStream()
         } catch (e: Throwable) {
-            Log.e("CacheFileManager", "${e.message}")
+            Log.w("CacheFileManager", "${e.message}")
             null
         }
     }
 }
+

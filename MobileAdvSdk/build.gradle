@@ -6,7 +6,7 @@ plugins {
 
 ext {
     PUBLISH_GROUP_ID = 'com.greengray'
-    PUBLISH_VERSION = '1.1.1'
+    PUBLISH_VERSION = '1.2.0'
     PUBLISH_ARTIFACT_ID = 'advsdk'
 }
 
@@ -28,7 +28,7 @@ android {
             it.buildConfigField "String", "PUBLISH_VERSION", "\"${PUBLISH_VERSION}\""
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

@@ -1,10 +1,12 @@
 package com.mobileadvsdk.presentation
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -17,7 +19,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.widget.ProgressBar
-import androidx.webkit.WebResourceErrorCompat
+import androidx.core.app.ActivityCompat
 import androidx.webkit.WebViewClientCompat
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
@@ -25,6 +27,8 @@ import com.mobileadvsdk.datasource.domain.model.AdvertiseType
 import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.domain.model.ShowCompletionState
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 internal class WebviewActivity : Activity() {
@@ -86,10 +90,7 @@ internal class WebviewActivity : Activity() {
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
             }
-            is JsSdkEvent.StorePicture -> {
-                Log.e("WebviewActivity", "StorePicture ${it.uri}")
-//                TODO()
-            }
+            is JsSdkEvent.StorePicture -> provider.downloadImageAndSave(it.uri)
         }
     }
 
@@ -99,6 +100,9 @@ internal class WebviewActivity : Activity() {
     private val STORE_PICTURE = true
     private val INLINE_VIDEO = false
     private val SDK = true
+    private val EXTERNAL_STORAGE_PERMISSION_CODE = 767
+
+    private var downloadImageUrl :String? = null
 
 
     @SuppressLint("SetJavaScriptEnabled", "SourceLockedOrientationActivity")
@@ -116,6 +120,30 @@ internal class WebviewActivity : Activity() {
         webView.webChromeClient = WebChromeClient()
         webView.addJavascriptInterface(mraidController, "MraidController")
         webView.loadDataWithBaseURL("https://mobidriven.com", provider.adm ?: "", "text/html", "UTF-8", null)
+
+        AdvSDK.scope.launch(Dispatchers.IO) {
+            provider.permissionChanel.collect {
+                downloadImageUrl = it.second
+                ActivityCompat.requestPermissions(
+                    this@WebviewActivity,
+                    arrayOf(it.first),
+                    EXTERNAL_STORAGE_PERMISSION_CODE
+                );
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == EXTERNAL_STORAGE_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED) {
+                downloadImageUrl?.let { provider.downloadImageAndSave(it) }
+            } else{
+                downloadImageUrl = null
+            }
+        }
     }
 
     override fun onResume() {
@@ -146,10 +174,10 @@ internal class WebviewActivity : Activity() {
     }
 
     private fun lockOrientation(orientations: MraidOrientations) {
-        if (orientations == MraidOrientations.PORTRAIT ) {
+        if (orientations == MraidOrientations.PORTRAIT) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-        if (orientations == MraidOrientations.LANDSCAPE ) {
+        if (orientations == MraidOrientations.LANDSCAPE) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
     }
@@ -248,14 +276,25 @@ internal class WebviewActivity : Activity() {
     private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClientCompat() {
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
             val mraidJsFileName = "mraid.js"
-            return when{
-                request.url.toString().endsWith(mraidJsFileName) -> view?.context?.assets?.open(mraidJsFileName)?.let { stream ->
-                    WebResourceResponse("text/javascript", "UTF-8", stream)
+            return when {
+                request.url.toString().endsWith(mraidJsFileName) -> view?.context?.assets?.open(mraidJsFileName)
+                    ?.let { stream ->
+                        WebResourceResponse("text/javascript", "UTF-8", stream)
+                    }
+
+                request.url.toString().endsWith(".mp4") -> CacheFileManager.getCacheResourceFile(request.url.toString())
+                    ?.let { stream -> WebResourceResponse("video/mp4", "UTF-8", stream) }
+
+                request.url.toString().endsWith(".png") -> CacheFileManager.getCacheResourceFile(request.url.toString())
+                    ?.let { stream -> WebResourceResponse("image/png", "UTF-8", stream) }
+
+                request.url.toString().endsWith(".jpg") -> CacheFileManager.getCacheResourceFile(request.url.toString())
+                    ?.let { stream -> WebResourceResponse("image/jpg", "UTF-8", stream) }
+
+                else -> {
+//                    Log.e("WebviewActivity", "${request.url}")
+                    super.shouldInterceptRequest(view, request)
                 }
-                request.url.toString().endsWith(".mp4") -> {
-                    WebResourceResponse("video/mp4", "UTF-8", CacheFileManager.getVideo(request.url.toString()))
-                }
-                else -> super.shouldInterceptRequest(view, request)
             }
         }
 

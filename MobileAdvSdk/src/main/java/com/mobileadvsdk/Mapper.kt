@@ -45,7 +45,7 @@ internal fun BidRemote.toDomain(): Bid =
     Bid(id, impid, nurl, lurl, adm, cid, crid, api, extAdv?.toDomain())
 
 internal fun ExtAdvRemote.toDomain(): ExtAdv =
-    ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
+    ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files)
 
 internal fun JSONObject.getStringOrNull(key: String): String? =
     if (isNull(key)) null else getString(key)
@@ -105,7 +105,15 @@ internal fun String.toExtAdvRemote(): ExtAdvRemote = JSONObject(this)
         val cache_timeout = getLongOrNull("cache_timeout")
         val req_timeout = getLongOrNull("req_timeout")
         val imp_timeout = getLongOrNull("imp_timeout")
-        ExtAdvRemote(cache_max, cache_timeout, req_timeout, imp_timeout)
+        val arr = getJsonArrayOrNull("files")
+        val files = mutableListOf<String>()
+        arr?.let {
+            for (i in 0 until it.length()) {
+                val str = it[i].toString()
+                files.add(str)
+            }
+        }
+        ExtAdvRemote(cache_max, cache_timeout, req_timeout, imp_timeout, files)
     }
 
 internal fun String.toAdvData(): AdvData = JSONObject(this)
@@ -162,7 +170,15 @@ internal fun String.toExtAdv() = JSONObject(this)
         val cache_timeout = getLongOrNull("cache_timeout")
         val req_timeout = getLongOrNull("req_timeout")
         val imp_timeout = getLongOrNull("imp_timeout")
-        ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout)
+        val arr = getJsonArrayOrNull("files")
+        val files = mutableListOf<String>()
+        arr?.let {
+            for (i in 0 until it.length()) {
+                val str = it[i].toString()
+                files.add(str)
+            }
+        }
+        ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files)
     }
 
 internal fun AdvertiseType.toJson() = when (this) {

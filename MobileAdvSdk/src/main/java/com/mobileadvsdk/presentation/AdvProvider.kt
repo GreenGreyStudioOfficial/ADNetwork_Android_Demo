@@ -2,18 +2,24 @@ package com.mobileadvsdk.presentation
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
 import android.telephony.TelephonyManager
-import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mobileadvsdk.AdvSDK
@@ -28,10 +34,14 @@ import com.mobileadvsdk.presentation.player.model.VASTModel
 import com.mobileadvsdk.presentation.player.processor.CacheFileManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.MalformedURLException
+import java.net.URL
 import java.util.*
 
 
@@ -54,6 +64,11 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         get() = if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
     internal val adm: String?
         get() = bid?.adm
+
+    private val _permissionChanel: Channel<Pair<String, String>> = Channel()
+
+    internal val permissionChanel: Flow<Pair<String, String>>
+        get() = _permissionChanel.receiveAsFlow()
 
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
@@ -86,6 +101,74 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                 WebviewActivity::class.java
             ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         )
+    }
+
+    fun downloadImageAndSave(url: String) {
+        val isGranted = ContextCompat.checkSelfPermission(
+            AdvSDK.context, Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (isGranted) {
+            scope.launch {
+                loadImage(url)?.let { saveMediaToStorage(it) }
+                Toast.makeText(AdvSDK.context, "Изображение успешно сохранено", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            scope.launch {
+                _permissionChanel.send(Manifest.permission.WRITE_EXTERNAL_STORAGE to url )
+            }
+        }
+
+    }
+
+    private suspend fun loadImage(stringUrl: String): Bitmap? {
+        val url = stringToURL(stringUrl) ?: return null
+        return withContext(Dispatchers.IO) {
+            try {
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connect()
+                val inputStream: InputStream = connection.inputStream
+                val bufferedInputStream = BufferedInputStream(inputStream)
+                BitmapFactory.decodeStream(bufferedInputStream)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+
+    private suspend fun saveMediaToStorage(bitmap: Bitmap) {
+        val filename = "Promo.jpg"
+        var fos: OutputStream? = null
+        val ctx = AdvSDK.context
+        withContext(Dispatchers.IO) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ctx.contentResolver?.also { resolver ->
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "image/jpg")
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                    }
+                    val imageUri: Uri? = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                    fos = imageUri?.let { resolver.openOutputStream(it) }
+                }
+            } else {
+                val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                fos = FileOutputStream(File(imagesDir, filename))
+            }
+            fos?.use {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
+            }
+        }
+    }
+
+    private fun stringToURL(string: String): URL? {
+        try {
+            return URL(string)
+        } catch (e: MalformedURLException) {
+            e.printStackTrace()
+        }
+        return null
     }
 
     private fun makeRequest(
