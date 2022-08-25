@@ -24,25 +24,25 @@ internal object CacheFileManager {
     private var cacheWriter: CacheWriter? = null
     private lateinit var simpleCache: Cache
 
-    fun cache(context: Context, uri: Uri) {
-        if (cacheWriter == null) {
-            cacheWriter = CacheWriter(
-                CacheDataSource.Factory()
-                    .setCache(getSimpleCache(context))
-                    .setUpstreamDataSourceFactory(
-                        DefaultHttpDataSource.Factory()
-                            .setAllowCrossProtocolRedirects(true)
-                    )
-                    .createDataSource(),
-                DataSpec(uri),
-                true,
-                null
-            ) { requestLength: Long, bytesCached: Long, _: Long ->
-                val downloadPercentage = (bytesCached * 100.0 / requestLength)
-                Log.d("CacheFileManager", "downloadPercentage = $downloadPercentage")
+    private fun cache(uri: Uri, context: Context = AdvSDK.context) {
+            if (cacheWriter == null) {
+                cacheWriter = CacheWriter(
+                    CacheDataSource.Factory()
+                        .setCache(getSimpleCache(context))
+                        .setUpstreamDataSourceFactory(
+                            DefaultHttpDataSource.Factory()
+                                .setAllowCrossProtocolRedirects(true)
+                        )
+                        .createDataSource(),
+                    DataSpec(uri),
+                    true,
+                    null
+                ) { requestLength: Long, bytesCached: Long, _: Long ->
+                    val downloadPercentage = (bytesCached * 100.0 / requestLength)
+                    Log.d("CacheFileManager", "downloadPercentage = $downloadPercentage")
+                }
             }
-        }
-        cacheWriter?.cache()
+            cacheWriter?.cache()
     }
 
     fun getSimpleCache(context: Context): Cache {
@@ -57,7 +57,7 @@ internal object CacheFileManager {
     }
 
     fun clearCache(context: Context = AdvSDK.context) {
-        GlobalScope.launch(Dispatchers.IO) {
+        AdvSDK.scope.launch(Dispatchers.IO) {
             getSimpleCache(context).release()
             simpleCache = SimpleCache(
                 context.cacheDir,
@@ -103,31 +103,30 @@ internal object CacheFileManager {
         val stream = FileOutputStream(file)
         stream.use { it.write(data.toJson().toString().toByteArray()) }
 
-        val adm = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm
+        val adm = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm ?: return
         val files = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.extAdv?.files ?: emptyList()
+        val isVideo = adm.startsWith("<VAST")
 
-        if(files.isNotEmpty()){
-            runBlocking(Dispatchers.IO) {
-                files.map {
-                    launch { downloadResourceFileAndCache(it) }
-                }.joinAll()
-            }
-        }
-
-        if (adm?.startsWith("<VAST") == true) {
+        if (isVideo) {
             runBlocking(Dispatchers.IO) {
                 try {
                     val processor = VASTProcessor()
                     processor.process(context, adm)
                     processor.model?.pickedMediaFileURL?.let {
-                        cache(context, Uri.parse(it))
+                        cache(Uri.parse(it))
                     }
                 } catch (e: Throwable) {
                     Log.w("CacheFileManager", "${e.message}")
                 }
-
             }
-
+        } else {
+            runBlocking(Dispatchers.IO) {
+                files.map {
+                    launch {
+                        downloadResourceFileAndCache(it)
+                    }
+                }.joinAll()
+            }
         }
     }
 

@@ -23,6 +23,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mobileadvsdk.AdvSDK
+import com.mobileadvsdk.BuildConfig
 import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
 import com.mobileadvsdk.datasource.data.DataRepositoryImpl
@@ -115,7 +116,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             }
         } else {
             scope.launch {
-                _permissionChanel.send(Manifest.permission.WRITE_EXTERNAL_STORAGE to url )
+                _permissionChanel.send(Manifest.permission.WRITE_EXTERNAL_STORAGE to url)
             }
         }
 
@@ -179,7 +180,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
 
         scope.launch(Dispatchers.IO) {
-            dataRepository.loadStartData(deviceInfo, "secret")
+            dataRepository.loadStartData(deviceInfo, if (BuildConfig.DEBUG) "secret" else gameId)
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
                     when (it) {
