@@ -1,5 +1,8 @@
 package com.mobileadvsdk.datasource.domain.model
 
+import androidx.annotation.Keep
+
+@Keep
 enum class ShowCompletionState {
     START,
     CLOSE,

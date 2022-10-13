@@ -1,7 +1,8 @@
 package com.mobileadvsdk.datasource.remote.model
 
+import androidx.annotation.Keep
 import org.json.JSONObject
-
+@Keep
 internal data class DeviceRemote(
     val geo: GeoRemote?,
     val ip: String?,

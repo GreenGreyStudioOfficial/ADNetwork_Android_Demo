@@ -1,7 +1,6 @@
 package com.example.advsdk
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
@@ -34,7 +33,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
         }
 
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
-            AdvSDK.load(AdvertiseType.REWARDED, AdvReqType.VIDEO, listener = object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.REWARDED, AdvReqType.WEB, listener = object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("REWARDED onLoadComplete, id = $id")
                 }
@@ -45,7 +44,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
             })
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
-            AdvSDK.load(AdvertiseType.INTERSTITIAL, AdvReqType.BANNER, listener = object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.INTERSTITIAL, AdvReqType.WEB, listener = object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
@@ -82,5 +81,5 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
     }
 }
 
-private const val MY_GAME_ID: String = "MY_GAME_ID"
+private const val MY_GAME_ID: String = "secret"
 private const val AD_SERVER_HOST = "https://sp.mobidriven.com"

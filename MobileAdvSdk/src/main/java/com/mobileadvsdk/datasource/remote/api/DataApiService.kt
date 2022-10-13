@@ -2,6 +2,7 @@ package com.mobileadvsdk.datasource.remote.api
 
 import android.util.Log
 import com.mobileadvsdk.AdvSDK
+import com.mobileadvsdk.datasource.domain.model.LoadErrorType
 import com.mobileadvsdk.datasource.remote.model.AdvDataRemote
 import com.mobileadvsdk.datasource.remote.model.AdvDataRequestRemote
 import com.mobileadvsdk.toAdvDataRemote
@@ -55,7 +56,19 @@ internal object DataApiServiceImpl {
             } catch (t: Throwable) {
                 continuation.resumeWithException(t)
                 urlConnection.disconnect()
+                return@suspendCancellableCoroutine
             }
+
+            try {
+               val code = urlConnection.responseCode
+               Log.e("DataApiService", "code $code $key $data")
+               if (code == 204 || code == 400) throw IllegalStateException(LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc)
+           }catch (t: Throwable){
+               Log.e("DataApiService", "${t.message}")
+               continuation.resumeWithException(t)
+               urlConnection.disconnect()
+               return@suspendCancellableCoroutine
+           }
 
             try {
                 urlConnection.inputStream.use { ins ->

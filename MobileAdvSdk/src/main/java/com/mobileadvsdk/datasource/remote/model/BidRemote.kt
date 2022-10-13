@@ -1,5 +1,8 @@
 package com.mobileadvsdk.datasource.remote.model
 
+import androidx.annotation.Keep
+
+@Keep
 internal data class BidRemote(
     val id: String,
     val impid: String?,

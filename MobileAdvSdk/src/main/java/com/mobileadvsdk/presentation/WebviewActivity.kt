@@ -1,6 +1,5 @@
 package com.mobileadvsdk.presentation
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
@@ -14,13 +13,9 @@ import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
+import android.webkit.*
 import android.widget.ProgressBar
 import androidx.core.app.ActivityCompat
-import androidx.webkit.WebViewClientCompat
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.R
 import com.mobileadvsdk.datasource.domain.model.AdvertiseType
@@ -87,7 +82,7 @@ internal class WebviewActivity : Activity() {
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 }
                 if (it.forceOrientation == "landscape" && currentOrientation != Configuration.ORIENTATION_LANDSCAPE) {
-                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 }
             }
             is JsSdkEvent.StorePicture -> provider.downloadImageAndSave(it.uri)
@@ -273,11 +268,10 @@ internal class WebviewActivity : Activity() {
         }
     }
 
-    private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClientCompat() {
+    private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClient() {
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
-            val mraidJsFileName = "mraid.js"
             return when {
-                request.url.toString().endsWith(mraidJsFileName) -> view?.context?.assets?.open(mraidJsFileName)
+                request.url.toString().endsWith("mraid.js") -> view?.context?.assets?.open("mraid.js")
                     ?.let { stream ->
                         WebResourceResponse("text/javascript", "UTF-8", stream)
                     }
@@ -292,7 +286,6 @@ internal class WebviewActivity : Activity() {
                     ?.let { stream -> WebResourceResponse("image/jpg", "UTF-8", stream) }
 
                 else -> {
-//                    Log.e("WebviewActivity", "${request.url}")
                     super.shouldInterceptRequest(view, request)
                 }
             }

@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.*
+import java.lang.IllegalStateException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
@@ -74,7 +75,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
 
-    fun loadAvd(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.VIDEO, listener: IAdLoadListener) {
+    fun loadAvd(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.DEFAULT, listener: IAdLoadListener) {
         loadListener = listener
         makeRequest(advertiseType, advReqType, listener = listener)
     }
@@ -84,7 +85,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         showListener = adShowListener
         advData?.let {
             val bid = it.seatbid.first().bid.first()
-            if (listOf(5, 6).contains(bid.api) || bid.adm.startsWith("<!DOCTYPE html>")) {
+            if (listOf(5, 6).contains(bid.api)) {
                 showMraid(bid.id)
             } else {
                 parseAdvData(bid.lurl, bid.adm)
@@ -195,6 +196,15 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             }
 
                         }
+                        is IllegalStateException -> {
+                            it.printStackTrace()
+                            withContext(Dispatchers.Main) {
+                                listener.onLoadError(
+                                    LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND,
+                                    LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc
+                                )
+                            }
+                        }
                     }
                 }
                 .collect { data ->
@@ -299,7 +309,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     private fun makeDeviceInfo(
         isTestMode: Boolean,
         gameId: String,
-        advReqType: AdvReqType = AdvReqType.VIDEO,
+        advReqType: AdvReqType = AdvReqType.DEFAULT,
         advertiseType: AdvertiseType
     ): DeviceInfo {
         val geo = getLastLocation()
@@ -308,7 +318,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             test = if (isTestMode) 1 else 0,
             listOf(
                 when (advReqType) {
-                    AdvReqType.VIDEO -> Imp(
+                    AdvReqType.DEFAULT -> Imp(
                         id = "1",
                         video = Video(
                             w = Resources.getSystem().displayMetrics.widthPixels,
@@ -317,7 +327,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                         ),
                         instl = 1,
                     )
-                    AdvReqType.BANNER -> Imp(
+                    AdvReqType.WEB -> Imp(
                         id = "1",
                         banner = Banner(
                             w = Resources.getSystem().displayMetrics.widthPixels,

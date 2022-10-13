@@ -4,11 +4,11 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.webkit.JavascriptInterface
-import android.webkit.WebView
+import androidx.annotation.Keep
 import org.json.JSONObject
 
+@Keep
 internal class MraidController(val onJsSdkEvent: (JsSdkEvent) -> Unit) {
-    private lateinit var _webView: WebView
 
     @JavascriptInterface
     fun sendMessageToSDK(json: String) {

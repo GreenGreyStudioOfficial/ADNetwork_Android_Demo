@@ -1,8 +1,9 @@
 package com.mobileadvsdk.datasource.remote.model
 
-import com.mobileadvsdk.BuildConfig
+import androidx.annotation.Keep
 import org.json.JSONObject
 
+@Keep
 internal data class ImpRemote(
     val id: String,
     val video: VideoRemote?,

@@ -7,6 +7,6 @@ internal data class Imp(
     val video: Video? = null,
     val banner: Banner? = null,
     val instl: Int,
-    val displaymanager: String = "MobidrivenAndroidSDK",
+    val displaymanager: String = "MobidrivenSDK",
     val displaymanagerver: String = BuildConfig.PUBLISH_VERSION
 )

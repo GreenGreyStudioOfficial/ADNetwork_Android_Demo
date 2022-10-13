@@ -1,9 +1,11 @@
 package com.mobileadvsdk.datasource.remote.model
 
+import androidx.annotation.Keep
 import org.json.JSONArray
 import org.json.JSONObject
 
-internal class AdvDataRequestRemote(
+@Keep
+internal data class AdvDataRequestRemote(
     val id: String,
     val test: Int,
     val imp: List<ImpRemote>,

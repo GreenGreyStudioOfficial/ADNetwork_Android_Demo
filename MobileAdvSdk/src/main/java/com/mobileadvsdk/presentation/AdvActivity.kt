@@ -2,7 +2,10 @@ package com.mobileadvsdk.presentation
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import com.mobileadvsdk.AdvSDK
@@ -32,6 +35,13 @@ internal class AdvActivity : Activity() {
         vastPlayer.setListener(object : VASTPlayer.Listener {
             override fun onVASTPlayerLoadFinish() {
                 provider.playerLoadFinish()
+                val currentOrientation = resources.configuration.orientation
+                if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+                if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                }
                 vastPlayer.setType(provider.advType)
                 vastPlayer.play()
             }

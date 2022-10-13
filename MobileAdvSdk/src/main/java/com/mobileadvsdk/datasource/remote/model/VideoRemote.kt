@@ -1,8 +1,9 @@
 package com.mobileadvsdk.datasource.remote.model
 
+import androidx.annotation.Keep
 import org.json.JSONArray
 import org.json.JSONObject
-
+@Keep
 internal data class VideoRemote(
     val mimes: List<String>,
     val w: Int,
