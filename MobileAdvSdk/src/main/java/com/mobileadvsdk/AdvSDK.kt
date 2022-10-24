@@ -37,8 +37,8 @@ object AdvSDK {
     }
 
     @Keep
-    fun load(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.DEFAULT, listener: IAdLoadListener) =
-        provider?.loadAvd(advertiseType, advReqType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
+    fun load(advertiseType: AdvertiseType, listener: IAdLoadListener) =
+        provider?.loadAvd(advertiseType, listener) ?: listener.onLoadError(LoadErrorType.NOT_INITIALIZED_ERROR)
 
     @Keep
     fun show(id: String, iAdShowListener: IAdShowListener) =

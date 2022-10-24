@@ -20,7 +20,7 @@ internal class DataRepositoryImpl(
         cloudDataStore.loadStartData(deviceInfo.toRemote(), key)
             .flowOn(Dispatchers.IO)
             .map {
-                Log.e("DataRepositoryImpl", "data $it")
+                Log.e("DataRepository", "data $it")
                 it.toDomain()
             }
 

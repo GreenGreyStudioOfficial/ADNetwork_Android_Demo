@@ -19,6 +19,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -75,9 +76,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
 
-    fun loadAvd(advertiseType: AdvertiseType, advReqType: AdvReqType = AdvReqType.DEFAULT, listener: IAdLoadListener) {
+    fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
         loadListener = listener
-        makeRequest(advertiseType, advReqType, listener = listener)
+        makeRequest(advertiseType, listener = listener)
     }
 
     fun showAvd(id: String, adShowListener: IAdShowListener) {
@@ -175,7 +176,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     private fun makeRequest(
         advertiseType: AdvertiseType,
-        advReqType: AdvReqType,
+        advReqType: AdvReqType = AdvReqType.DEFAULT,
         listener: IAdLoadListener
     ) {
         val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
@@ -184,9 +185,10 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             dataRepository.loadStartData(deviceInfo, if (BuildConfig.DEBUG) "secret" else gameId)
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
+                    Log.e("AdvProvider", "err $it")
                     when (it) {
                         is IOException -> {
-//                            Log.e("AdvProvider", "err $it")
+
                             it.printStackTrace()
                             withContext(Dispatchers.Main) {
                                 listener.onLoadError(
@@ -204,6 +206,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                                     LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc
                                 )
                             }
+                        }
+                        else ->{
+
                         }
                     }
                 }

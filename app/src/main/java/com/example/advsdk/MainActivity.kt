@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
         }
 
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
-            AdvSDK.load(AdvertiseType.REWARDED, AdvReqType.WEB, listener = object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.REWARDED,  listener = object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("REWARDED onLoadComplete, id = $id")
                 }
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
             })
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
-            AdvSDK.load(AdvertiseType.INTERSTITIAL, AdvReqType.WEB, listener = object : IAdLoadListener {
+            AdvSDK.load(AdvertiseType.INTERSTITIAL,  listener = object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
                     addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
