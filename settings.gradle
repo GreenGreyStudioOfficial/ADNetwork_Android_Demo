@@ -1,11 +1,12 @@
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven {
+            url "https://nexus.ggsinternal.space/repository/maven-public-hosted/"
+        }
         google()
         mavenCentral()
-        jcenter() // Warning: this repository is going to shut down soon
     }
 }
-rootProject.name = "AdvSDK"
+rootProject.name = "AdvDemo"
 include ':app'
-include ':MobileAdvSdk'

@@ -1,19 +1,17 @@
 package com.example.advsdk
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.mobileadvsdk.AdvSDK
 import com.mobileadvsdk.IAdInitializationListener
-import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.IAdShowListener
+import com.mobileadvsdk.IAdLoadListener
 import com.mobileadvsdk.datasource.domain.model.*
 
-class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowListener {
-
+class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdLoadListener, IAdShowListener {
+    var advId :  String? = null
     private lateinit var recyclerView: RecyclerView
 
     private val logsAdapter by lazy {
@@ -21,7 +19,6 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -30,33 +27,28 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
         }
 
         findViewById<View>(R.id.btnInit).setOnClickListener {
-            AdvSDK.initialize(this.application, MY_GAME_ID,  true, this)
+            AdvSDK.INSTANCE.initialize(this.application, MY_GAME_ID,  true, this)
         }
 
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
-            AdvSDK.load(AdvertiseType.REWARDED, AdvReqType.BANNER, listener = object : IAdLoadListener {
-                override fun onLoadComplete(id: String) {
-                    addLog("REWARDED onLoadComplete, id = $id")
-                }
-
-                override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
-                    addLog("REWARDED onLoadError, id = $id, ${error.name} , errorMessage $errorMessage")
-                }
-            })
+            AdvSDK.INSTANCE.load(AdvertiseType.REWARDED,this)
         }
         findViewById<View>(R.id.btnLoadInterstitial).setOnClickListener {
-            AdvSDK.load(AdvertiseType.INTERSTITIAL, AdvReqType.BANNER, listener = object : IAdLoadListener {
+            AdvSDK.INSTANCE.load(AdvertiseType.INTERSTITIAL, object : IAdLoadListener {
                 override fun onLoadComplete(id: String) {
+                    advId = id
                     addLog("INTERSTITIAL onLoadComplete, id = $id")
                 }
 
                 override fun onLoadError(error: LoadErrorType, errorMessage: String, id: String) {
-                    addLog("INTERSTITIAL onLoadError, id = $id,   ${error.name} ,errorMessage $errorMessage")
+                    addLog("INTERSTITIAL onLoadError, id = $id, ${error.name}, errorMessage $errorMessage")
                 }
             })
         }
         findViewById<View>(R.id.btnShow).setOnClickListener {
-            AdvSDK.show("", this)
+            advId?.let {
+                AdvSDK.INSTANCE.show(it, this)
+            }
         }
     }
 
@@ -66,21 +58,29 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
     }
 
     override fun onInitializationComplete() {
-        addLog("onInitializationComplete")
+        addLog("initialization complete")
     }
 
-    override fun onInitializationError(error: InitializationErrorType, errorMessage: String) {
-        addLog("onInitializationError = ${error.name}, $errorMessage")
+    override fun onInitializationError(error: InitializationErrorType, message: String) {
+        addLog("initialization error = ${error.name}, $message")
     }
 
-    override fun onShowChangeState(id: String, showCompletionState: ShowCompletionState) {
-        addLog("onShowChangeState, id = $id showCompletionState = ${showCompletionState.name}")
+    override fun onShowChangeState(id: String, state: ShowCompletionState) {
+        addLog("show change state, id = $id state = ${state.name}")
     }
 
-    override fun onShowError(id: String, error: ShowErrorType, errorMessage: String) {
-        addLog("onShowError, id = $id errorMessage = ${error.name}")
+    override fun onShowError(id: String, error: ShowErrorType, message: String) {
+        addLog("show error, id = $id message = $message")
+    }
+
+    override fun onLoadComplete(id: String) {
+        advId = id
+        addLog("load complete, id = $id")
+    }
+
+    override fun onLoadError(error: LoadErrorType, message: String, id: String) {
+        addLog("load error, id = $id, message $message")
     }
 }
 
-private const val MY_GAME_ID: String = "MY_GAME_ID"
-private const val AD_SERVER_HOST = "https://sp.mobidriven.com"
+private const val MY_GAME_ID: String = "secret"
