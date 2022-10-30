@@ -1,0 +1,177 @@
+{
+  "main": {
+    "id": "6ccc7bfbb964f148",
+    "type": "split",
+    "children": [
+      {
+        "id": "ac23850718ac5267",
+        "type": "tabs",
+        "dimension": 50.0362056480811,
+        "children": [
+          {
+            "id": "c54b72161e09082e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/sdk_ru.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "664ac9a8145d9c9a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/sdk_api.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      },
+      {
+        "id": "22fc9b9682bcffe6",
+        "type": "tabs",
+        "dimension": 49.9637943519189,
+        "children": [
+          {
+            "id": "88c83b95f5703182",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f057b4fe12b8e86c",
+    "type": "split",
+    "children": [
+      {
+        "id": "86891500e705c52a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "95d36bf475d0e32e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "bcf928193263d6a5",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "f98919ae362689e4",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "5caa577c7a00e056",
+    "type": "split",
+    "children": [
+      {
+        "id": "64a09763d2121aff",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1f5564c3b55ae699",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "0a4b63295dd5b21b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "76a9009c11f93cf0",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "e5a64e3fdc339f07",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "88c83b95f5703182",
+  "lastOpenFiles": [
+    "docs/sdk_ru.md",
+    "README.md",
+    "docs/index.md",
+    "docs/sdk_api.md",
+    "().md",
+    "images/integration_0.png.md",
+    "docs/images/Screenshot_2.png",
+    "images/integration_0.png",
+    "images/integration_2.png",
+    "images/integration_3.png"
+  ]
+}
