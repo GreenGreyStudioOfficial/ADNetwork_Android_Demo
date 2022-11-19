@@ -8,7 +8,7 @@
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:
--keepclassmembers class com.mobileadvsdk.presentation.MraidController {
+-keepclassmembers class com.mobidriven.presentation.MraidController {
    public *;
 }
 
@@ -22,17 +22,17 @@
 -keepattributes MethodParameters
 -keepparameternames
 
--keepnames class com.mobileadvsdk.AdvSDK
+-keepnames class com.mobidriven.AdvSDK
 
--keep class com.mobileadvsdk.AdvSDK {
+-keep class com.mobidriven.AdvSDK {
    public *;
 }
 
--keepclassmembers enum com.mobileadvsdk.datasource.domain.model.AdvertiseType, com.mobileadvsdk.datasource.domain.model.AdvReqType, com.mobileadvsdk.datasource.domain.model.InitializationErrorType, com.mobileadvsdk.datasource.domain.model.LoadErrorType, com.mobileadvsdk.datasource.domain.model.ShowCompletionState, com.mobileadvsdk.datasource.domain.model.ShowErrorType {
+-keepclassmembers enum com.mobidriven.datasource.domain.model.AdvertiseType, com.mobidriven.datasource.domain.model.AdvReqType, com.mobidriven.datasource.domain.model.InitializationErrorType, com.mobidriven.datasource.domain.model.LoadErrorType, com.mobidriven.datasource.domain.model.ShowCompletionState, com.mobidriven.datasource.domain.model.ShowErrorType {
     public *;
 }
 
--keep interface com.mobileadvsdk.IAdInitializationListener, com.mobileadvsdk.IAdShowListener, com.mobileadvsdk.IAdLoadListener
--keepclassmembers interface com.mobileadvsdk.IAdInitializationListener, com.mobileadvsdk.IAdShowListener, com.mobileadvsdk.IAdLoadListener {
+-keep interface com.mobidriven.IAdInitializationListener, com.mobidriven.IAdShowListener, com.mobidriven.IAdLoadListener
+-keepclassmembers interface com.mobidriven.IAdInitializationListener, com.mobidriven.IAdShowListener, com.mobidriven.IAdLoadListener {
     public <methods>;
 }

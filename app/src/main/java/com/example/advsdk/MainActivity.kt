@@ -5,11 +5,11 @@ import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.mobileadvsdk.AdvSDK
-import com.mobileadvsdk.IAdInitializationListener
-import com.mobileadvsdk.IAdLoadListener
-import com.mobileadvsdk.IAdShowListener
-import com.mobileadvsdk.datasource.domain.model.*
+import com.mobidriven.AdvSDK
+import com.mobidriven.IAdInitializationListener
+import com.mobidriven.IAdLoadListener
+import com.mobidriven.IAdShowListener
+import com.mobidriven.datasource.domain.model.*
 
 class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowListener {
 

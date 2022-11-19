@@ -2,16 +2,24 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
     <FrameLayout
-        android:layout_width="40dp"
-        android:layout_height="40dp">
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center">
 
-        <ProgressBar
+        <com.mobidriven.presentation.player.SquareProgressView
+            android:id="@+id/view_progress_bar"
+            android:layout_width="32dp"
+            android:layout_height="32dp">
+
+        </com.mobidriven.presentation.player.SquareProgressView>
+
+        <!--<ProgressBar
             android:id="@+id/view_progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:progressDrawable="@drawable/pubnative_circular_progress" />
+            android:progressDrawable="@drawable/pubnative_circular_progress" />-->
 
         <TextView
             android:id="@+id/view_progress_text"

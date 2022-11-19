@@ -6,7 +6,7 @@ plugins {
 
 ext {
     PUBLISH_GROUP_ID = 'com.greengray'
-    PUBLISH_VERSION = '1.2.7'
+    PUBLISH_VERSION = '1.3.2'
     PUBLISH_ARTIFACT_ID = 'advsdk'
 }
 
@@ -18,7 +18,6 @@ android {
         targetSdk 31
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -42,10 +41,9 @@ android {
 }
 
 dependencies {
-//    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.8.0'
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-    implementation("com.google.android.exoplayer:exoplayer:2.13.3")
-    implementation("com.google.android.exoplayer:exoplayer-ui:2.13.3")
+    implementation("com.google.guava:guava:31.1-android")
 }
 
 

@@ -1,8 +1,66 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">AdvSDK</string>
-    <string name="VAST">AdvSDK</string>
     <string name="dialog_continue_watch">Продолжить просмотр</string>
     <string name="dialog_close">Закрыть</string>
     <string name="dialog_subtitle">Вознаграждение не будет получено.</string>
     <string name="dialog_title">Закрыть ролик?</string>
+    <!-- Accessibility description for a media player view to indicate that tapping on the view hides the playback controls [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media player seek bar, which indicates the playback progress. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a settings button. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a settings button that hides a list of additional settings. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a settings button that expands a list of additional settings. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that enters fullscreen playback. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that exits fullscreen playback. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes the previous track to be played. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes the next track to be played. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be paused. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be started. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be stopped. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be rewound. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be rewound a specified number of seconds. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be fast-forwarded. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that causes playback to be fast-forwarded a specified number of seconds. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a button that controls the repeat mode of a media playback. In this mode media is not repeated. If the user clicks the button, the repeat mode changes to the next available mode. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a button that controls the repeat mode of a media playback. In this mode the current piece of media is repeated. If the user clicks the button, the repeat mode changes to the next available mode. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a button that controls the repeat mode of a media playback. In this mode the entire playlist is repeated. If the user clicks the button, the repeat mode changes to the next available mode. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a button that controls the shuffle mode of media playback. In this mode shuffle is on. If the user clicks the button, shuffle mode will be turned off. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a button that controls the shuffle mode of media playback. In this mode shuffle is off. If the user clicks the button, shuffle mode will be turned on. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a media control button that toggles whether a video playback is in VR mode. [CHAR LIMIT=NONE] -->
+    <!-- Accessibility description for a closed captions (subtitles) button, when subtitles are enabled. If the user clicks the button, closed captions will be disabled. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a closed captions (subtitles) button, when subtitles are disabled. If the user clicks the button, closed captions will be enabled. [CHAR_LIMIT=NONE] -->
+    <!-- Accessibility description for a playback speed selection button. The button is shown with the current playback speed. If a user clicks it, the list of possible playback speeds will be shown. [CHAR_LIMIT=NONE] -->
+    <!-- LINT.IfChange(playback_speeds) -->
+    <!-- Different media playback speeds from one quarter normal speed ("0.25x") to double normal speed ("2x"). The fourth item ("Normal") corresponds to normal playback speed. [CHAR_LIMIT=16] -->
+    <!-- LINT.ThenChange(../../java/com/google/android/exoplayer2/ui/StyledPlayerControlView.java:playback_speeds) -->
+    <!-- Shown to indicate a custom playback speed. [CHAR_LIMIT=16] -->
+    <!-- Placeholder text for displaying time. Used to calculate which size layout to use. -->
+    <!-- The title of a track selection view for video tracks. [CHAR LIMIT=20] -->
+    <!-- The title of a track selection view for audio tracks. [CHAR LIMIT=20] -->
+    <!-- The title of a track selection view for text (i.e. subtitle or caption) tracks. [CHAR LIMIT=20] -->
+    <!-- An option in a track selection view (e.g. a view that allows the user to choose between multiple media tracks) to indicate that no track should be selected. Examples: When playing a video, if this option is selected for audio, playback will proceed without sound. If this option is selected for video, playback will proceed without visual output. [CHAR LIMIT=20] -->
+    <!-- An option in a track selection view (e.g. a view that allows the user to choose between multiple media tracks) to indicate that the automatic or default track should be selected. Examples: If there are multiple audio tracks in different languages, the automatic selection would normally be the track in the user's native language. If there are multiple video tracks at different qualities, the automatic selection would normally be the highest quality track that can be played without buffering over the current network. [CHAR LIMIT=20] -->
+    <!-- Name of a media track about which nothing is known. Shown in a list view that allows the user to choose between multiple media tracks. [CHAR LIMIT=20] -->
+    <!-- Resolution of a video track. [CHAR LIMIT=20] -->
+    <!-- Describes an audio track with one channel. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=20] -->
+    <!-- Describes an audio track with two channels. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=20] -->
+    <!-- Describes a surround sound audio track. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes a 5.1 surround sound (https://en.wikipedia.org/wiki/5.1_surround_sound) audio track. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes a 7.1 (https://en.wikipedia.org/wiki/7.1_surround_sound) audio track. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes an alternate media track, e.g. a video recorded from a different viewpoint. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes a supplementary track. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes a track containing commentary. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes a track with closed captions. Shown in a list view that allows the user to choose between multiple audio tracks. [CHAR LIMIT=40] -->
+    <!-- Describes the bitrate of a media track in Megabits (https://en.wikipedia.org/wiki/Megabit) per second. [CHAR LIMIT=20] -->
+
+    <!-- Defines a way of appending an item to a list of items. For example appending "banana" to "apple, pear" to get "apple, pear, banana". Note: the command separator will appear between all consecutive list items, so do not use an equivalent of 'and'. [CHAR LIMIT=40] -->
+
+    <!-- Description for a button that downloads a piece of media content onto the device. [CHAR LIMIT=20] -->
+    <!-- Default name for a notification channel corresponding to media downloads. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate a download is currently downloading. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate a download has finished downloading. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate a download has failed. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate downloads are being removed from the device. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate downloads are paused. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate downloads are paused waiting for network connectivity. [CHAR LIMIT=40] -->
+    <!-- Shown in a notification or UI component to indicate downloads are paused waiting for WiFi connectivity. [CHAR LIMIT=40] -->
 </resources>
