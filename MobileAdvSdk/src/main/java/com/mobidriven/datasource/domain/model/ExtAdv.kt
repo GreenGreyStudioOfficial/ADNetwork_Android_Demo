@@ -7,7 +7,7 @@ internal data class ExtAdv(
     val cache_timeout: Long?,
     val req_timeout: Long?,
     val imp_timeout: Long?,
-    val files: List<String>? ,
+    val files: List<String>?
 ) {
     fun toJson(): JSONObject =JSONObject().apply {
         cache_max?.let { put("cache_max",it) }

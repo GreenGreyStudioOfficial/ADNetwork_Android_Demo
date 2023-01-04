@@ -57,7 +57,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     var vastModel: VASTModel? = null
 
     private val advData: AdvData?
-        get() = _advDataFlow.asStateFlow().value ?: CacheFileManager.loadAdv(advId)
+        get() = _advDataFlow.value ?: CacheFileManager.loadAdv(advId)
 
     private val bid
         get() = advData?.seatbid?.first()?.bid?.first()
@@ -321,7 +321,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         return DeviceInfo(
             id = UUID.randomUUID().toString(),
             test = if (isTestMode) 1 else 0,
-            listOf(
+            imp = listOf(
                 when (advReqType) {
                     AdvReqType.DEFAULT -> Imp(
                         id = "1",
@@ -330,7 +330,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             h = Resources.getSystem().displayMetrics.heightPixels,
                             ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
                         ),
-                        instl = 1,
+                        instl = 1
                     )
                     AdvReqType.WEB -> Imp(
                         id = "1",
@@ -339,16 +339,16 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             h = Resources.getSystem().displayMetrics.heightPixels,
                             ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
                         ),
-                        instl = 1,
+                        instl = 1
                     )
                 }
             ),
-            AppInfo(
+            app = AppInfo(
                 gameId,
                 AdvSDK.context.applicationInfo.loadLabel(AdvSDK.context.packageManager).toString(),
                 AdvSDK.context.packageName
             ),
-            Device(
+            device = Device(
                 geo = geo ?: Geo(),
                 deviceType = 0,
                 make = Build.MANUFACTURER,
@@ -360,7 +360,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                 ifa = Settings.Secure.getString(AdvSDK.context.contentResolver, Settings.Secure.ANDROID_ID),
                 connectionType = getConnectionType()
             ),
-            User(Prefs.userId)
+            user = User(Prefs.userId)
         )
     }
 

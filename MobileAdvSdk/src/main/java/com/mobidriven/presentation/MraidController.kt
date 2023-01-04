@@ -40,13 +40,13 @@ internal sealed class JsSdkEvent {
     object CreateCalendarEvent : JsSdkEvent()
     data class SetOrientationProperties(
         val allowOrientationChange: Boolean,
-        val forceOrientation: String,
+        val forceOrientation: String
     ) : JsSdkEvent()
 
     data class SetExpandProperties(
         val width: Int,
         val height: Int,
-        val isModal: Boolean,
+        val isModal: Boolean
     ) : JsSdkEvent()
 
     data class RewardReceived(val value: Boolean) : JsSdkEvent()
@@ -74,7 +74,7 @@ private fun toSdkEvent(event: String): JsSdkEvent? {
             "createCalendarEvent" -> JsSdkEvent.CreateCalendarEvent
             "setOrientationProperties" -> JsSdkEvent.SetOrientationProperties(
                 allowOrientationChange = obj.getBoolean("m_allowOrientationChange"),
-                forceOrientation = obj.getString("m_forceOrientation"),
+                forceOrientation = obj.getString("m_forceOrientation")
             )
             "setExpandProperties" -> JsSdkEvent.SetExpandProperties(
                 width = obj.getInt("m_width"),

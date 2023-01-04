@@ -8,7 +8,7 @@ internal data class GeoRemote(
     val lon: Double?,
     val country: String?,
     val region: String?,
-    val city: String?,
+    val city: String?
 ) {
     fun toJson(): JSONObject =JSONObject().apply {
         lat?.let { put("lat",it) }

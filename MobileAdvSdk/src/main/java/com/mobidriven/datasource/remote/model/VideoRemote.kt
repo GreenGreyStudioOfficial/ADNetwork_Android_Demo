@@ -25,7 +25,7 @@ internal data class BannerRemote(
     val w: Int,
     val h: Int,
     val ext: ExtRemote,
-    val api: List<Int>,
+    val api: List<Int>
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("mimes", JSONArray().apply {
