@@ -1,14 +1,17 @@
 package com.mobidriven.datasource.domain
 
 import com.mobidriven.datasource.domain.model.AdvData
+import com.mobidriven.datasource.domain.model.AdvInitData
 import com.mobidriven.datasource.domain.model.DeviceInfo
-import com.mobidriven.datasource.remote.model.AdvDataRemote
+import com.mobidriven.datasource.remote.model.AdvInitDataRemote
 import kotlinx.coroutines.flow.Flow
-import java.nio.channels.spi.AbstractSelectionKey
 
-internal interface DataRepository {
+internal interface IDataRepository {
 
     fun loadStartData(deviceInfo: DeviceInfo, key: String): Flow<AdvData>
 
+    suspend fun sendInitUserData(key: String, data: AdvInitData)
+
     fun callPixel(url: String)
+
 }

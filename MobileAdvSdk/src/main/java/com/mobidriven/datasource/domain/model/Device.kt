@@ -1,7 +1,7 @@
 package com.mobidriven.datasource.domain.model
 
 internal data class Device(
-    var geo: Geo,
+    var geo: Geo?,
     val ip: String? = null,
     val deviceType: Int? = null,
     val make: String? = null,
@@ -11,5 +11,5 @@ internal data class Device(
     val w: Int,
     val h: Int,
     val connectionType: Int,
-    val ifa: String
+    val ifa: String?
 )

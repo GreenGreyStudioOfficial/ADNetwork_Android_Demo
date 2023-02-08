@@ -14,6 +14,7 @@ internal fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     user.toRemote()
 )
 
+internal fun AdvInitData.toRemote() : AdvInitDataRemote =AdvInitDataRemote(device = device.toRemote(), user = user.toRemote())
 internal fun Imp.toRemote(): ImpRemote =
     ImpRemote(id, video?.toRemote(), banner?.toRemote(), instl, displaymanager, displaymanagerver)
 
@@ -22,7 +23,7 @@ internal fun Banner.toRemote(): BannerRemote = BannerRemote(mimes, w, h, ext.toR
 internal fun Ext.toRemote(): ExtRemote = ExtRemote(rewarded)
 internal fun AppInfo.toRemote(): AppInfoRemote = AppInfoRemote(id, name, bundle)
 internal fun Device.toRemote(): DeviceRemote = DeviceRemote(
-    geo.toRemote(),
+    geo?.toRemote(),
     ip,
     deviceType,
     make,

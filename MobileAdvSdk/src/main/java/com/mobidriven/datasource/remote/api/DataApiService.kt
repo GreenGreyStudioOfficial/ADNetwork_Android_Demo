@@ -5,11 +5,12 @@ import com.mobidriven.AdvSDK
 import com.mobidriven.datasource.domain.model.LoadErrorType
 import com.mobidriven.datasource.remote.model.AdvDataRemote
 import com.mobidriven.datasource.remote.model.AdvDataRequestRemote
+import com.mobidriven.datasource.remote.model.AdvInitDataRemote
 import com.mobidriven.toAdvDataRemote
+import com.mobidriven.toRemote
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.net.HttpURLConnection
@@ -31,8 +32,35 @@ internal object DataApiServiceImpl {
     }
 
     internal fun loadStartData(data: AdvDataRequestRemote, key: String): Flow<AdvDataRemote> = flow {
+//        Log.e("TTT", "${data.toJson()}")
         val res = loadAvdData(key, data)
         emit(res)
+    }
+
+    internal suspend  fun sendInitUserData(key: String, data: AdvInitDataRemote, ){
+        suspendCancellableCoroutine { continuation ->
+            val url = URL("https://sp.mobidriven.com/user?key=$key")
+
+            val urlConnection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Accept", "application/json")
+                doOutput = true
+                readTimeout = OKHTTP_READ_TIMEOUT_MS
+                connectTimeout = OKHTTP_CONNECT_TIMEOUT_MS
+            }
+
+            try {
+                urlConnection.outputStream.use { os ->
+                    val input: ByteArray = data.toJson().toString().toByteArray()
+                    os.write(input, 0, input.size)
+                }
+            } catch (t: Throwable) {
+                continuation.resumeWithException(t)
+                urlConnection.disconnect()
+                return@suspendCancellableCoroutine
+            }
+        }
     }
 
     private suspend fun loadAvdData(key: String, data: AdvDataRequestRemote): AdvDataRemote =
@@ -61,10 +89,10 @@ internal object DataApiServiceImpl {
 
             try {
                val code = urlConnection.responseCode
-               Log.e("DataApiService", "code $code $key $data")
+//               Log.e("DataApiService", "code $code $key $data")
                if (code == 204 || code == 400) throw IllegalStateException(LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc)
            }catch (t: Throwable){
-               Log.e("DataApiService", "${t.message}")
+//               Log.e("DataApiService", "${t.message}")
                continuation.resumeWithException(t)
                urlConnection.disconnect()
                return@suspendCancellableCoroutine

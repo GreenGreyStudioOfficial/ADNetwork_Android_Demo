@@ -1,5 +1,8 @@
 package com.mobidriven.datasource.domain.model
 
+import androidx.annotation.Keep
+import com.mobidriven.datasource.remote.model.DeviceRemote
+import com.mobidriven.datasource.remote.model.UserRemote
 import com.mobidriven.toJson
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,3 +22,8 @@ internal data class AdvData(
         })
     }
 }
+
+internal data class AdvInitData(
+    val device: Device,
+    val user: User
+)

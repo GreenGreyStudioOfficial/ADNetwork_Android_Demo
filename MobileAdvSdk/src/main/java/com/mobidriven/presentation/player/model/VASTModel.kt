@@ -1,5 +1,6 @@
 package com.mobidriven.presentation.player.model
 
+import android.util.Log
 import com.mobidriven.presentation.player.util.VASTLog
 import com.mobidriven.presentation.player.util.XmlTools
 import org.w3c.dom.Document
@@ -86,7 +87,8 @@ internal class VASTModel(var vastsDocument: Document) : Serializable {
                 val nodes = xpath.evaluate(XPATH_INLINE_LINEAR, vastsDocument, XPathConstants.NODESET) as NodeList
                 result = nodes.item(0).attributes.getNamedItem("skipoffset").nodeValue.toInt()
             } catch (e: Exception) {
-                VASTLog.e(TAG, e.message, e)
+                //TODO() handle error
+//                VASTLog.e(TAG, e.message, e)
             }
             return result
         }

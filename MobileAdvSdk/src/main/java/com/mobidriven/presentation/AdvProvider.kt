@@ -23,13 +23,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.mobidriven.AdvSDK
 import com.mobidriven.BuildConfig
 import com.mobidriven.IAdLoadListener
 import com.mobidriven.IAdShowListener
 import com.mobidriven.datasource.data.DataRepositoryImpl
 import com.mobidriven.datasource.data.Prefs
-import com.mobidriven.datasource.domain.DataRepository
+import com.mobidriven.datasource.domain.IDataRepository
 import com.mobidriven.datasource.domain.model.*
 import com.mobidriven.presentation.player.VASTParser
 import com.mobidriven.presentation.player.model.VASTModel
@@ -41,7 +42,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.*
-import java.lang.IllegalStateException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
@@ -52,7 +52,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     private val _advDataFlow: MutableStateFlow<AdvData?> = MutableStateFlow(null)
 
-    private val dataRepository: DataRepository = DataRepositoryImpl()
+    private val dataRepository: IDataRepository = DataRepositoryImpl()
 
     var vastModel: VASTModel? = null
 
@@ -75,6 +75,21 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
+
+    init {
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                val data = makeDeviceInfo(isTestMode = false, gameId = gameId, advertiseType = AdvertiseType.REWARDED)
+                    .run { AdvInitData(device = device, user = user) }
+
+                dataRepository.sendInitUserData(gameId, data)
+            }catch (t:Throwable){
+                t.printStackTrace()
+            }
+
+        }
+    }
 
     fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
         loadListener = listener
@@ -179,9 +194,9 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         advReqType: AdvReqType = AdvReqType.DEFAULT,
         listener: IAdLoadListener
     ) {
-        val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
 
         scope.launch(Dispatchers.IO) {
+            val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
             dataRepository.loadStartData(deviceInfo, if (BuildConfig.DEBUG) "secret" else gameId)
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
@@ -207,7 +222,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                                 )
                             }
                         }
-                        else ->{
+                        else -> {
 
                         }
                     }
@@ -349,7 +364,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                 AdvSDK.context.packageName
             ),
             Device(
-                geo = geo ?: Geo(),
+                geo = geo,
                 deviceType = 0,
                 make = Build.MANUFACTURER,
                 model = Build.MODEL,
@@ -357,11 +372,12 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                 osv = "${Build.VERSION.SDK_INT}",
                 w = Resources.getSystem().displayMetrics.widthPixels,
                 h = Resources.getSystem().displayMetrics.heightPixels,
-                ifa = Settings.Secure.getString(AdvSDK.context.contentResolver, Settings.Secure.ANDROID_ID),
+                ifa = AdvertisingIdClient.getAdvertisingIdInfo(AdvSDK.context).id,
                 connectionType = getConnectionType()
             ),
             User(Prefs.userId)
         )
+
     }
 
     @SuppressLint("MissingPermission")

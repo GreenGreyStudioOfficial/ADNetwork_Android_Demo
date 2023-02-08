@@ -24,3 +24,14 @@ internal data class AdvDataRequestRemote(
         put("user", user.toJson())
     }
 }
+
+@Keep
+internal data class AdvInitDataRemote(
+    val device: DeviceRemote,
+    val user: UserRemote
+) {
+    fun toJson(): JSONObject = JSONObject().apply {
+        put("device", device.toJson())
+        put("user", user.toJson())
+    }
+}

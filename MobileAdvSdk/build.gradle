@@ -6,7 +6,8 @@ plugins {
 
 ext {
     PUBLISH_GROUP_ID = 'com.greengray'
-    PUBLISH_VERSION = '1.3.2'
+//    PUBLISH_VERSION = '1.3.4'
+    PUBLISH_VERSION = '1.0.30'
     PUBLISH_ARTIFACT_ID = 'advsdk'
 }
 
@@ -44,6 +45,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.google.guava:guava:31.1-android")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
 }
 
 
