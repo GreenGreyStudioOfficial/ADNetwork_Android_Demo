@@ -9,6 +9,7 @@ import com.mobidriven.AdvSDK
 import com.mobidriven.IAdInitializationListener
 import com.mobidriven.IAdLoadListener
 import com.mobidriven.IAdShowListener
+import com.mobidriven.adfetcher.AdFetcher
 import com.mobidriven.datasource.domain.model.*
 
 class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowListener {
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity(), IAdInitializationListener, IAdShowList
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        AdFetcher.initialize("", this.application)
 
         recyclerView = findViewById<RecyclerView>(R.id.rvLogs).apply {
             adapter = logsAdapter

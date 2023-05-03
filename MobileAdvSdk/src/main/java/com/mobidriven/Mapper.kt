@@ -51,6 +51,9 @@ internal fun ExtAdvRemote.toDomain(): ExtAdv =
 internal fun JSONObject.getStringOrNull(key: String): String? =
     if (isNull(key)) null else getString(key)
 
+internal fun JSONObject.getDoubleOrNull(key: String): Double? =
+    if (isNull(key)) null else getDouble(key)
+
 internal fun JSONObject.getLongOrNull(key: String): Long? = if (isNull(key)) null else getLong(key)
 internal fun JSONObject.getIntOrNull(key: String): Int? = if (isNull(key)) null else getInt(key)
 internal fun JSONObject.getJsonObjectOrNull(key: String): JSONObject? = if (isNull(key)) null else getJSONObject(key)

@@ -17,13 +17,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import com.mobidriven.AdvSDK
 import com.mobidriven.BuildConfig
 import com.mobidriven.IAdLoadListener
@@ -32,6 +30,7 @@ import com.mobidriven.datasource.data.DataRepositoryImpl
 import com.mobidriven.datasource.data.Prefs
 import com.mobidriven.datasource.domain.IDataRepository
 import com.mobidriven.datasource.domain.model.*
+import com.mobidriven.deviceinfo.DeviceInformation
 import com.mobidriven.presentation.player.VASTParser
 import com.mobidriven.presentation.player.model.VASTModel
 import com.mobidriven.presentation.player.processor.CacheFileManager
@@ -267,33 +266,6 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         dataRepository.callPixel(url)
     }
 
-    @SuppressLint("MissingPermission")
-    private fun getLastLocation(): Geo? {
-        val manager = AdvSDK.context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        return if (ContextCompat.checkSelfPermission(
-                AdvSDK.context, Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-            &&
-            ContextCompat.checkSelfPermission(
-                AdvSDK.context, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            var utilLocation: Location? = null
-            val providers = manager.getProviders(true)
-            for (provider in providers) {
-                provider?.let { it ->
-                    manager.getLastKnownLocation(it)?.let {
-                        utilLocation = it
-                    }
-                }
-            }
-            Geo(utilLocation?.latitude, utilLocation?.longitude)
-        } else {
-            null
-        }
-    }
-
     fun playerLoadFinish() {
         callPixel(bid?.nurl ?: "")
     }
@@ -332,7 +304,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         advReqType: AdvReqType = AdvReqType.DEFAULT,
         advertiseType: AdvertiseType
     ): DeviceInfo {
-        val geo = getLastLocation()
+        val device : Device = DeviceInformation.getDeviceInfo(AdvSDK.context).fromJson()
         return DeviceInfo(
             id = UUID.randomUUID().toString(),
             test = if (isTestMode) 1 else 0,
@@ -363,82 +335,10 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                 AdvSDK.context.applicationInfo.loadLabel(AdvSDK.context.packageManager).toString(),
                 AdvSDK.context.packageName
             ),
-            Device(
-                geo = geo,
-                deviceType = 0,
-                make = Build.MANUFACTURER,
-                model = Build.MODEL,
-                os = "Android ${Build.VERSION.SDK_INT}",
-                osv = "${Build.VERSION.SDK_INT}",
-                w = Resources.getSystem().displayMetrics.widthPixels,
-                h = Resources.getSystem().displayMetrics.heightPixels,
-                ifa = AdvertisingIdClient.getAdvertisingIdInfo(AdvSDK.context).id,
-                connectionType = getConnectionType()
-            ),
+            device,
             User(Prefs.userId)
         )
 
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getConnectionType(): Int {
-        val context = AdvSDK.context
-        val cm: ConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val networkCapabilities = cm.activeNetwork
-            val actNw = cm.getNetworkCapabilities(networkCapabilities) ?: return 0
-            return when {
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 2
-                actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> {
-                    val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_PHONE_STATE
-                        ) == PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                    ) {
-                        when (tm.dataNetworkType) {
-                            TelephonyManager.NETWORK_TYPE_GPRS,
-                            TelephonyManager.NETWORK_TYPE_EDGE,
-                            TelephonyManager.NETWORK_TYPE_CDMA,
-                            TelephonyManager.NETWORK_TYPE_1xRTT,
-                            TelephonyManager.NETWORK_TYPE_IDEN,
-                            TelephonyManager.NETWORK_TYPE_GSM -> 4
-                            TelephonyManager.NETWORK_TYPE_UMTS,
-                            TelephonyManager.NETWORK_TYPE_EVDO_0,
-                            TelephonyManager.NETWORK_TYPE_EVDO_A,
-                            TelephonyManager.NETWORK_TYPE_HSDPA,
-                            TelephonyManager.NETWORK_TYPE_HSUPA,
-                            TelephonyManager.NETWORK_TYPE_HSPA,
-                            TelephonyManager.NETWORK_TYPE_EVDO_B,
-                            TelephonyManager.NETWORK_TYPE_EHRPD,
-                            TelephonyManager.NETWORK_TYPE_HSPAP,
-                            TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
-                            TelephonyManager.NETWORK_TYPE_LTE,
-                            TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
-                            TelephonyManager.NETWORK_TYPE_NR -> 6
-                            else -> 3
-                        }
-                    } else 3
-                }
-                else -> 0
-            }
-        } else {
-            val mInfo = cm.activeNetworkInfo
-            if (mInfo == null || !mInfo.isConnected) return 0
-            if (mInfo.type == ConnectivityManager.TYPE_ETHERNET) return 1
-            if (mInfo.type == ConnectivityManager.TYPE_WIFI) return 2
-            if (mInfo.type == ConnectivityManager.TYPE_MOBILE) {
-                return when (mInfo.subtype) {
-                    TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE, TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT, TelephonyManager.NETWORK_TYPE_IDEN, TelephonyManager.NETWORK_TYPE_GSM -> 4
-                    TelephonyManager.NETWORK_TYPE_UMTS, TelephonyManager.NETWORK_TYPE_EVDO_0, TelephonyManager.NETWORK_TYPE_EVDO_A, TelephonyManager.NETWORK_TYPE_HSDPA, TelephonyManager.NETWORK_TYPE_HSUPA, TelephonyManager.NETWORK_TYPE_HSPA, TelephonyManager.NETWORK_TYPE_EVDO_B, TelephonyManager.NETWORK_TYPE_EHRPD, TelephonyManager.NETWORK_TYPE_HSPAP, TelephonyManager.NETWORK_TYPE_TD_SCDMA -> 5
-                    TelephonyManager.NETWORK_TYPE_LTE, TelephonyManager.NETWORK_TYPE_IWLAN, 19 -> 6
-                    TelephonyManager.NETWORK_TYPE_NR -> 6
-                    else -> 3
-                }
-            }
-            return 0
-        }
     }
 }
 

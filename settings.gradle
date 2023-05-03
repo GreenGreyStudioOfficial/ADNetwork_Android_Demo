@@ -3,6 +3,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url "https://nexus.ggsinternal.space/repository/maven-public-hosted/"
+        }
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
