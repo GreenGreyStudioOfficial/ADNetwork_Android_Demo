@@ -4,17 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
-    tools:ignore="ContentDescription">
-
-
+    tools:ignore="ContentDescription"
+    android:background="@color/black">
 
     <WebView
         android:id="@+id/webView"
-        android:layout_gravity="center"
-        android:background="@color/black"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:background="@color/black"
+     />
 
     <ImageView
         android:id="@+id/close"
@@ -24,5 +22,14 @@
         android:layout_marginRight="16dp"
         android:layout_marginTop="16dp"
         android:layout_gravity="top|right"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:indeterminate="true"
+        android:layout_gravity="center"
+        android:visibility="visible"
+        />
 
 </FrameLayout>

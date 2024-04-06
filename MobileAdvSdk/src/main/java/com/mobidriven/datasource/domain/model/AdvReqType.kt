@@ -5,5 +5,6 @@ import androidx.annotation.Keep
 @Keep
 enum class AdvReqType {
     DEFAULT,
-    WEB
+    WEB,
+    BANNER
 }

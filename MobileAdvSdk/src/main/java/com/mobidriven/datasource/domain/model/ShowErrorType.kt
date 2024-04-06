@@ -6,8 +6,9 @@ import androidx.annotation.Keep
 enum class ShowErrorType {
     UNKNOWN,
     ID_NOT_FOUND,
-    VIDEO_CACHE_NOT_FOUND,
+    ADV_CACHE_NOT_FOUND,
     VIDEO_DATA_NOT_FOUND,
     NOT_INITIALIZED_ERROR,
-    VIDEO_WAS_DELETED
+    ACTIVITY_WAS_DESTROYED,
+    BANNER_VIEW_NOT_FOUND,
 }

@@ -3,28 +3,20 @@ package com.mobidriven.presentation
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ContentValues
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.Location
-import android.location.LocationManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.telephony.TelephonyManager
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.mobidriven.AdvSDK
-import com.mobidriven.BuildConfig
 import com.mobidriven.IAdLoadListener
+import com.mobidriven.IAdShowBannerListener
 import com.mobidriven.IAdShowListener
 import com.mobidriven.datasource.data.DataRepositoryImpl
 import com.mobidriven.datasource.data.Prefs
@@ -49,6 +41,7 @@ import java.util.*
 
 internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = false, val scope: CoroutineScope) {
 
+    val advShowFlow: MutableStateFlow<ShowAdv?> = MutableStateFlow(null)
     private val _advDataFlow: MutableStateFlow<AdvData?> = MutableStateFlow(null)
 
     private val dataRepository: IDataRepository = DataRepositoryImpl()
@@ -60,10 +53,15 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     private val bid
         get() = advData?.seatbid?.first()?.bid?.first()
-    private var advId: String? = null
+
+    val bannerSize
+        get() = bid?.w to bid?.h
+
+    internal var advId: String? = null
 
     internal val advType: AdvertiseType
         get() = if (advData?.advertiseType == AdvertiseType.REWARDED) AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL
+
     internal val adm: String?
         get() = bid?.adm
 
@@ -74,6 +72,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
+    lateinit var showBannerListener: IAdShowBannerListener
 
     init {
 
@@ -83,52 +82,95 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                     .run { AdvInitData(device = device, user = user) }
 
                 dataRepository.sendInitUserData(gameId, data)
-            }catch (t:Throwable){
+            } catch (t: Throwable) {
                 t.printStackTrace()
             }
 
         }
     }
 
-    fun loadAvd(advertiseType: AdvertiseType, listener: IAdLoadListener) {
+    fun loadAdv(advertiseType: AdvertiseType, listener: IAdLoadListener) {
         loadListener = listener
         makeRequest(advertiseType, listener = listener)
     }
 
-    fun showAvd(id: String, adShowListener: IAdShowListener) {
-        advId = id
+    fun showAdv(id: String?, adShowListener: IAdShowListener) {
         showListener = adShowListener
         advData?.let {
             val bid = it.seatbid.first().bid.first()
-            if (listOf(5, 6).contains(bid.api)) {
-                showMraid(bid.id)
-            } else {
-                parseAdvData(bid.lurl, bid.adm)
+            advId = bid.id
+            Log.e("BID", "bid $bid")
+            when {
+                listOf(5, 6).contains(bid.api) || bid.adm.contains("<script>") && bid.adm.contains("mraid.js") -> _showMraid(advId ?: "")
+                bid.adm.contains("<script>") || bid.adm.contains("<html>") || bid.adm.contains("<body>") -> _showWeb(advId ?: "")
+                else -> _parseAdvData(advId, bid.lurl, bid.adm)
             }
         } ?: run {
             CacheFileManager.clearCache()
-            showListener.onShowError(id, ShowErrorType.VIDEO_CACHE_NOT_FOUND, "")
+            showListener.onShowError( error =  ShowErrorType.ADV_CACHE_NOT_FOUND, errorMessage = "", id=id)
         }
     }
 
-    private fun showMraid(id: String?) {
-        AdvSDK.context.startActivity(
-            Intent(
-                AdvSDK.context,
-                WebviewActivity::class.java
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
+    private fun _showMraid(id: String) {
+        scope.launch {
+            advShowFlow.emit(ShowAdv.MraidFullScreenAdv(id))
+        }
     }
+
+    private fun _showWeb(id: String?) {
+        scope.launch {
+            advShowFlow.emit(ShowAdv.WebFullScreenAdv(id ?: ""))
+        }
+    }
+
+    internal fun showBanner(id: String?, listener: IAdShowBannerListener) {
+        showBannerListener = listener
+        advData?.let {
+            val bid = it.seatbid.first().bid.first()
+            _showBanner(bid.id)
+        } ?: run {
+            CacheFileManager.clearCache()
+            listener.onBannerShowError(ShowErrorType.ADV_CACHE_NOT_FOUND, "", id ?: "")
+        }
+    }
+
+    internal fun hideBanner(id: String?, listener: IAdShowBannerListener) {
+        showBannerListener = listener
+        scope.launch {
+            advShowFlow.emit(ShowAdv.HideBannerAdv(id ?: ""))
+        }
+    }
+
+
+
+    internal fun onBannerShow(id: String?) {
+        showBannerListener.onBannerShow(id)
+    }
+
+    internal fun onBannerHide(id: String?) {
+        showBannerListener.onBannerHide(id)
+    }
+
+    internal fun onBannerHideError(id: String?, type:ShowErrorType){
+        showBannerListener.onBannerHideError(type, id = id)
+    }
+
+    private fun _showBanner(id: String?) {
+        scope.launch {
+            advShowFlow.emit(ShowAdv.BannerAdv(id ?: ""))
+        }
+    }
+
 
     fun downloadImageAndSave(url: String) {
         val isGranted = ContextCompat.checkSelfPermission(
-            AdvSDK.context, Manifest.permission.WRITE_EXTERNAL_STORAGE
+            AdvSDK.application, Manifest.permission.WRITE_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
 
         if (isGranted) {
             scope.launch {
                 loadImage(url)?.let { saveMediaToStorage(it) }
-                Toast.makeText(AdvSDK.context, "Изображение успешно сохранено", Toast.LENGTH_SHORT).show()
+                Toast.makeText(AdvSDK.application, "Изображение успешно сохранено", Toast.LENGTH_SHORT).show()
             }
         } else {
             scope.launch {
@@ -157,7 +199,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     private suspend fun saveMediaToStorage(bitmap: Bitmap) {
         val filename = "Promo.jpg"
         var fos: OutputStream? = null
-        val ctx = AdvSDK.context
+        val ctx = AdvSDK.application
         withContext(Dispatchers.IO) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ctx.contentResolver?.also { resolver ->
@@ -190,19 +232,17 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
 
     private fun makeRequest(
         advertiseType: AdvertiseType,
-        advReqType: AdvReqType = AdvReqType.DEFAULT,
         listener: IAdLoadListener
     ) {
 
         scope.launch(Dispatchers.IO) {
-            val deviceInfo = makeDeviceInfo(isTestMode, gameId, advReqType, advertiseType)
-            dataRepository.loadStartData(deviceInfo, if (BuildConfig.DEBUG) "secret" else gameId)
+            val deviceInfo = makeDeviceInfo(isTestMode, gameId, advertiseType)
+            dataRepository.loadStartData(deviceInfo, gameId)
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
-                    Log.e("AdvProvider", "err $it")
+//                    Log.e("AdvProvider", "err $it")
                     when (it) {
                         is IOException -> {
-
                             it.printStackTrace()
                             withContext(Dispatchers.Main) {
                                 listener.onLoadError(
@@ -212,53 +252,53 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                             }
 
                         }
+
                         is IllegalStateException -> {
                             it.printStackTrace()
                             withContext(Dispatchers.Main) {
                                 listener.onLoadError(
-                                    LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND,
-                                    LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc
+                                    LoadErrorType.AVAILABLE_CREATIVE_NOT_FOUND,
+                                    LoadErrorType.AVAILABLE_CREATIVE_NOT_FOUND.desc
                                 )
                             }
                         }
+
                         else -> {
 
                         }
                     }
                 }
                 .collect { data ->
+                    Log.e("DATA", "${data.toJson()}")
                     _advDataFlow.value = data.copy(advertiseType = advertiseType)
                     advId = bid?.id
                     withContext(Dispatchers.Main) {
-                        advId?.let { listener.onLoadComplete(it) }
+                        listener.onLoadComplete(advId)
                     }
                 }
         }
     }
 
-    private fun parseAdvData(lurl: String?, vast: String) {
+    private fun _parseAdvData(id: String?, lurl: String?, vast: String) {
         VASTParser.setListener(object : VASTParser.Listener {
             override fun onVASTParserError(error: Int) {
-                showListener.onShowError("", ShowErrorType.VIDEO_DATA_NOT_FOUND)
+                showListener.onShowError(error = ShowErrorType.VIDEO_DATA_NOT_FOUND, id = id)
                 callPixel(lurl ?: "")
             }
 
             override fun onVASTCacheError(error: Int) {
-                showListener.onShowError("", ShowErrorType.VIDEO_CACHE_NOT_FOUND)
+                showListener.onShowError(error = ShowErrorType.ADV_CACHE_NOT_FOUND, id=id)
             }
 
             override fun onVASTParserFinished(model: VASTModel?) {
                 vastModel = model
-                AdvSDK.context.startActivity(
-                    Intent(
-                        AdvSDK.context,
-                        AdvActivity::class.java
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                scope.launch {
+                    advShowFlow.emit(ShowAdv.VideoAdv(id ?: ""))
+                }
             }
         })
         scope.launch {
-            VASTParser.parseVast(AdvSDK.context, vast)
+            VASTParser.parseVast(AdvSDK.application, vast)
         }
     }
 
@@ -271,20 +311,19 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun showError(type: ShowErrorType, message: String = "") {
-        advId?.let {
-            showListener.onShowError(
-                it,
-                type,
-                message
-            )
-        }
+        showListener.onShowError(
+            error = type,
+            errorMessage = message,
+            id = advId,
+        )
 
     }
 
     fun loadError(type: LoadErrorType, message: String = "") {
         loadListener.onLoadError(
-            type,
-            message
+            error = type,
+            errorMessage = message,
+            id = advId,
         )
     }
 
@@ -294,52 +333,86 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     fun handleShowChangeState(state: ShowCompletionState) {
-        advId?.let { showListener.onShowChangeState(it, state) }
+        showListener.onShowChangeState(advId, state)
     }
 
     @SuppressLint("HardwareIds")
     private fun makeDeviceInfo(
         isTestMode: Boolean,
         gameId: String,
-        advReqType: AdvReqType = AdvReqType.DEFAULT,
         advertiseType: AdvertiseType
     ): DeviceInfo {
-        val device : Device = DeviceInformation.getDeviceInfo(AdvSDK.context).fromJson()
+        val device: Device = DeviceInformation.getDeviceInfo(AdvSDK.application).fromJson()
         return DeviceInfo(
             id = UUID.randomUUID().toString(),
             test = if (isTestMode) 1 else 0,
-            listOf(
-                when (advReqType) {
-                    AdvReqType.DEFAULT -> Imp(
+            imp = when (advertiseType) {
+                AdvertiseType.INTERSTITIAL -> listOf(
+                    Imp(
                         id = "1",
                         video = Video(
                             w = Resources.getSystem().displayMetrics.widthPixels,
                             h = Resources.getSystem().displayMetrics.heightPixels,
-                            ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
+                            ext = Ext(0)
                         ),
-                        instl = 1,
-                    )
-                    AdvReqType.WEB -> Imp(
-                        id = "1",
                         banner = Banner(
                             w = Resources.getSystem().displayMetrics.widthPixels,
                             h = Resources.getSystem().displayMetrics.heightPixels,
-                            ext = Ext(if (advertiseType == AdvertiseType.REWARDED) 1 else 0)
+                            ext = Ext(0)
                         ),
                         instl = 1,
-                    )
-                }
-            ),
-            AppInfo(
+                    ),
+                )
+
+                AdvertiseType.REWARDED -> listOf(
+                    Imp(
+                        id = "1",
+                        video = Video(
+                            w = Resources.getSystem().displayMetrics.widthPixels,
+                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            ext = Ext(1)
+                        ),
+                        banner = Banner(
+                            w = Resources.getSystem().displayMetrics.widthPixels,
+                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            ext = Ext(1)
+                        ),
+                        instl = 1,
+                    ),
+                )
+
+                AdvertiseType.BANNER -> listOf(
+                    Imp(
+                        id = "1",
+                        banner = Banner(
+                            w = 320,
+                            h = 50,
+                            ext = Ext(0),
+                        ),
+                        instl = 0,
+                    ),
+                )
+            },
+            app = AppInfo(
                 gameId,
-                AdvSDK.context.applicationInfo.loadLabel(AdvSDK.context.packageManager).toString(),
-                AdvSDK.context.packageName
+                AdvSDK.application.applicationInfo.loadLabel(AdvSDK.application.packageManager).toString(),
+                AdvSDK.application.packageName
             ),
-            device,
-            User(Prefs.userId)
+            device = device,
+            user = User(Prefs.userId)
         )
 
     }
+
+
+}
+
+internal sealed class ShowAdv {
+    data class VideoAdv(val id: String) : ShowAdv()
+    data class MraidFullScreenAdv(val id: String) : ShowAdv()
+    data class WebFullScreenAdv(val id: String) : ShowAdv()
+    data class BannerAdv(val id: String) : ShowAdv()
+    data class HideBannerAdv(val id: String) : ShowAdv()
 }
 
 

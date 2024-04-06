@@ -112,7 +112,7 @@ bridge.sendMessageToSDK = function (value) {
     }
     catch (e) {
     }
-    console.log('send message to sdk '+ JSON.stringify(value));
+    console.log(JSON.stringify(value));
 }
 
 var VERSION = mraid.VERSION = '3.0';
@@ -557,7 +557,6 @@ var broadcastEvent = function () {
     for (var i = 0; i < l; i++) args[i] = arguments[i];
     var event = args.shift();
     if (listeners[event]) listeners[event].broadcast(args);
-//    MraidController.broadcastEvent(event, args)
 };
 
 // FUNCTIONS
@@ -736,6 +735,10 @@ mraid.storePicture = function (uri) {
     }
 };
 
+mraid.useCustomClose = function (isUseCustomClose) {
+    expandProperties.useCustomClose = isUseCustomClose;
+}
+
 mraid.createCalendarEvent = function (parameters) {
     var obj = {
         m_eventType: "createCalendarEvent"
@@ -830,6 +833,7 @@ mraid.getExpandProperties = function () {
 };
 
 mraid.setExpandProperties = function (properties) {
+console.log("setExpandProperties", properties)
     if (validate(properties, expandPropertyValidators, 'setExpandProperties', true)) {
         expandProperties.height = properties.height;
         expandProperties.width = properties.width;

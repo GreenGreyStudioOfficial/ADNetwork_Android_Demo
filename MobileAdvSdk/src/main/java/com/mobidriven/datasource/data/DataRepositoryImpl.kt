@@ -18,16 +18,18 @@ internal class DataRepositoryImpl(
     private val cloudDataStore: DataApiServiceImpl = DataApiServiceImpl
 ) : IDataRepository {
 
-    override fun loadStartData(deviceInfo: DeviceInfo, key: String): Flow<AdvData> =
-        cloudDataStore.loadStartData(deviceInfo.toRemote(), key)
+    override fun loadStartData(deviceInfo: DeviceInfo, key: String): Flow<AdvData> {
+        Log.e("req", "${deviceInfo.toRemote()} $key")
+        return  cloudDataStore.loadStartData(deviceInfo.toRemote(), key)
             .flowOn(Dispatchers.IO)
             .map {
-//                Log.e("DataRepository", "data $it")
+                Log.e("DataRepository", "data $it")
                 it.toDomain()
             }
+    }
+
 
     override suspend fun sendInitUserData(key: String, data: AdvInitData) {
-
         cloudDataStore.sendInitUserData(key, data.toRemote())
     }
 

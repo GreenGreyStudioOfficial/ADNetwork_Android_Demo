@@ -36,3 +36,5 @@
 -keepclassmembers interface com.mobidriven.IAdInitializationListener, com.mobidriven.IAdShowListener, com.mobidriven.IAdLoadListener {
     public <methods>;
 }
+
+-repackageclasses 'com.mobidriven'

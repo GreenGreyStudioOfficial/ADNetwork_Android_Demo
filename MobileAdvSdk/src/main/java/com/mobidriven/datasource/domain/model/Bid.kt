@@ -11,6 +11,8 @@ internal data class Bid(
     val cid: String? = null,
     val crid: String? = null,
     val api: Int? = null,
+    val w: Int? = null,
+    val h: Int? = null,
     val extAdv: ExtAdv? = null,
 ) {
     fun toJson(): JSONObject  = JSONObject().apply{
@@ -22,6 +24,8 @@ internal data class Bid(
         cid?.let { put("cid", it) }
         crid?.let { put("crid", it) }
         api?.let { put("api", it) }
+        w?.let { put("w", it) }
+        h?.let { put("h", it) }
         extAdv?.let { put("extAdv", it.toJson()) }
     }
 }

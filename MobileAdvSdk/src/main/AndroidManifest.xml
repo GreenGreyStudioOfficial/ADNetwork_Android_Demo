@@ -14,7 +14,10 @@
             android:name=".presentation.AdvActivity"
             android:exported="false" />
         <activity
-            android:name=".presentation.WebviewActivity"
+            android:name=".presentation.MraidActivity"
+            android:exported="false"/>
+        <activity
+            android:name=".presentation.WebActivity"
             android:exported="false"/>
     </application>
 </manifest>

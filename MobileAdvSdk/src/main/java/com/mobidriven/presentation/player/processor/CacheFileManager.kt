@@ -24,7 +24,7 @@ internal object CacheFileManager {
     private var cacheWriter: CacheWriter? = null
     private lateinit var simpleCache: Cache
 
-    private fun cache(uri: Uri, context: Context = AdvSDK.context) {
+    private fun cache(uri: Uri, context: Context = AdvSDK.application) {
             if (cacheWriter == null) {
                 cacheWriter = CacheWriter(
                     CacheDataSource.Factory()
@@ -55,7 +55,7 @@ internal object CacheFileManager {
         return simpleCache
     }
 
-    fun clearCache(context: Context = AdvSDK.context) {
+    fun clearCache(context: Context = AdvSDK.application) {
         AdvSDK.scope.launch(Dispatchers.IO) {
             getSimpleCache(context).release()
             simpleCache = SimpleCache(
@@ -94,7 +94,7 @@ internal object CacheFileManager {
         }
     }
 
-    fun saveAdv(data: AdvData, context: Context = AdvSDK.context) {
+    fun saveAdv(data: AdvData, context: Context = AdvSDK.application) {
         //clear cache before set new
         clearCache()
         val path: File = context.cacheDir
@@ -129,7 +129,7 @@ internal object CacheFileManager {
         }
     }
 
-    private fun downloadResourceFileAndCache(url: String, context: Context = AdvSDK.context) {
+    private fun downloadResourceFileAndCache(url: String, context: Context = AdvSDK.application) {
         val link = URL(url)
 
         val urlConnection = (link.openConnection() as HttpURLConnection).apply {
@@ -160,7 +160,7 @@ internal object CacheFileManager {
         }
     }
 
-    fun getCacheResourceFile(url: String, context: Context = AdvSDK.context): InputStream? {
+    fun getCacheResourceFile(url: String, context: Context = AdvSDK.application): InputStream? {
         return try {
             return File(context.cacheDir, url.split("/").last()).inputStream()
         } catch (e: Throwable) {

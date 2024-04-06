@@ -14,7 +14,9 @@ internal fun DeviceInfo.toRemote(): AdvDataRequestRemote = AdvDataRequestRemote(
     user.toRemote()
 )
 
-internal fun AdvInitData.toRemote() : AdvInitDataRemote =AdvInitDataRemote(device = device.toRemote(), user = user.toRemote())
+internal fun AdvInitData.toRemote(): AdvInitDataRemote =
+    AdvInitDataRemote(device = device.toRemote(), user = user.toRemote())
+
 internal fun Imp.toRemote(): ImpRemote =
     ImpRemote(id, video?.toRemote(), banner?.toRemote(), instl, displaymanager, displaymanagerver)
 
@@ -33,7 +35,8 @@ internal fun Device.toRemote(): DeviceRemote = DeviceRemote(
     w,
     h,
     connectionType,
-    ifa
+    ifa,
+    carrier
 )
 
 internal fun Geo.toRemote(): GeoRemote = GeoRemote(lat, lon, country, region, city)
@@ -43,7 +46,7 @@ internal fun AdvDataRemote.toDomain(): AdvData =
 
 internal fun SeatbidRemote.toDomain(): Seatbid = Seatbid(bid?.map { it.toDomain() } ?: mutableListOf())
 internal fun BidRemote.toDomain(): Bid =
-    Bid(id, impid, nurl, lurl, adm, cid, crid, api, extAdv?.toDomain())
+    Bid(id, impid, nurl, lurl, adm, cid, crid, api, w, h, extAdv?.toDomain())
 
 internal fun ExtAdvRemote.toDomain(): ExtAdv =
     ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files)
@@ -99,8 +102,10 @@ internal fun String.toBidRemote(): BidRemote = JSONObject(this)
         val cid = getStringOrNull("cid")
         val crid = getStringOrNull("crid")
         val api = getIntOrNull("api")
+        val w = getIntOrNull("w")
+        val h = getIntOrNull("h")
         val extAdv = getJsonObjectOrNull("ext")?.toString()?.toExtAdvRemote()
-        BidRemote(id, impid, nurl, lurl, adm, cid, crid, api, extAdv)
+        BidRemote(id, impid, nurl, lurl, adm, cid, crid, api, w,h,extAdv)
     }
 
 internal fun String.toExtAdvRemote(): ExtAdvRemote = JSONObject(this)
@@ -135,7 +140,12 @@ internal fun String.toAdvData(): AdvData = JSONObject(this)
         }
         AdvData(
             id,
-            if (advertiseType == "REWARDED") AdvertiseType.REWARDED else AdvertiseType.INTERSTITIAL,
+            when (advertiseType) {
+                "REWARDED" -> AdvertiseType.REWARDED
+                "INTERSTITIAL" -> AdvertiseType.INTERSTITIAL
+                "BANNER" -> AdvertiseType.BANNER
+                else -> AdvertiseType.BANNER
+            },
             bidid,
             list
         )
@@ -164,8 +174,22 @@ internal fun String.toBid() = JSONObject(this)
         val cid = getStringOrNull("cid")
         val crid = getStringOrNull("crid")
         val api = getIntOrNull("api")
+        val w = getIntOrNull("w")
+        val h = getIntOrNull("h")
         val extAdv: ExtAdv? = getStringOrNull("extAdv")?.toExtAdv()
-        Bid(id, impid, nurl, lurl, adm, cid, crid, api, extAdv)
+        Bid(
+            id = id,
+            impid = impid,
+            nurl = nurl,
+            lurl = lurl,
+            adm = adm,
+            cid = cid,
+            crid = crid,
+            api = api,
+            w = w,
+            h = h,
+            extAdv = extAdv
+        )
     }
 
 internal fun String.toExtAdv() = JSONObject(this)
@@ -188,5 +212,6 @@ internal fun String.toExtAdv() = JSONObject(this)
 internal fun AdvertiseType.toJson() = when (this) {
     AdvertiseType.INTERSTITIAL -> "INTERSTITIAL"
     AdvertiseType.REWARDED -> "REWARDED"
+    AdvertiseType.BANNER -> "BANNER"
 }
 

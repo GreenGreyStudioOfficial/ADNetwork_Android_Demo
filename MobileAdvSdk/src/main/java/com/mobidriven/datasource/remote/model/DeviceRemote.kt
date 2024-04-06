@@ -14,7 +14,8 @@ internal data class DeviceRemote(
     val w: Int?,
     val h: Int?,
     val connectionType: Int?,
-    val ifa: String?
+    val ifa: String?,
+    val carrier: String?
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         geo?.let { put("geo", it.toJson()) }
@@ -28,5 +29,6 @@ internal data class DeviceRemote(
         h?.let { put("h", it) }
         connectionType?.let { put("connectiontype", it) }
         ifa?.let { put("ifa", it) }
+        carrier?.let { put("carrier", it) }
     }
 }

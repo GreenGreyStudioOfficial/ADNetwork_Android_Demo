@@ -599,7 +599,7 @@ public class StyledPlayerView extends FrameLayout implements AdViewProvider {
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
-    if (!useController() || player == null) {
+    if ( player == null) {
       return false;
     }
     switch (event.getAction()) {

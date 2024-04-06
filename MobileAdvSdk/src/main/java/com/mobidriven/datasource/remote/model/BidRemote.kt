@@ -12,5 +12,7 @@ internal data class BidRemote(
     val cid: String?,
     val crid: String?,
     val api: Int?,
+    val w: Int?,
+    val h: Int?,
     val extAdv: ExtAdvRemote?,
 )

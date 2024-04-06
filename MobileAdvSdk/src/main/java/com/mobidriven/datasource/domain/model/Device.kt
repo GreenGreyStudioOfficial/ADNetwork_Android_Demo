@@ -17,7 +17,8 @@ internal data class Device(
     val w: Int,
     val h: Int,
     val connectionType: Int,
-    val ifa: String?
+    val ifa: String?,
+    val carrier: String?
 )
 
 internal fun String.fromJson(): Device {
@@ -40,6 +41,7 @@ internal fun String.fromJson(): Device {
         val h = getInt("h")
         val connectionType = getInt("connectiontype")
         val ifa = getStringOrNull("ifa")
-        Device(geo, ip, deviceType, make, model, os, osv, w, h, connectionType, ifa)
+        val carrier = getStringOrNull("carrier")
+        Device(geo, ip, deviceType, make, model, os, osv, w, h, connectionType, ifa, carrier)
     }
 }

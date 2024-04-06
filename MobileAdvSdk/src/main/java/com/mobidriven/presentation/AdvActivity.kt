@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import com.mobidriven.AdvSDK
@@ -24,6 +23,9 @@ internal class AdvActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adv)
         vastPlayer = findViewById(R.id.vastPlayer)
+       /* vastPlayer.setOnClickListener {
+            provider.
+        }*/
 
         provider.vastModel?.let {
             vastPlayer.load(it)
@@ -51,7 +53,7 @@ internal class AdvActivity : Activity() {
             }
 
             override fun onVASTPlayerCacheNotFound() {
-                provider.showError(ShowErrorType.VIDEO_CACHE_NOT_FOUND)
+                provider.showError(ShowErrorType.ADV_CACHE_NOT_FOUND)
             }
 
             override fun onVASTPlayerPlaybackStart() {
@@ -110,7 +112,7 @@ internal class AdvActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        vastPlayer.onSkipClick()
+//        vastPlayer.onSkipClick()
     }
 
     private fun showCloseDialog() {

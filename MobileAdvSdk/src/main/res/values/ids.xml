@@ -57,5 +57,6 @@
   <item name="exo_extra_controls_scroll_view" type="id"/>
   <item name="exo_minimal_fullscreen" type="id"/>
   <item name="exo_minimal_controls" type="id"/>
+  <item name="adv_banner_view" type="id"/>
 
 </resources>

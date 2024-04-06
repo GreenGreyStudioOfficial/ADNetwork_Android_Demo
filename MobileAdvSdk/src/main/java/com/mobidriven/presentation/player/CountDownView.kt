@@ -1,24 +1,18 @@
 package com.mobidriven.presentation.player
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.RectF
+import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.widget.FrameLayout
-import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.Keep
 import com.mobidriven.R
 
-
+@Keep
 internal class CountDownView : FrameLayout {
-    //    private lateinit var progressBarView: ProgressBar
     private lateinit var progressBarView: SquareProgressView
     private lateinit var progressTextView: TextView
 
@@ -57,7 +51,7 @@ internal class CountDownView : FrameLayout {
     }
 }
 
-
+@Keep
 internal class SquareProgressView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyle: Int = 0
 ) : View(context, attrs, defStyle) {
@@ -86,7 +80,6 @@ internal class SquareProgressView @JvmOverloads constructor(
 
     fun setProgress(value: Float) {
         this.drawUpto = value
-        Log.e("CountDownView", "drawUpto")
         invalidate()
     }
 
@@ -120,15 +113,10 @@ internal class SquareProgressView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        Log.e("CountDownView", "draw $drawUpto, $mRadius ang ${drawUpto / maxValue * 360}")
         canvas.clipPath(clipPath);
         canvas.drawRect(mBounds, backgroundPaint)
         canvas.drawArc(mArcBounds, startingAngle.toFloat(), drawUpto / maxValue * 360, true, progressBarPaint)
         canvas.drawRoundRect(mInnerBounds, 4 * dpToPx, 4 * dpToPx, progressBarPaint)
-//        canvas.drawCircle(mRadius, mRadius, mouthInset * 2, backgroundPaint)
-//        mArcBounds[-8f, -8f, mRadius * 2 + 32] = mRadius * 2
-
-//        canvas.drawArc(mArcBounds, 0f, 360f, false, progressBarBackgroundPaint)
     }
 
 }

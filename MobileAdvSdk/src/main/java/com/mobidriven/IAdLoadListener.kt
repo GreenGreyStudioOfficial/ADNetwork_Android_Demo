@@ -7,8 +7,8 @@ import com.mobidriven.datasource.domain.model.LoadErrorType
 interface IAdLoadListener {
 
     @Keep
-    fun onLoadComplete(id: String)
+    fun onLoadComplete(id: String?)
 
     @Keep
-    fun onLoadError(error: LoadErrorType, errorMessage: String = "", id: String = "")
+    fun onLoadError(error: LoadErrorType, errorMessage: String = "", id: String? = null)
 }

@@ -7,7 +7,7 @@ import java.util.*
 
 internal object Prefs {
     private const val USER_ID_KEY = "USER_ID"
-    private val prefs = AdvSDK.context.getSharedPreferences("com.mobidriven", Context.MODE_PRIVATE)
+    private val prefs = AdvSDK.application.getSharedPreferences("com.mobidriven", Context.MODE_PRIVATE)
     val userId: String
         get() = prefs.getString(USER_ID_KEY, null) ?: run {
             val uuid = UUID.randomUUID().toString()

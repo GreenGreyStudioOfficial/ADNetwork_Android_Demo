@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.annotation.Keep
 import androidx.core.view.isVisible
 import com.mobidriven.exoplayer2.*
 import com.mobidriven.exoplayer2.analytics.AnalyticsListener
@@ -34,6 +35,7 @@ import com.mobidriven.presentation.player.util.VASTLog.w
 import java.util.*
 import kotlin.math.abs
 
+@Keep
 internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     private lateinit var cacheDataSourceFactory: CacheDataSource.Factory
     private var playerView: StyledPlayerView? = null
@@ -94,7 +96,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     // VIEWS
     private var mRoot: View? = null
-    private var mOpen: View? = null
+//    private var mOpen: View? = null
 
     // Player
     private var mSkip: ImageView? = null
@@ -443,6 +445,8 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         if (mRoot == null) {
             mRoot = LayoutInflater.from(context).inflate(R.layout.pubnative_player, null)
             playerView = mRoot?.findViewById<View>(R.id.playerView) as StyledPlayerView
+
+
 //            progressBar = mRoot?.findViewById<View>(R.id.progress) as ProgressBar
             mMute = mRoot?.findViewById<View>(R.id.mute) as ImageView
             mMute?.visibility = INVISIBLE
@@ -453,9 +457,11 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
             mSkip = mRoot?.findViewById<View>(R.id.skip) as ImageView
             mSkip?.visibility = INVISIBLE
             mSkip?.setOnClickListener(this)
-            mOpen = mRoot?.findViewById(R.id.open)
-            mOpen?.visibility = INVISIBLE
-            mOpen?.setOnClickListener(this)
+            playerView?.setOnClickListener(this)
+            Log.e("VIEW", "player view ${playerView}")
+//            mOpen = mRoot?.findViewById(R.id.open)
+//            mOpen?.visibility = INVISIBLE
+//            mOpen?.setOnClickListener(this)
             addView(
                 mRoot, ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -466,11 +472,11 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     }
 
     private fun hideOpen() {
-        mOpen?.visibility = INVISIBLE
+//        mOpen?.visibility = INVISIBLE
     }
 
     private fun showOpen() {
-        mOpen?.visibility = VISIBLE
+//        mOpen?.visibility = VISIBLE
     }
 
     private fun hidePlayerLayout() {
@@ -580,10 +586,10 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         muteParams.addRule(ALIGN_TOP, R.id.playerView)
         muteParams.addRule(ALIGN_LEFT, R.id.playerView)
         mMute?.layoutParams = muteParams
-        val openParams = mOpen?.layoutParams as LayoutParams
+      /*  val openParams = mOpen?.layoutParams as LayoutParams
         openParams.addRule(ALIGN_TOP, R.id.playerView)
         openParams.addRule(ALIGN_RIGHT, R.id.playerView)
-        mOpen?.layoutParams = openParams
+        mOpen?.layoutParams = openParams*/
         val countDownParams = mCountDown?.layoutParams as LayoutParams
         countDownParams.addRule(ALIGN_BOTTOM, R.id.playerView)
         countDownParams.addRule(ALIGN_LEFT, R.id.playerView)
@@ -872,8 +878,9 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     // View.OnClickListener
     //---------------------------------------------
     override fun onClick(view: View) {
-        v(TAG, "onClick -- (View.OnClickListener callback)")
-        if (mOpen === view) {
+        Log.e("CLICK", "click in player view ${view}")
+        v(TAG, "onClick -- (View.OnClickListener callback) ${view}")
+        if (playerView === view) {
             onOpenClick()
         } else if (mSkip === view || mCountDown === view) {
             onSkipClick()

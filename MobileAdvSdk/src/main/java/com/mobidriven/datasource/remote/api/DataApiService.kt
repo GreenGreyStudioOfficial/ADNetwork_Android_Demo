@@ -7,7 +7,6 @@ import com.mobidriven.datasource.remote.model.AdvDataRemote
 import com.mobidriven.datasource.remote.model.AdvDataRequestRemote
 import com.mobidriven.datasource.remote.model.AdvInitDataRemote
 import com.mobidriven.toAdvDataRemote
-import com.mobidriven.toRemote
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -67,6 +66,8 @@ internal object DataApiServiceImpl {
         suspendCancellableCoroutine { continuation ->
             val url = URL("https://sp.mobidriven.com/rtb?key=$key")
 
+            Log.e("REQ","${data.toJson()}" )
+
             val urlConnection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 setRequestProperty("Content-Type", "application/json")
@@ -90,7 +91,7 @@ internal object DataApiServiceImpl {
             try {
                val code = urlConnection.responseCode
 //               Log.e("DataApiService", "code $code $key $data")
-               if (code == 204 || code == 400) throw IllegalStateException(LoadErrorType.AVAILABLE_VIDEO_NOT_FOUND.desc)
+               if (code == 204 || code == 400) throw IllegalStateException(LoadErrorType.AVAILABLE_CREATIVE_NOT_FOUND.desc)
            }catch (t: Throwable){
 //               Log.e("DataApiService", "${t.message}")
                continuation.resumeWithException(t)
