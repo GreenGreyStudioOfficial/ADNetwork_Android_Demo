@@ -1,5 +1,7 @@
 package com.example.advsdk
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -8,13 +10,14 @@ import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.mobidriven.AdvSDK
+import com.mobidriven.IAdHideBannerListener
 import com.mobidriven.IAdInitializationListener
 import com.mobidriven.IAdLoadListener
 import com.mobidriven.IAdShowBannerListener
 import com.mobidriven.IAdShowListener
 import com.mobidriven.datasource.domain.model.*
 
-class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener, IAdInitializationListener {
+class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener, IAdHideBannerListener, IAdInitializationListener {
 
     private lateinit var recyclerView: RecyclerView
 
@@ -39,7 +42,16 @@ class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener
         }
 
         findViewById<View>(R.id.btnHideBanner).setOnClickListener {
-            AdvSDK.hideBanner(null,this )
+            AdvSDK.hideBanner(null,object : IAdHideBannerListener{
+                override fun onBannerHide(id: String?) {
+//                    TODO("Not yet implemented")
+                }
+
+                override fun onBannerHideError(error: ShowErrorType, errorMessage: String, id: String?) {
+//                    TODO("Not yet implemented")
+                }
+
+            } )
         }
 
         findViewById<View>(R.id.btnLoadRewarded).setOnClickListener {
@@ -77,7 +89,18 @@ class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener
             })
         }
         findViewById<View>(R.id.btnShowBanner).setOnClickListener {
-            AdvSDK.showBanner(null, this)
+            AdvSDK.showBanner(null, object : IAdShowBannerListener{
+                override fun onBannerShow(id: String?) {
+                    addLog("onBannerShow, id = $id")
+                }
+
+                override fun onBannerShowError(error: ShowErrorType, errorMessage: String, id: String?) {
+                    addLog("onBannerShowError, id = $id errorMessage = ${error.name}")
+                }
+
+
+
+            })
         }
         /*findViewById<View>(R.id.btnLoadBanner3).setOnClickListener {
             AdvSDK.load(AdvertiseType.BANNER_480x320, listener = object : IAdLoadListener {
@@ -134,17 +157,19 @@ class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener
     }
 }
 
+//private const val MY_GAME_ID: String = "029b82b478b82eab4bdb13463765b5d6c3eef30f" //mraid banner
 //private const val MY_GAME_ID: String = "secret" //mraid banner
 //private const val MY_GAME_ID: String = "bf997a85569a0c697a06555119e32dcea4475d2d" //mraid banner
 //private const val MY_GAME_ID: String = "9889865ad2c84f4d1d61605ffe3830e31e634e63" //video horizontal
 //private const val MY_GAME_ID: String = "05b65b3909bacc5f2036d75e4f2b44b58861c4f4" //video horizontal
+//private const val MY_GAME_ID: String = "18551279cbb7c79e083ab73bda57238783ef99da" //video horizontal rew
 //private const val MY_GAME_ID: String = "b0492893722e4112dc0fb8e23cf978e4245ea075" //video horizontal
-private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //video horizontal
+//private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //video horizontal
 //private const val MY_GAME_ID: String = "bf997a85569a0c697a06555119e32dcea4475d2d" //mraid
 //private const val MY_GAME_ID: String = "cc6cc257e6238a1a925fd6fb294bbd5e41693dcd"
 //private const val MY_GAME_ID: String = "fe5a8f73f923a46f75586ee384530114e13c2b6d" //320x50 code
 //private const val MY_GAME_ID: String = "eab360c153374c950f4e7e3ba7325d9c141cf0f6" //320x50
-//private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //320x480
+private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //320x480
 
 //private const val MY_GAME_ID: String = "169a4d49448f9453c716c1daee05763d400747e4" //480х320
 private const val AD_SERVER_HOST = "https://sp.mobidriven.com"

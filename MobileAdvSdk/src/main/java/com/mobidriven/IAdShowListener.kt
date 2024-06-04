@@ -23,6 +23,11 @@ interface IAdShowBannerListener {
     @Keep
     fun onBannerShowError(error: ShowErrorType, errorMessage: String = "", id: String? = null)
 
+
+}
+
+@Keep
+interface IAdHideBannerListener {
     @Keep
     fun onBannerHide(id: String? = null)
 

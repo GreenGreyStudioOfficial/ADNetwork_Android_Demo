@@ -19,11 +19,11 @@ internal class DataRepositoryImpl(
 ) : IDataRepository {
 
     override fun loadStartData(deviceInfo: DeviceInfo, key: String): Flow<AdvData> {
-        Log.e("req", "${deviceInfo.toRemote()} $key")
+//        Log.e("req", "${deviceInfo.toRemote()} $key")
         return  cloudDataStore.loadStartData(deviceInfo.toRemote(), key)
             .flowOn(Dispatchers.IO)
             .map {
-                Log.e("DataRepository", "data $it")
+//                Log.e("DataRepository", "data $it")
                 it.toDomain()
             }
     }

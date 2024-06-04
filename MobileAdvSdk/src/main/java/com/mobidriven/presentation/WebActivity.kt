@@ -10,6 +10,8 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.Window
@@ -17,6 +19,7 @@ import android.view.WindowManager
 import android.webkit.*
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import androidx.core.app.ActivityCompat
 import com.mobidriven.AdvSDK
 import com.mobidriven.AdvSDK.createAdHtml
@@ -24,14 +27,20 @@ import com.mobidriven.R
 import com.mobidriven.datasource.domain.model.AdvertiseType
 import com.mobidriven.datasource.domain.model.LoadErrorType
 import com.mobidriven.datasource.domain.model.ShowCompletionState
+import com.mobidriven.presentation.player.VASTPlayer
 import com.mobidriven.presentation.player.processor.CacheFileManager
+import com.mobidriven.presentation.player.util.VASTLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Timer
+import java.util.TimerTask
 
 
 internal class WebActivity : Activity() {
+
     private val provider: AdvProviderImpl = AdvSDK.provider!!
     private lateinit var webView: WebView
+    private lateinit var mSkip: ImageView
     private var isRewardReceived: Boolean = false
 
     @SuppressLint("SetJavaScriptEnabled", "SourceLockedOrientationActivity")
@@ -46,13 +55,21 @@ internal class WebActivity : Activity() {
         webView.settings.javaScriptEnabled = true
         webView.settings.mediaPlaybackRequiresUserGesture = false;
 //        webView.settings.userAgentString = "0"
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = object :WebViewClient(){
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url ?: return false
+                //you can do checks here e.g. url.host equals to target one
+                view?.context?.startActivity(Intent(Intent.ACTION_VIEW, url)) ?: return false
+                return true
+            }
+        }
         webView.webChromeClient = WebChromeClient()
 
         val adHtml = createAdHtml(provider.adm ?: "")
         webView.loadDataWithBaseURL("https://mobidriven.com", adHtml, "text/html", "UTF-8", null)
 
-        findViewById<ImageView>(R.id.close).setOnClickListener {
+        mSkip = findViewById(R.id.close)
+        mSkip.setOnClickListener {
             if (provider.advType == AdvertiseType.REWARDED && !isRewardReceived) {
                 showCloseDialog()
             } else {
@@ -61,19 +78,12 @@ internal class WebActivity : Activity() {
                 finish()
             }
         }
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            mSkip.visibility = View.VISIBLE
+        }, 3000)
+
     }
-
-
-
-    private fun lockOrientation(orientations: MraidOrientations) {
-        if (orientations == MraidOrientations.PORTRAIT) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        }
-        if (orientations == MraidOrientations.LANDSCAPE) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        }
-    }
-
 
     private fun showCloseDialog() {
         val builder = AlertDialog.Builder(this)

@@ -49,7 +49,7 @@ internal class AdvBannerView @JvmOverloads constructor(
 
     private val webView: WebView
     private val mraidController = MraidController {
-        Log.e("MRAID BANNER VIEW", "event $it" )
+//        Log.e("MRAID BANNER VIEW", "event $it" )
         when (it) {
             JsSdkEvent.Close, JsSdkEvent.Unload -> {
                 provider?.handleShowChangeState(ShowCompletionState.CLOSE)
@@ -151,7 +151,7 @@ internal class AdvBannerView @JvmOverloads constructor(
             fireVisibilityChangeEvent()
             fireRewardedChangeEvent()
         }catch (thr:Throwable){
-            Log.e("MRAID", thr.message ?: "something wrong")
+//            Log.e("MRAID", thr.message ?: "something wrong")
         }
 
     }
@@ -235,8 +235,15 @@ internal class AdvBannerView @JvmOverloads constructor(
         override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler, error: SslError?) {
             handler.proceed() // Ignore SSL certificate errors
         }
+
+        override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+            val url = request?.url ?: return false
+            //you can do checks here e.g. url.host equals to target one
+            view?.context?.startActivity(Intent(Intent.ACTION_VIEW, url)) ?: return false
+            return true
+        }
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
-            Log.e("shouldInterceptRequest", "request ${request.url}")
+//            Log.e("shouldInterceptRequest", "request ${request.url}")
             return when {
                 request.url.toString().endsWith("mraid.js") -> view?.context?.assets?.open("mraid.js")
                     ?.let { stream ->

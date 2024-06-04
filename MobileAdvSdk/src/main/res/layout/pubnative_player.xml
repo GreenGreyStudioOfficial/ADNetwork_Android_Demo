@@ -24,9 +24,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
-        tools:background="@android:color/black"
-        android:visibility="gone"/>
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
     <ImageView
         android:id="@+id/skip"
@@ -34,9 +34,10 @@
         android:layout_height="32dp"
         android:layout_gravity="end|top"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:src="@drawable/ic_close"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
     <!--MUTE-->
     <ImageView
@@ -45,7 +46,7 @@
         android:layout_height="32dp"
         android:layout_gravity="start|bottom"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/ic_sound_on"/>
 
 
@@ -64,14 +65,15 @@
         tools:text="Close" />-->
 
     <!-- OPEN BANNER BUTTON -->
-   <!-- <ImageView
+    <ImageView
         android:id="@+id/open"
-        android:layout_width="82dp"
-        android:layout_height="32dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="62dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="20dp"
+        android:scaleType="fitCenter"
         android:layout_marginStart="16dp"
         android:layout_gravity="start|top"
         android:visibility="gone"
         android:src="@drawable/ic_logo"
-        tools:visibility="visible" />-->
+        tools:visibility="visible" />
 </FrameLayout>

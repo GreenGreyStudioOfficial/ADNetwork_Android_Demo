@@ -3,6 +3,8 @@ package com.mobidriven.presentation.player
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
@@ -11,10 +13,12 @@ import android.widget.TextView
 import androidx.annotation.Keep
 import com.mobidriven.R
 
+
 @Keep
 internal class CountDownView : FrameLayout {
     private lateinit var progressBarView: SquareProgressView
     private lateinit var progressTextView: TextView
+    private var pressed = false
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -36,6 +40,7 @@ internal class CountDownView : FrameLayout {
         val makeVertical = RotateAnimation(0f, -90f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
         makeVertical.fillAfter = true
         progressBarView.startAnimation(makeVertical)
+        isClickable = true
     }
 
     fun setProgress(currentMs: Int, totalMs: Int) {
@@ -75,6 +80,7 @@ internal class SquareProgressView @JvmOverloads constructor(
 
 
     init {
+        isClickable = false
         initPaints(context)
     }
 

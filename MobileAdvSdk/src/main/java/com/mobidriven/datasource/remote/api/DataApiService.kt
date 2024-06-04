@@ -66,7 +66,7 @@ internal object DataApiServiceImpl {
         suspendCancellableCoroutine { continuation ->
             val url = URL("https://sp.mobidriven.com/rtb?key=$key")
 
-            Log.e("REQ","${data.toJson()}" )
+//            Log.e("REQ","${data.toJson()}" )
 
             val urlConnection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"

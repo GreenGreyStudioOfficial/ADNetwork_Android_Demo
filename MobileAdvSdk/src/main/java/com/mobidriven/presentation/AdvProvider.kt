@@ -15,6 +15,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.mobidriven.AdvSDK
+import com.mobidriven.IAdHideBannerListener
 import com.mobidriven.IAdLoadListener
 import com.mobidriven.IAdShowBannerListener
 import com.mobidriven.IAdShowListener
@@ -73,6 +74,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     lateinit var showListener: IAdShowListener
     lateinit var loadListener: IAdLoadListener
     lateinit var showBannerListener: IAdShowBannerListener
+    lateinit var hideBannerListener: IAdHideBannerListener
 
     init {
 
@@ -99,7 +101,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         advData?.let {
             val bid = it.seatbid.first().bid.first()
             advId = bid.id
-            Log.e("BID", "bid $bid")
+//            Log.e("BID", "bid $bid")
             when {
                 listOf(5, 6).contains(bid.api) || bid.adm.contains("<script>") && bid.adm.contains("mraid.js") -> _showMraid(advId ?: "")
                 bid.adm.contains("<script>") || bid.adm.contains("<html>") || bid.adm.contains("<body>") -> _showWeb(advId ?: "")
@@ -134,8 +136,8 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         }
     }
 
-    internal fun hideBanner(id: String?, listener: IAdShowBannerListener) {
-        showBannerListener = listener
+    internal fun hideBanner(id: String?, listener: IAdHideBannerListener) {
+        hideBannerListener = listener
         scope.launch {
             advShowFlow.emit(ShowAdv.HideBannerAdv(id ?: ""))
         }
@@ -148,11 +150,11 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
     }
 
     internal fun onBannerHide(id: String?) {
-        showBannerListener.onBannerHide(id)
+        hideBannerListener.onBannerHide(id)
     }
 
     internal fun onBannerHideError(id: String?, type:ShowErrorType){
-        showBannerListener.onBannerHideError(type, id = id)
+        hideBannerListener.onBannerHideError(type, id = id)
     }
 
     private fun _showBanner(id: String?) {
@@ -269,7 +271,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                     }
                 }
                 .collect { data ->
-                    Log.e("DATA", "${data.toJson()}")
+//                    Log.e("DATA", "${data.toJson()}")
                     _advDataFlow.value = data.copy(advertiseType = advertiseType)
                     advId = bid?.id
                     withContext(Dispatchers.Main) {

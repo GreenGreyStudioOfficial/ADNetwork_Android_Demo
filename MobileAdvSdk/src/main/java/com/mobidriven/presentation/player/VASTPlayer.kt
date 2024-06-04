@@ -39,7 +39,8 @@ import kotlin.math.abs
 internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     private lateinit var cacheDataSourceFactory: CacheDataSource.Factory
     private var playerView: StyledPlayerView? = null
-//    private var progressBar: ProgressBar? = null
+
+    //    private var progressBar: ProgressBar? = null
     private var type = AdvertiseType.INTERSTITIAL
 
     fun setType(type: AdvertiseType) {
@@ -96,7 +97,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
 
     // VIEWS
     private var mRoot: View? = null
-//    private var mOpen: View? = null
+    private var mOpen: View? = null
 
     // Player
     private var mSkip: ImageView? = null
@@ -338,9 +339,11 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
             canSetState(PlayerState.Playing) -> {
                 setState(PlayerState.Playing)
             }
+
             mPlayerState == PlayerState.Empty -> {
                 setState(PlayerState.Ready)
             }
+
             else -> {
                 e(TAG, "ERROR, player in wrong state: " + mPlayerState.name)
             }
@@ -432,7 +435,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         // Navigate to the click through url
         clickThroughUrl?.let {
             val uri = Uri.parse(clickThroughUrl)
-            val intent = Intent(Intent.ACTION_VIEW, uri)
+            val intent = Intent(Intent.ACTION_VIEW).setData(uri)
             context.startActivity(intent)
             invokeOnPlayerOpenOffer()
         }
@@ -458,10 +461,9 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
             mSkip?.visibility = INVISIBLE
             mSkip?.setOnClickListener(this)
             playerView?.setOnClickListener(this)
-            Log.e("VIEW", "player view ${playerView}")
-//            mOpen = mRoot?.findViewById(R.id.open)
-//            mOpen?.visibility = INVISIBLE
-//            mOpen?.setOnClickListener(this)
+            mOpen = mRoot?.findViewById(R.id.open)
+            mOpen?.visibility = INVISIBLE
+            mOpen?.setOnClickListener(this)
             addView(
                 mRoot, ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -472,11 +474,11 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     }
 
     private fun hideOpen() {
-//        mOpen?.visibility = INVISIBLE
+        mOpen?.visibility = INVISIBLE
     }
 
     private fun showOpen() {
-//        mOpen?.visibility = VISIBLE
+        mOpen?.visibility = VISIBLE
     }
 
     private fun hidePlayerLayout() {
@@ -586,17 +588,17 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
         muteParams.addRule(ALIGN_TOP, R.id.playerView)
         muteParams.addRule(ALIGN_LEFT, R.id.playerView)
         mMute?.layoutParams = muteParams
-      /*  val openParams = mOpen?.layoutParams as LayoutParams
+        val openParams = mOpen?.layoutParams as LayoutParams
         openParams.addRule(ALIGN_TOP, R.id.playerView)
         openParams.addRule(ALIGN_RIGHT, R.id.playerView)
-        mOpen?.layoutParams = openParams*/
+        mOpen?.layoutParams = openParams
         val countDownParams = mCountDown?.layoutParams as LayoutParams
         countDownParams.addRule(ALIGN_BOTTOM, R.id.playerView)
         countDownParams.addRule(ALIGN_LEFT, R.id.playerView)
         mCountDown?.layoutParams = countDownParams
-    /*    val skipParams = mSkip?.layoutParams as LayoutParams
-        skipParams.addRule(ALIGN_BOTTOM, R.id.playerView)
-        skipParams.addRule(ALIGN_RIGHT, R.id.playerView)*/
+        /*    val skipParams = mSkip?.layoutParams as LayoutParams
+            skipParams.addRule(ALIGN_BOTTOM, R.id.playerView)
+            skipParams.addRule(ALIGN_RIGHT, R.id.playerView)*/
 //        mSkip?.layoutParams = skipParams
     }
 
@@ -795,7 +797,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
                             val currentPositionElvis = simpleExoPlayer?.currentPosition?.toInt() ?: 1
                             val currentPosition = currentPositionElvis / 1000
                             if (type === AdvertiseType.REWARDED && mVastModel?.skipOffset != -1) {
-                                mCountDown?.setProgress(currentPosition, mVastModel?.skipOffset ?: 0)
+//                                mCountDown?.setProgress(currentPosition, mVastModel?.skipOffset ?: 0)
 //                                mSkip?.visibility = VISIBLE
                                 needShowDialogClose = currentPosition < mSkipDelay
                             } else if (type === AdvertiseType.REWARDED && mVastModel?.skipOffset == -1) {
@@ -813,7 +815,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
 //                                mCountDown?.setProgress(currentPosition, simpleExoPlayer?.duration?.toInt() ?: 1)
                                 mCountDown?.visibility = INVISIBLE
 //                                mSkip?.text = mSkipName
-                                mSkip?.visibility = VISIBLE
+//                                mSkip?.visibility = VISIBLE
                                 needShowDialogClose = false
                             }
                         }
@@ -825,6 +827,15 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
                 }
             }
         }, 0, TIMER_LAYOUT_INTERVAL)
+        handler.postDelayed({
+           if (type === AdvertiseType.INTERSTITIAL && mVastModel?.skipOffset != -1) {
+                mCountDown?.visibility = INVISIBLE
+                mSkip?.visibility = VISIBLE
+            } else if (type === AdvertiseType.INTERSTITIAL && mVastModel?.skipOffset == -1) {
+                mCountDown?.visibility = INVISIBLE
+                mSkip?.visibility = VISIBLE
+            }
+        }, 3000)
     }
 
     private fun stopLayoutTimer() {
@@ -878,11 +889,12 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     // View.OnClickListener
     //---------------------------------------------
     override fun onClick(view: View) {
-        Log.e("CLICK", "click in player view ${view}")
+//        Log.e("CLICK", "click in player view ${view}")
         v(TAG, "onClick -- (View.OnClickListener callback) ${view}")
         if (playerView === view) {
             onOpenClick()
         } else if (mSkip === view || mCountDown === view) {
+
             onSkipClick()
         } else if (mMute === view) {
             onMuteClick()

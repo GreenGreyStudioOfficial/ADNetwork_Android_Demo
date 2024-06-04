@@ -10,6 +10,8 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.Window
@@ -41,7 +43,7 @@ internal class MraidActivity : Activity() {
     private val displayHeight by lazy { displayMetrics.heightPixels }
 
     private val mraidController = MraidController {
-        Log.e("JS SDK EVENT", "$it")
+//        Log.e("JS SDK EVENT", "$it")
         when (it) {
             JsSdkEvent.Close, JsSdkEvent.Unload -> {
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
@@ -144,6 +146,10 @@ internal class MraidActivity : Activity() {
             }
         }
 
+        Handler(Looper.getMainLooper()).postDelayed({
+            close.visibility = View.VISIBLE
+        }, 3000)
+
         AdvSDK.scope.launch(Dispatchers.IO) {
             provider.permissionChanel.collect {
                 downloadImageUrl = it.second
@@ -185,7 +191,7 @@ internal class MraidActivity : Activity() {
     }
 
     private fun loadFinished() {
-        Log.e("WebviewActivity", "load finished")
+//        Log.e("WebviewActivity", "load finished")
         sendEventToJs("bridge.notifyReadyEvent()")
         changeState(MraidStates.DEFAULT)
         firePlacementTypeChangeEvent()
@@ -239,7 +245,7 @@ internal class MraidActivity : Activity() {
     }
 
     private fun sendEventToJs(event: String) {
-        Log.e("sendEventToJs", event)
+//        Log.e("sendEventToJs", event)
         webView.evaluateJavascript(event, null)
     }
 
@@ -331,7 +337,7 @@ internal class MraidActivity : Activity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-            Log.e("client", "page lOADED")
+//            Log.e("client", "page lOADED")
             loadFinished()
         }
     }

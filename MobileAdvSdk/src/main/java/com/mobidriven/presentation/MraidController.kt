@@ -12,7 +12,7 @@ internal class MraidController(val onJsSdkEvent: (JsSdkEvent) -> Unit) {
 
     @JavascriptInterface
     fun sendMessageToSDK(json: String) {
-        Log.e("MraidController ", "sendMessageToSDK $json")
+//        Log.e("MraidController ", "sendMessageToSDK $json")
         toSdkEvent(json)?.let {
             Handler(Looper.getMainLooper()).post {
                 onJsSdkEvent(it)
@@ -86,7 +86,7 @@ private fun toSdkEvent(event: String): JsSdkEvent? {
             else -> error("not supported event type ${obj.getString("m_eventType")}")
         }
     } catch (e: Exception) {
-        Log.d("MRAID Event", "${e.message}")
+//        Log.d("MRAID Event", "${e.message}")
         null
     }
 

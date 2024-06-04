@@ -4,12 +4,14 @@
     <FrameLayout
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+       >
 
         <com.mobidriven.presentation.player.SquareProgressView
             android:id="@+id/view_progress_bar"
             android:layout_width="32dp"
-            android:layout_height="32dp">
+            android:layout_height="32dp"
+            android:clickable="false">
 
         </com.mobidriven.presentation.player.SquareProgressView>
 
@@ -27,7 +29,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:clickable="false"/>
 
     </FrameLayout>
 </merge>
