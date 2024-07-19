@@ -62,7 +62,6 @@ internal class AdvActivity : Activity() {
             }
 
             override fun onVASTPlayerPlaybackFinish() {
-//                Log.e("ADV activity","onVASTPlayerPlaybackFinish")
                 provider.handleShowChangeState(ShowCompletionState.COMPLETE)
                 provider.playerPlaybackFinish()
                 vastPlayer.destroy()
@@ -86,7 +85,6 @@ internal class AdvActivity : Activity() {
             }
 
             override fun onVASTPlayerClose(needToConfirm: Boolean) {
-//                Log.e("CLOSE", "needToConfirm $needToConfirm")
                 if (needToConfirm) {
                     showCloseDialog()
                 } else {

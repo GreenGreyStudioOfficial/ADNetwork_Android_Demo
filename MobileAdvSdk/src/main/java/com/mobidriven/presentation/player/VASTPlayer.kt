@@ -820,7 +820,7 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
                             }
                         }
                     } catch (e: Exception) {
-                        Log.e(TAG, "Layout timer error: ${e.localizedMessage}")
+                        Log.d(TAG, "Layout timer error: ${e.localizedMessage}")
                         cancel()
                         return@post
                     }
@@ -889,7 +889,6 @@ internal class VASTPlayer : RelativeLayout, View.OnClickListener {
     // View.OnClickListener
     //---------------------------------------------
     override fun onClick(view: View) {
-//        Log.e("CLICK", "click in player view ${view}")
         v(TAG, "onClick -- (View.OnClickListener callback) ${view}")
         if (playerView === view) {
             onOpenClick()

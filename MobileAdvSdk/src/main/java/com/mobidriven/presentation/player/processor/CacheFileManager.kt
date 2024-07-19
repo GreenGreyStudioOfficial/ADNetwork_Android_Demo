@@ -3,26 +3,28 @@ package com.mobidriven.presentation.player.processor
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import com.mobidriven.exoplayer2.upstream.DataSpec
-import com.mobidriven.exoplayer2.upstream.DefaultHttpDataSource
-import com.mobidriven.exoplayer2.upstream.cache.*
 import com.mobidriven.AdvSDK
 import com.mobidriven.datasource.domain.model.AdvData
 import com.mobidriven.datasource.remote.api.OKHTTP_CONNECT_TIMEOUT_MS
 import com.mobidriven.datasource.remote.api.OKHTTP_READ_TIMEOUT_MS
 import com.mobidriven.exoplayer2.database.StandaloneDatabaseProvider
+import com.mobidriven.exoplayer2.upstream.DataSpec
+import com.mobidriven.exoplayer2.upstream.DefaultHttpDataSource
+import com.mobidriven.exoplayer2.upstream.cache.*
 import com.mobidriven.toAdvData
 import kotlinx.coroutines.*
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 
+
 private const val CACHE_SIZE = 90 * 1024 * 1024L
 
 internal object CacheFileManager {
 
+
     private var cacheWriter: CacheWriter? = null
-    private lateinit var simpleCache: Cache
+    private var simpleCache: Cache? = null
 
     private fun cache(uri: Uri, context: Context = AdvSDK.application) {
             if (cacheWriter == null) {
@@ -45,24 +47,22 @@ internal object CacheFileManager {
     }
 
     fun getSimpleCache(context: Context): Cache {
-        if (!::simpleCache.isInitialized) {
+        if (simpleCache == null) {
+            val myDir: File = File(context.cacheDir, "mobidriven")
+            myDir.mkdir()
             simpleCache = SimpleCache(
-                context.cacheDir,
+                myDir,
                 LeastRecentlyUsedCacheEvictor(CACHE_SIZE),
                 StandaloneDatabaseProvider(context)
             )
         }
-        return simpleCache
+        return simpleCache as Cache
     }
 
     fun clearCache(context: Context = AdvSDK.application) {
         AdvSDK.scope.launch(Dispatchers.IO) {
-            getSimpleCache(context).release()
-            simpleCache = SimpleCache(
-                context.cacheDir,
-                LeastRecentlyUsedCacheEvictor(CACHE_SIZE),
-                StandaloneDatabaseProvider(context)
-            )
+            simpleCache?.release()
+            simpleCache = null
             cacheWriter = null
             deleteCache(context)
         }
@@ -70,7 +70,7 @@ internal object CacheFileManager {
 
     private fun deleteCache(context: Context) {
         try {
-            val dir = context.cacheDir
+            val dir = File(context.cacheDir, "mobidriven")
             deleteDir(dir)
         } catch (e: Exception) {
 //            Log.w("CacheFileManager", "${e.message}")
@@ -97,7 +97,8 @@ internal object CacheFileManager {
     fun saveAdv(data: AdvData, context: Context = AdvSDK.application) {
         //clear cache before set new
         clearCache()
-        val path: File = context.cacheDir
+        val path: File = File(context.cacheDir, "mobidriven_assets")
+        path.mkdir()
         val file = File(path, "${data.id}.json")
         val stream = FileOutputStream(file)
         stream.use { it.write(data.toJson().toString().toByteArray()) }
@@ -139,20 +140,22 @@ internal object CacheFileManager {
 
         try {
             urlConnection.inputStream.use { input ->
-                FileOutputStream(File(context.cacheDir, url.split("/").last())).use { output ->
+                val cachedir  = File(context.cacheDir, "mobidriven_assets")
+                cachedir.mkdir()
+                FileOutputStream(File(cachedir, url.split("/").last())).use { output ->
                     input.copyTo(output)
                 }
             }
         } finally {
             urlConnection.disconnect()
-//            Log.e("CacheFileManager", "download complete $url")
         }
     }
 
     fun loadAdv(advId: String?): AdvData? {
         advId ?: return null
         return try {
-            val inputStream = File("${advId}.json").inputStream()
+            val path: File = File(AdvSDK.application.cacheDir, "mobidriven_assets")
+            val inputStream = File(path, "${advId}.json").inputStream()
             val json = inputStream.bufferedReader().use { it.readText() }
             json.toAdvData()
         } catch (e: Throwable) {
@@ -162,7 +165,8 @@ internal object CacheFileManager {
 
     fun getCacheResourceFile(url: String, context: Context = AdvSDK.application): InputStream? {
         return try {
-            return File(context.cacheDir, url.split("/").last()).inputStream()
+            val cachedir  = File(context.cacheDir, "mobidriven_assets")
+            return File(cachedir, url.split("/").last()).inputStream()
         } catch (e: Throwable) {
             Log.w("CacheFileManager", "${e.message}")
             null

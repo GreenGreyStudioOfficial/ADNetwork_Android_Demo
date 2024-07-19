@@ -43,7 +43,6 @@ internal class MraidActivity : Activity() {
     private val displayHeight by lazy { displayMetrics.heightPixels }
 
     private val mraidController = MraidController {
-//        Log.e("JS SDK EVENT", "$it")
         when (it) {
             JsSdkEvent.Close, JsSdkEvent.Unload -> {
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
@@ -191,7 +190,6 @@ internal class MraidActivity : Activity() {
     }
 
     private fun loadFinished() {
-//        Log.e("WebviewActivity", "load finished")
         sendEventToJs("bridge.notifyReadyEvent()")
         changeState(MraidStates.DEFAULT)
         firePlacementTypeChangeEvent()
@@ -245,7 +243,6 @@ internal class MraidActivity : Activity() {
     }
 
     private fun sendEventToJs(event: String) {
-//        Log.e("sendEventToJs", event)
         webView.evaluateJavascript(event, null)
     }
 
@@ -337,7 +334,6 @@ internal class MraidActivity : Activity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
             super.onPageFinished(view, url)
-//            Log.e("client", "page lOADED")
             loadFinished()
         }
     }

@@ -101,7 +101,6 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         advData?.let {
             val bid = it.seatbid.first().bid.first()
             advId = bid.id
-//            Log.e("BID", "bid $bid")
             when {
                 listOf(5, 6).contains(bid.api) || bid.adm.contains("<script>") && bid.adm.contains("mraid.js") -> _showMraid(advId ?: "")
                 bid.adm.contains("<script>") || bid.adm.contains("<html>") || bid.adm.contains("<body>") -> _showWeb(advId ?: "")
@@ -242,7 +241,6 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             dataRepository.loadStartData(deviceInfo, gameId)
                 .onEach { CacheFileManager.saveAdv(it) }
                 .catch {
-//                    Log.e("AdvProvider", "err $it")
                     when (it) {
                         is IOException -> {
                             it.printStackTrace()
@@ -271,7 +269,6 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                     }
                 }
                 .collect { data ->
-//                    Log.e("DATA", "${data.toJson()}")
                     _advDataFlow.value = data.copy(advertiseType = advertiseType)
                     advId = bid?.id
                     withContext(Dispatchers.Main) {

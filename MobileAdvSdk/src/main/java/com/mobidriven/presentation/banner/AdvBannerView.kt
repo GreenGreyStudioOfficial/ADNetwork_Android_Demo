@@ -49,7 +49,6 @@ internal class AdvBannerView @JvmOverloads constructor(
 
     private val webView: WebView
     private val mraidController = MraidController {
-//        Log.e("MRAID BANNER VIEW", "event $it" )
         when (it) {
             JsSdkEvent.Close, JsSdkEvent.Unload -> {
                 provider?.handleShowChangeState(ShowCompletionState.CLOSE)
@@ -114,11 +113,8 @@ internal class AdvBannerView @JvmOverloads constructor(
 
         val bannerSize = provider?.bannerSize
         val dp2px = getContext().resources.displayMetrics.density
-//        Log.e("SIZE", "$bannerSize ${bannerSize?.first?.let { (it * dp2px).toInt() }} ${bannerSize?.second?.let { (it * dp2px).toInt() } }")
 
         val lp = LayoutParams(bannerSize?.first?.let { (it * dp2px).toInt() } ?: LayoutParams.WRAP_CONTENT , bannerSize?.second?.let { (it * dp2px).toInt() } ?: LayoutParams.WRAP_CONTENT)
-//        val lp = LayoutParams(320  , 50)
-//        val lp = LayoutParams(320*dp2px.toInt()  , 50*dp2px.toInt())
         addView(webView, lp)
         load()
     }
@@ -135,7 +131,6 @@ internal class AdvBannerView @JvmOverloads constructor(
 
 
     private fun loadFinished() {
-//        Log.e("WebviewActivity", "load finished")
         try {
             sendEventToJs("bridge.notifyReadyEvent()")
             changeState(MraidStates.DEFAULT)
@@ -151,7 +146,6 @@ internal class AdvBannerView @JvmOverloads constructor(
             fireVisibilityChangeEvent()
             fireRewardedChangeEvent()
         }catch (thr:Throwable){
-//            Log.e("MRAID", thr.message ?: "something wrong")
         }
 
     }
@@ -243,7 +237,6 @@ internal class AdvBannerView @JvmOverloads constructor(
             return true
         }
         override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
-//            Log.e("shouldInterceptRequest", "request ${request.url}")
             return when {
                 request.url.toString().endsWith("mraid.js") -> view?.context?.assets?.open("mraid.js")
                     ?.let { stream ->

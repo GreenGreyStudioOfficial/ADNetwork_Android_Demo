@@ -2,6 +2,8 @@ package com.mobidriven.datasource.domain.model
 
 import androidx.annotation.Keep
 
+
+
 @Keep
 enum class LoadErrorType(val desc: String) {
     UNKNOWN("Неизвестная ошибка"),

@@ -60,7 +60,6 @@ object AdvSDK : Application.ActivityLifecycleCallbacks {
         }
         scope.launch {
             provider?.advShowFlow?.collect{
-//                Log.e("COLLECT", "$it")
                 when(it){
                     is ShowAdv.BannerAdv -> _showBanner(it.id)
                     is ShowAdv.MraidFullScreenAdv -> _showMraid()
@@ -98,7 +97,6 @@ object AdvSDK : Application.ActivityLifecycleCallbacks {
 
     @SuppressLint("StaticFieldLeak")
      private fun _showBanner(id:String?){
-//        Log.e("BANNER", "SHOW $id")
         currentActivity ?: return
         val rootView : View? = currentActivity?.findViewById<ViewGroup>(android.R.id.content)?.rootView ?: currentActivity?.window?.decorView?.findViewById(android.R.id.content)
         rootView ?: return
