@@ -63,6 +63,7 @@ internal object DataApiServiceImpl {
 
     private suspend fun loadAvdData(key: String, data: AdvDataRequestRemote): AdvDataRemote =
         suspendCancellableCoroutine { continuation ->
+            Log.e("req", data.toJson().toString())
             val url = URL("https://sp.mobidriven.com/rtb?key=$key")
 
             val urlConnection = (url.openConnection() as HttpURLConnection).apply {
@@ -97,6 +98,7 @@ internal object DataApiServiceImpl {
             try {
                 urlConnection.inputStream.use { ins ->
                     val json = ins.bufferedReader().readText()
+//                    Log.e("resp", json)
                     continuation.resume(json.toAdvDataRemote()) {
                         urlConnection.disconnect()
                     }

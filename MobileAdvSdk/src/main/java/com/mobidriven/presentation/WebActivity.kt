@@ -73,6 +73,7 @@ internal class WebActivity : Activity() {
             if (provider.advType == AdvertiseType.REWARDED && !isRewardReceived) {
                 showCloseDialog()
             } else {
+                provider.sendClose()
                 provider.handleShowChangeState(ShowCompletionState.CLOSE)
                 provider.playerPlaybackFinish()
                 finish()

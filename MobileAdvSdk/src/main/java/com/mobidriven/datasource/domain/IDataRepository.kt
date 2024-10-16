@@ -13,5 +13,5 @@ internal interface IDataRepository {
     suspend fun sendInitUserData(key: String, data: AdvInitData)
 
     fun callPixel(url: String)
-
+    fun sendClose(url: String)
 }

@@ -27,6 +27,8 @@ import android.provider.Settings.Global;
 import androidx.annotation.DoNotInline;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.C;
 import com.mobidriven.exoplayer2.util.Util;
 import com.google.common.collect.ImmutableList;
@@ -77,8 +79,8 @@ public final class AudioCapabilities {
   @SuppressWarnings("InlinedApi")
   public static AudioCapabilities getCapabilities(Context context) {
     Intent intent =
-        context.registerReceiver(
-            /* receiver= */ null, new IntentFilter(AudioManager.ACTION_HDMI_AUDIO_PLUG));
+            ContextCompat.registerReceiver( context,
+            /* receiver= */ null, new IntentFilter(AudioManager.ACTION_HDMI_AUDIO_PLUG), ContextCompat.RECEIVER_NOT_EXPORTED);
     return getCapabilities(context, intent);
   }
 

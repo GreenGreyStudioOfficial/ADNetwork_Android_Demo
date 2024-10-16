@@ -8,6 +8,7 @@ internal data class ExtAdv(
     val req_timeout: Long?,
     val imp_timeout: Long?,
     val files: List<String>? ,
+    val events: Map<String, String>? ,
 ) {
     fun toJson(): JSONObject =JSONObject().apply {
         cache_max?.let { put("cache_max",it) }
@@ -15,5 +16,8 @@ internal data class ExtAdv(
         req_timeout?.let { put("req_timeout",it) }
         imp_timeout?.let { put("imp_timeout",it) }
         files?.let { put("files", files) }
+        events?.let { ev -> put("events", JSONObject().apply{
+            ev.keys.forEach { k -> put(k, ev[k]) }
+        }) }
     }
 }

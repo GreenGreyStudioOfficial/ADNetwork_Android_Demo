@@ -9,4 +9,5 @@ internal data class ExtAdvRemote(
     val req_timeout: Long?,
     val imp_timeout: Long?,
     val files: List<String>?,
+    val events: Map<String, String>?,
 )

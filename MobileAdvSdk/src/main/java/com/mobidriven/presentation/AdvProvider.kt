@@ -239,7 +239,7 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         scope.launch(Dispatchers.IO) {
             val deviceInfo = makeDeviceInfo(isTestMode, gameId, advertiseType)
             dataRepository.loadStartData(deviceInfo, gameId)
-                .onEach { CacheFileManager.saveAdv(it) }
+                .onEach { CacheFileManager.saveAdv(it, advertiseType) }
                 .catch {
                     when (it) {
                         is IOException -> {
@@ -341,7 +341,10 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
         gameId: String,
         advertiseType: AdvertiseType
     ): DeviceInfo {
-        val device: Device = DeviceInformation.getDeviceInfo(AdvSDK.application).fromJson()
+        val device: Device = DeviceInformation.getDeviceInfo(AdvSDK.application).fromJson().run { copy(os="Android") }
+
+        val widthPixels = Resources.getSystem().displayMetrics.widthPixels
+        val heightPixels = Resources.getSystem().displayMetrics.heightPixels
         return DeviceInfo(
             id = UUID.randomUUID().toString(),
             test = if (isTestMode) 1 else 0,
@@ -350,13 +353,13 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                     Imp(
                         id = "1",
                         video = Video(
-                            w = Resources.getSystem().displayMetrics.widthPixels,
-                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            w = if(widthPixels > heightPixels) 480 else 320,
+                            h = if(widthPixels > heightPixels) 320 else 480,
                             ext = Ext(0)
                         ),
                         banner = Banner(
-                            w = Resources.getSystem().displayMetrics.widthPixels,
-                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            w = if(widthPixels > heightPixels) 480 else 320,
+                            h = if(widthPixels > heightPixels) 320 else 480,
                             ext = Ext(0)
                         ),
                         instl = 1,
@@ -367,13 +370,8 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
                     Imp(
                         id = "1",
                         video = Video(
-                            w = Resources.getSystem().displayMetrics.widthPixels,
-                            h = Resources.getSystem().displayMetrics.heightPixels,
-                            ext = Ext(1)
-                        ),
-                        banner = Banner(
-                            w = Resources.getSystem().displayMetrics.widthPixels,
-                            h = Resources.getSystem().displayMetrics.heightPixels,
+                            w = if(widthPixels > heightPixels) 480 else 320,
+                            h = if(widthPixels > heightPixels) 320 else 480,
                             ext = Ext(1)
                         ),
                         instl = 1,
@@ -400,6 +398,17 @@ internal class AdvProviderImpl(val gameId: String, val isTestMode: Boolean = fal
             device = device,
             user = User(Prefs.userId)
         )
+
+    }
+
+    fun sendClose() {
+//        Log.e("PR", "$bid")
+        scope.launch(Dispatchers.IO) {
+            bid?.extAdv?.events?.get("close")?.let {
+                dataRepository.sendClose(it)
+            }
+        }
+
 
     }
 

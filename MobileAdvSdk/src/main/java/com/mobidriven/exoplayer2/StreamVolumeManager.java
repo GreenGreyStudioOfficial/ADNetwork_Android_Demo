@@ -22,6 +22,8 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Handler;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.util.Assertions;
 import com.mobidriven.exoplayer2.util.Log;
 import com.mobidriven.exoplayer2.util.Util;
@@ -74,7 +76,7 @@ import com.mobidriven.exoplayer2.util.Util;
     VolumeChangeReceiver receiver = new VolumeChangeReceiver();
     IntentFilter filter = new IntentFilter(VOLUME_CHANGED_ACTION);
     try {
-      applicationContext.registerReceiver(receiver, filter);
+      ContextCompat.registerReceiver(applicationContext, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
       this.receiver = receiver;
     } catch (RuntimeException e) {
       Log.w(TAG, "Error registering stream volume receiver", e);

@@ -29,6 +29,8 @@ import android.os.Looper;
 import android.os.PowerManager;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.util.Util;
 
 /**
@@ -109,7 +111,7 @@ public final class RequirementsWatcher {
       filter.addAction(Intent.ACTION_DEVICE_STORAGE_OK);
     }
     receiver = new DeviceStatusChangeReceiver();
-    context.registerReceiver(receiver, filter, null, handler);
+    ContextCompat.registerReceiver(context,receiver, filter, null, handler, ContextCompat.RECEIVER_NOT_EXPORTED);
     return notMetRequirements;
   }
 

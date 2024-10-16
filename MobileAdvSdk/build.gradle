@@ -7,18 +7,17 @@ plugins {
 ext {
     PUBLISH_GROUP_ID = 'com.greengray'
 //    PUBLISH_VERSION = '1.5.1'
-    PUBLISH_VERSION = '1.0.57'
+    PUBLISH_VERSION = '1.0.70'
     PUBLISH_ARTIFACT_ID = 'advsdk'
 }
 
 android {
-    compileSdk 31
+    compileSdk 34
+    namespace "com.mobidriven"
 
     defaultConfig {
         minSdk 21
-        targetSdk 31
-        versionCode 1
-        versionName "1.0"
+        targetSdk 34
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -45,16 +44,24 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("com.google.guava:guava:31.1-android")
-    implementation('com.greengray:deviceinfo:1.0.26')
+    implementation('com.greengray:deviceinfo:1.0.27')
+    constraints {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
+            because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
+        }
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") {
+            because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
+        }
+    }
 //    implementation("com.google.android.gms:play-services-ads-identifier:18.0.1")
 }
 
 configurations.all {
     resolutionStrategy {
-        force 'androidx.core:core-ktx:1.8.0'
+        force 'androidx.core:core-ktx:1.13.1'
         force 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     }
 }

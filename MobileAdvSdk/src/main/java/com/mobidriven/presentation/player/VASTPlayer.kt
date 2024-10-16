@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.annotation.Keep
-import androidx.core.view.isVisible
 import com.mobidriven.exoplayer2.*
 import com.mobidriven.exoplayer2.analytics.AnalyticsListener
 import com.mobidriven.exoplayer2.source.DefaultMediaSourceFactory

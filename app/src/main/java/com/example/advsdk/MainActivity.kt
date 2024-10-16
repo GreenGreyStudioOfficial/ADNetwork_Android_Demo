@@ -157,7 +157,9 @@ class MainActivity : AppCompatActivity(), IAdShowListener, IAdShowBannerListener
     }
 }
 
-private const val MY_GAME_ID: String = "029b82b478b82eab4bdb13463765b5d6c3eef30f" //mraid banner
+//private const val MY_GAME_ID: String = "cd0f59937cd9b40710f11a39ee4e7636c263d56f" //cross test
+//private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //cross test
+//private const val MY_GAME_ID: String = "029b82b478b82eab4bdb13463765b5d6c3eef30f" //mraid banner
 //private const val MY_GAME_ID: String = "secret" //mraid banner
 //private const val MY_GAME_ID: String = "bf997a85569a0c697a06555119e32dcea4475d2d" //mraid banner
 //private const val MY_GAME_ID: String = "9889865ad2c84f4d1d61605ffe3830e31e634e63" //video horizontal
@@ -168,7 +170,7 @@ private const val MY_GAME_ID: String = "029b82b478b82eab4bdb13463765b5d6c3eef30f
 //private const val MY_GAME_ID: String = "bf997a85569a0c697a06555119e32dcea4475d2d" //mraid
 //private const val MY_GAME_ID: String = "cc6cc257e6238a1a925fd6fb294bbd5e41693dcd"
 //private const val MY_GAME_ID: String = "fe5a8f73f923a46f75586ee384530114e13c2b6d" //320x50 code
-//private const val MY_GAME_ID: String = "eab360c153374c950f4e7e3ba7325d9c141cf0f6" //320x50
+private const val MY_GAME_ID: String = "eab360c153374c950f4e7e3ba7325d9c141cf0f6" //320x50
 //private const val MY_GAME_ID: String = "f4169c9d0e71da08ce0e98430632db404331d5e7" //320x480
 
 //private const val MY_GAME_ID: String = "169a4d49448f9453c716c1daee05763d400747e4" //480х320

@@ -49,7 +49,7 @@ internal fun BidRemote.toDomain(): Bid =
     Bid(id, impid, nurl, lurl, adm, cid, crid, api, w, h, extAdv?.toDomain())
 
 internal fun ExtAdvRemote.toDomain(): ExtAdv =
-    ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files)
+    ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files, events)
 
 internal fun JSONObject.getStringOrNull(key: String): String? =
     if (isNull(key)) null else getString(key)
@@ -116,13 +116,23 @@ internal fun String.toExtAdvRemote(): ExtAdvRemote = JSONObject(this)
         val imp_timeout = getLongOrNull("imp_timeout")
         val arr = getJsonArrayOrNull("files")
         val files = mutableListOf<String>()
+
         arr?.let {
             for (i in 0 until it.length()) {
                 val str = it[i].toString()
                 files.add(str)
             }
         }
-        ExtAdvRemote(cache_max, cache_timeout, req_timeout, imp_timeout, files)
+
+        val events = mutableMapOf<String, String>()
+        val obj = getJsonObjectOrNull("events")
+
+        obj?.let {
+            it.keys().forEach {key ->
+                events[key] = it.get(key) as? String ?: ""
+            }
+        }
+        ExtAdvRemote(cache_max, cache_timeout, req_timeout, imp_timeout, files, events)
     }
 
 internal fun String.toAdvData(): AdvData = JSONObject(this)
@@ -206,7 +216,16 @@ internal fun String.toExtAdv() = JSONObject(this)
                 files.add(str)
             }
         }
-        ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files)
+        val events = mutableMapOf<String, String>()
+        val obj = getJsonObjectOrNull("events")
+
+        obj?.let {
+            it.keys().forEach {key ->
+                events[key] = it.get(key) as? String ?: ""
+            }
+        }
+
+        ExtAdv(cache_max, cache_timeout, req_timeout, imp_timeout, files, events)
     }
 
 internal fun AdvertiseType.toJson() = when (this) {

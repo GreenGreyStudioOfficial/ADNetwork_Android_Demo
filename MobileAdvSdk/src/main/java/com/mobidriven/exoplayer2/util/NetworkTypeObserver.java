@@ -33,6 +33,8 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.C;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -111,7 +113,7 @@ public final class NetworkTypeObserver {
     networkType = C.NETWORK_TYPE_UNKNOWN;
     IntentFilter filter = new IntentFilter();
     filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-    context.registerReceiver(/* receiver= */ new Receiver(), filter);
+    ContextCompat.registerReceiver(context,/* receiver= */ new Receiver(), filter, ContextCompat.RECEIVER_NOT_EXPORTED);
   }
 
   /**

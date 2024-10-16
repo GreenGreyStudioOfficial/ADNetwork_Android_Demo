@@ -225,11 +225,6 @@ internal class AdvBannerView @JvmOverloads constructor(
 
     private class MraidJsInjectingWebViewClient(val loadFinished: () -> Unit) : WebViewClient() {
 
-        @SuppressLint("WebViewClientOnReceivedSslError")
-        override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler, error: SslError?) {
-            handler.proceed() // Ignore SSL certificate errors
-        }
-
         override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
             val url = request?.url ?: return false
             //you can do checks here e.g. url.host equals to target one

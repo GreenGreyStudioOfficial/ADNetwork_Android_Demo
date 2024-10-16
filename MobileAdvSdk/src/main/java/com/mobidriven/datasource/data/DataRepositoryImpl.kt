@@ -33,4 +33,8 @@ internal class DataRepositoryImpl(
 
 
     override fun callPixel(url: String) = cloudDataStore.getUrl(url)
+    override fun sendClose(url: String) {
+//       Log.e("send close", url)
+        cloudDataStore.getUrl(url)
+    }
 }

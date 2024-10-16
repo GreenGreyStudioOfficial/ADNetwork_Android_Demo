@@ -34,6 +34,8 @@ import android.os.Parcelable;
 import android.os.PowerManager;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.util.Assertions;
 import com.mobidriven.exoplayer2.util.Util;
 import java.lang.annotation.Documented;
@@ -180,8 +182,8 @@ public final class Requirements implements Parcelable {
   private boolean isDeviceCharging(Context context) {
     @Nullable
     Intent batteryStatus =
-        context.registerReceiver(
-            /* receiver= */ null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            ContextCompat.registerReceiver(context,
+            /* receiver= */ null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED);
     if (batteryStatus == null) {
       return false;
     }
@@ -199,8 +201,8 @@ public final class Requirements implements Parcelable {
   }
 
   private boolean isStorageNotLow(Context context) {
-    return context.registerReceiver(
-            /* receiver= */ null, new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW))
+    return ContextCompat.registerReceiver(context,
+            /* receiver= */ null, new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW), ContextCompat.RECEIVER_NOT_EXPORTED)
         == null;
   }
 

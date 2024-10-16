@@ -25,6 +25,8 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
 import com.mobidriven.exoplayer2.util.Assertions;
 import com.mobidriven.exoplayer2.util.Util;
 
@@ -92,8 +94,8 @@ public final class AudioCapabilitiesReceiver {
     if (receiver != null) {
       IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_HDMI_AUDIO_PLUG);
       stickyIntent =
-          context.registerReceiver(
-              receiver, intentFilter, /* broadcastPermission= */ null, handler);
+              ContextCompat.registerReceiver(context,
+              receiver, intentFilter, /* broadcastPermission= */ null, handler, ContextCompat.RECEIVER_NOT_EXPORTED);
     }
     audioCapabilities = AudioCapabilities.getCapabilities(context, stickyIntent);
     return audioCapabilities;

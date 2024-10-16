@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.mobidriven.AdvSDK
 import com.mobidriven.datasource.domain.model.AdvData
+import com.mobidriven.datasource.domain.model.AdvertiseType
 import com.mobidriven.datasource.remote.api.OKHTTP_CONNECT_TIMEOUT_MS
 import com.mobidriven.datasource.remote.api.OKHTTP_READ_TIMEOUT_MS
 import com.mobidriven.exoplayer2.database.StandaloneDatabaseProvider
@@ -94,17 +95,18 @@ internal object CacheFileManager {
         }
     }
 
-    fun saveAdv(data: AdvData, context: Context = AdvSDK.application) {
+    fun saveAdv(data: AdvData, type: AdvertiseType, context: Context = AdvSDK.application,) {
         //clear cache before set new
+        val newData = data.copy(advertiseType = type)
         clearCache()
         val path: File = File(context.cacheDir, "mobidriven_assets")
         path.mkdir()
-        val file = File(path, "${data.id}.json")
+        val file = File(path, "${newData.id}.json")
         val stream = FileOutputStream(file)
-        stream.use { it.write(data.toJson().toString().toByteArray()) }
+        stream.use { it.write(newData.toJson().toString().toByteArray()) }
 
-        val adm = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm ?: return
-        val files = data.seatbid.firstOrNull()?.bid?.firstOrNull()?.extAdv?.files ?: emptyList()
+        val adm = newData.seatbid.firstOrNull()?.bid?.firstOrNull()?.adm ?: return
+        val files = newData.seatbid.firstOrNull()?.bid?.firstOrNull()?.extAdv?.files ?: emptyList()
         val isVideo = adm.startsWith("<VAST")
 
         if (isVideo) {
